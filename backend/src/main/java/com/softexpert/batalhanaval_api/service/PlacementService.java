@@ -3,12 +3,17 @@ package com.softexpert.batalhanaval_api.service;
 import com.softexpert.batalhanaval_api.domain.*;
 import com.softexpert.batalhanaval_api.dto.request.ShipPlacement;
 import com.softexpert.batalhanaval_api.exception.InvalidShipPlacementException;
+import com.softexpert.batalhanaval_api.repository.ShipRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 
 @Service
+@RequiredArgsConstructor
 public class PlacementService {
+
+    private final ShipRepository shipRepository;
 
     public void validateAndPlaceShips(Board board, List<ShipPlacement> placements) {
         validateFleetComposition(placements);
@@ -36,6 +41,7 @@ public class PlacementService {
         }
 
         board.getShips().addAll(ships);
+        shipRepository.saveAllAndFlush(ships);
 
         for (Cell cell : board.getCells()) {
             String key = cell.getRow() + "," + cell.getCol();

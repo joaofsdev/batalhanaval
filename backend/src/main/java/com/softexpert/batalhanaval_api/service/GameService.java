@@ -65,12 +65,20 @@ public class GameService {
             throw new BoardAlreadyReadyException();
         }
 
-        placementService.validateAndPlaceShips(board, request.ships());
-        boardRepository.save(board);
+        // Force initialize lazy collections before passing to placement service
+        board.getShips().size();
+        board.getCells().size();
 
-        if (areBothBoardsReady(game)) {
+        placementService.validateAndPlaceShips(board, request.ships());
+        boardRepository.saveAndFlush(board);
+
+        List<Board> allBoards = boardRepository.findByGameId(gameId);
+        boolean bothReady = allBoards.size() == 2 && allBoards.stream().allMatch(Board::isReady);
+
+        if (bothReady) {
             game.setStatus(GameStatus.IN_PROGRESS);
-            game.setCurrentTurn(game.getPlayer1());
+            User player1 = userRepository.findById(game.getPlayer1().getId()).orElseThrow();
+            game.setCurrentTurn(player1);
             gameRepository.save(game);
         }
 
@@ -103,12 +111,7 @@ public class GameService {
             }
         }
         board.setCells(cells);
-        game.getBoards().add(board);
         boardRepository.save(board);
-    }
-
-    private boolean areBothBoardsReady(Game game) {
-        return game.getBoards().stream().allMatch(Board::isReady);
     }
 
     private void validateParticipant(Game game, UUID userId) {
@@ -135,9 +138,7 @@ public class GameService {
     }
 
     private BoardResponse buildMyBoard(Game game, UUID userId) {
-        Board board = game.getBoards().stream()
-            .filter(b -> b.getOwner().getId().equals(userId))
-            .findFirst().orElse(null);
+        Board board = boardRepository.findByGameIdAndOwnerId(game.getId(), userId).orElse(null);
 
         if (board == null) return null;
 

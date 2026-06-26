@@ -53,6 +53,7 @@ public class ShotService {
         if (cell.isHasShip()) {
             Ship ship = cell.getShip();
             ship.setHits(ship.getHits() + 1);
+            shipRepository.saveAndFlush(ship);
             if (ship.isSunk()) {
                 result = ShotResult.SUNK;
                 sunkShipType = ship.getShipType();
@@ -79,7 +80,7 @@ public class ShotService {
             : game.getPlayer1();
         game.setCurrentTurn(nextTurn);
 
-        // Check victory
+        // Check victory - ensure ship hits are persisted before query
         boolean allSunk = shipRepository.findAllByBoardId(targetBoard.getId()).stream().allMatch(Ship::isSunk);
         if (allSunk) {
             game.setStatus(GameStatus.FINISHED);
