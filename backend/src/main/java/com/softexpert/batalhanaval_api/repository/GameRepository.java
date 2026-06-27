@@ -17,4 +17,10 @@ public interface GameRepository extends JpaRepository<Game, UUID> {
 
     @Query("SELECT g FROM Game g WHERE (g.player1.id = :userId OR g.player2.id = :userId) AND g.status IN :statuses")
     Optional<Game> findActiveGameByUserId(@Param("userId") UUID userId, @Param("statuses") List<GameStatus> statuses);
+
+    @Query("SELECT g.winner.id, g.winner.username, COUNT(g) FROM Game g WHERE g.status = 'FINISHED' AND g.winner IS NOT NULL GROUP BY g.winner.id, g.winner.username ORDER BY COUNT(g) DESC")
+    List<Object[]> findWinsRanking();
+
+    @Query("SELECT COUNT(g) FROM Game g WHERE (g.player1.id = :userId OR g.player2.id = :userId) AND g.status = 'FINISHED'")
+    long countFinishedGamesByUserId(@Param("userId") UUID userId);
 }
