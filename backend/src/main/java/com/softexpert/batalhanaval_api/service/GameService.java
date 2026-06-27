@@ -92,6 +92,43 @@ public class GameService {
         return buildGameResponse(game, userId);
     }
 
+    @Transactional
+    public void cancelGame(UUID gameId, UUID userId) {
+        Game game = gameRepository.findById(gameId).orElseThrow(GameNotFoundException::new);
+
+        if (!game.getPlayer1().getId().equals(userId)) {
+            throw new NotGameParticipantException();
+        }
+
+        // Cenário 1: partida ainda WAITING — deletar normalmente
+        if (game.getStatus() == GameStatus.WAITING) {
+            gameRepository.delete(game);
+            gameRepository.flush();
+            return;
+        }
+
+        // Cenário 2: jogador 2 acabou de entrar (PLACING) e player1 ainda não posicionou
+        if (game.getStatus() == GameStatus.PLACING) {
+            Board player1Board = boardRepository.findByGameAndOwner(game, game.getPlayer1()).orElse(null);
+
+            if (player1Board != null && !player1Board.isReady()) {
+                User player2 = game.getPlayer2();
+
+                boardRepository.delete(player1Board);
+
+                game.setPlayer1(player2);
+                game.setPlayer2(null);
+                game.setStatus(GameStatus.WAITING);
+                game.setCurrentTurn(null);
+                gameRepository.save(game);
+                gameRepository.flush();
+                return;
+            }
+        }
+
+        throw new GameCannotBeCancelledException();
+    }
+
     private void createBoardForPlayer(Game game, User player) {
         Board board = new Board();
         board.setGame(game);

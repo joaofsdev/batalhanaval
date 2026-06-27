@@ -57,6 +57,13 @@ public class GameController {
         return gameService.placeShips(id, userId, request);
     }
 
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void cancelGame(@PathVariable UUID id, @AuthenticationPrincipal UserDetails userDetails) {
+        UUID userId = resolveUserId(userDetails);
+        gameService.cancelGame(id, userId);
+    }
+
     private UUID resolveUserId(UserDetails userDetails) {
         User user = userRepository.findByUsername(userDetails.getUsername()).orElseThrow();
         return user.getId();
