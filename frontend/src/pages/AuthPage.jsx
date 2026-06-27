@@ -41,71 +41,168 @@ const AuthPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 flex items-center justify-center px-4">
-      <div className="w-full max-w-sm bg-slate-800 rounded-lg shadow-lg p-8">
-        <h1 className="text-2xl font-bold text-center text-blue-400 mb-6">
-          ⚓ Batalha Naval
-        </h1>
+    <div className="min-h-screen flex flex-row">
+      {/* Coluna esquerda — Painel Radar */}
+      <div className="hidden md:flex md:w-3/5 h-screen relative radar-grid items-center justify-center bg-surface-container-lowest overflow-hidden">
+        {/* Imagem do navio como fundo */}
+        <div
+          className="absolute inset-0 z-0"
+          style={{
+            backgroundImage: "url('/src/assets/background-image.png')",
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            opacity: 0.5,
+          }}
+        />
 
-        <div className="flex mb-6">
-          <button
-            type="button"
-            onClick={() => { setMode('login'); setError(''); }}
-            className={`flex-1 py-2 text-sm font-medium border-b-2 ${mode === 'login' ? 'border-blue-500 text-blue-400' : 'border-slate-600 text-slate-400'}`}
-          >
-            Login
-          </button>
-          <button
-            type="button"
-            onClick={() => { setMode('register'); setError(''); }}
-            className={`flex-1 py-2 text-sm font-medium border-b-2 ${mode === 'register' ? 'border-blue-500 text-blue-400' : 'border-slate-600 text-slate-400'}`}
-          >
-            Cadastro
-          </button>
+        {/* Overlay azul-esverdeado sobre a imagem */}
+        <div
+          className="absolute inset-0 z-[1]"
+          style={{
+            background: 'linear-gradient(135deg, rgba(8, 28, 36, 0.75) 0%, rgba(0, 54, 62, 0.6) 100%)',
+            mixBlendMode: 'multiply',
+          }}
+        />
+
+        {/* Linha de varredura giratória */}
+        <div className="absolute inset-0 z-10 w-full h-full pointer-events-none opacity-20 bg-[conic-gradient(from_90deg_at_50%_50%,transparent_0%,rgba(34,211,238,1)_100%)] animate-[spin_4s_linear_infinite] rounded-full scale-150" />
+
+        {/* Coordenadas no canto */}
+        <div className="absolute top-4 left-4 z-40 font-mono-data text-mono-data text-primary-container/70">
+          LAT: 45.923 N<br/>LON: 14.882 W
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <input
-            name="username"
-            placeholder="Usuário"
-            required
-            value={form.username}
-            onChange={handleChange}
-            className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white placeholder-slate-400 focus:outline-none focus:border-blue-500"
-          />
-          {mode === 'register' && (
-            <input
-              name="email"
-              type="email"
-              placeholder="Email"
-              required
-              value={form.email}
-              onChange={handleChange}
-              className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white placeholder-slate-400 focus:outline-none focus:border-blue-500"
-            />
-          )}
-          <input
-            name="password"
-            type="password"
-            placeholder="Senha"
-            required
-            value={form.password}
-            onChange={handleChange}
-            className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white placeholder-slate-400 focus:outline-none focus:border-blue-500"
-          />
+        {/* Pulsos de sonar concêntricos */}
+        <div className="absolute w-96 h-96 border border-primary-container/40 rounded-full flex items-center justify-center z-20">
+          <div className="absolute w-full h-full border border-primary-container rounded-full sonar-pulse" />
+          <div className="absolute w-2/3 h-2/3 border border-primary-container rounded-full sonar-pulse" style={{ animationDelay: '1s' }} />
+          <div className="absolute w-1/3 h-1/3 border border-primary-container rounded-full sonar-pulse" style={{ animationDelay: '2s' }} />
+          {/* Ponto central */}
+          <div className="w-4 h-4 bg-primary-container rounded-full animate-pulse shadow-[0_0_15px_rgba(34,211,238,1)]" />
+        </div>
 
-          {error && (
-            <p className="text-red-400 text-sm text-center">{error}</p>
-          )}
+        {/* Borda da área de radar */}
+        <div className="absolute inset-0 border border-primary-container/20 m-8 z-30 pointer-events-none" />
+      </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-600 text-white font-medium rounded transition-colors"
-          >
-            {loading ? 'Carregando...' : mode === 'login' ? 'Entrar' : 'Cadastrar'}
-          </button>
-        </form>
+      {/* Coluna direita — Formulário */}
+      <div className="w-full md:w-2/5 min-h-screen bg-surface-container-low flex flex-col justify-center px-8 md:px-16 lg:px-24 border-l border-outline-variant relative z-40">
+        {/* Corner accents */}
+        <div className="corner-accent tl" /><div className="corner-accent tr" />
+        <div className="corner-accent bl" /><div className="corner-accent br" />
+
+        <div className="max-w-md w-full mx-auto">
+          {/* Logo */}
+          <div className="mb-12 text-center">
+            <h1 className="font-display-tactical text-display-tactical text-primary mb-2 glow-text uppercase tracking-widest">
+              BATALHA NAVAL
+            </h1>
+            <p className="font-mono-data text-mono-data text-primary-fixed-dim uppercase tracking-widest">
+              SISTEMA DE COMBATE NAVAL v1.0
+            </p>
+          </div>
+
+          {/* Toggle LOGIN / REGISTRO */}
+          <div className="flex mb-8 border-b border-outline-variant">
+            <button
+              type="button"
+              onClick={() => { setMode('login'); setError(''); }}
+              className={`flex-1 py-3 font-label-caps text-label-caps transition-colors ${mode === 'login' ? 'text-primary border-t-2 border-primary bg-primary-container/10' : 'text-on-surface-variant hover:text-primary'}`}
+            >LOGIN</button>
+            <button
+              type="button"
+              onClick={() => { setMode('register'); setError(''); }}
+              className={`flex-1 py-3 font-label-caps text-label-caps transition-colors ${mode === 'register' ? 'text-primary border-t-2 border-primary bg-primary-container/10' : 'text-on-surface-variant hover:text-primary'}`}
+            >REGISTRO</button>
+          </div>
+
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <label className="block font-label-caps text-label-caps text-primary-fixed-dim mb-2">
+                IDENTIFICAÇÃO (USUÁRIO)
+              </label>
+              <div className="relative">
+                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-primary-fixed-dim">person</span>
+                <input
+                  name="username"
+                  required
+                  value={form.username}
+                  onChange={handleChange}
+                  placeholder="CMD_JOHN_DOE"
+                  className="w-full bg-[#1e293b] border-0 border-b border-primary-fixed-dim/50 text-on-surface font-mono-data text-mono-data pl-10 py-3 focus:ring-0 focus:border-primary-container focus:bg-surface-container-highest transition-all duration-200 outline-none placeholder-primary-fixed-dim/60 focus:shadow-[0_0_8px_rgba(34,211,238,0.3)]"
+                />
+              </div>
+            </div>
+
+            {mode === 'register' && (
+              <div>
+                <label className="block font-label-caps text-label-caps text-primary-fixed-dim mb-2">
+                  EMAIL
+                </label>
+                <div className="relative">
+                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-primary-fixed-dim">mail</span>
+                  <input
+                    name="email"
+                    type="email"
+                    required
+                    value={form.email}
+                    onChange={handleChange}
+                    placeholder="operador@aegis.mil"
+                    className="w-full bg-[#1e293b] border-0 border-b border-primary-fixed-dim/50 text-on-surface font-mono-data text-mono-data pl-10 py-3 focus:ring-0 focus:border-primary-container focus:bg-surface-container-highest transition-all duration-200 outline-none placeholder-primary-fixed-dim/60 focus:shadow-[0_0_8px_rgba(34,211,238,0.3)]"
+                  />
+                </div>
+              </div>
+            )}
+
+            <div>
+              <label className="block font-label-caps text-label-caps text-primary-fixed-dim mb-2">
+                SENHA
+              </label>
+              <div className="relative">
+                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-primary-fixed-dim">lock</span>
+                <input
+                  name="password"
+                  type="password"
+                  required
+                  value={form.password}
+                  onChange={handleChange}
+                  placeholder="••••••••"
+                  className="w-full bg-[#1e293b] border-0 border-b border-primary-fixed-dim/50 text-on-surface font-mono-data text-mono-data pl-10 py-3 focus:ring-0 focus:border-primary-container focus:bg-surface-container-highest transition-all duration-200 outline-none placeholder-primary-fixed-dim/60 focus:shadow-[0_0_8px_rgba(34,211,238,0.3)]"
+                />
+              </div>
+            </div>
+
+            {error && (
+              <p className="font-mono-data text-mono-data text-error border-l-2 border-error pl-3">
+                {error}
+              </p>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-primary-container text-on-primary-fixed font-label-caps text-label-caps py-4 rounded hover:bg-primary transition-all duration-200 shadow-[0_0_10px_rgba(34,211,238,0.2)] hover:shadow-[0_0_20px_rgba(34,211,238,0.6)] flex items-center justify-center gap-2 mt-8 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <span className="material-symbols-outlined text-[18px]">login</span>
+              {loading ? 'AUTENTICANDO...' : 'AUTENTICAR'}
+            </button>
+          </form>
+
+          {/* Link alternador */}
+          <div className="mt-8 text-center">
+            <span className="font-mono-data text-mono-data text-on-surface-variant">
+              {mode === 'login' ? 'Não tem conta? ' : 'Já tem conta? '}
+              <button
+                type="button"
+                onClick={() => setMode(mode === 'login' ? 'register' : 'login')}
+                className="text-primary border-b border-primary/30 pb-1"
+              >
+                {mode === 'login' ? 'REGISTRE-SE' : 'FAÇA LOGIN'}
+              </button>
+            </span>
+          </div>
+        </div>
       </div>
     </div>
   );
