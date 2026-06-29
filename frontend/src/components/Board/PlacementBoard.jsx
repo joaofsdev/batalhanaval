@@ -94,7 +94,7 @@ const PlacementBoard = ({ gameId, onConfirmed }) => {
       {/* Painel de controle */}
       <section className="w-full md:w-80 flex flex-col bg-surface-container border border-outline-variant p-panel-padding gap-4">
         <header className="border-b border-outline-variant pb-2">
-          <h2 className="font-headline-md text-headline-md text-primary tracking-widest">
+          <h2 className="font-headline-md text-headline-md text-primary tracking-widest whitespace-nowrap" style={{ fontSize: 'clamp(0.85rem, 2vw, 1.125rem)' }}>
             [ POSICIONAR FROTA ]
           </h2>
         </header>

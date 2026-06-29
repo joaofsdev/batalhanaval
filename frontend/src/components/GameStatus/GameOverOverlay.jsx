@@ -26,9 +26,9 @@ const GameOverOverlay = ({ isWinner, stats }) => {
         </span>
 
         {/* Título */}
-        <h2 className={`font-display-tactical text-display-tactical uppercase tracking-widest text-center ${
+        <h2 className={`font-display-tactical text-display-tactical uppercase tracking-widest text-center whitespace-nowrap ${
           isWinner ? 'text-tertiary-container' : 'text-error'
-        }`}>
+        }`} style={{ fontSize: 'clamp(1rem, 3vw, 1.5rem)' }}>
           {isWinner ? '[ MISSÃO CUMPRIDA ]' : '[ MISSÃO FRACASSADA ]'}
         </h2>
 
