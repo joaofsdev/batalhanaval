@@ -11,6 +11,7 @@ import OpponentBoard from "../components/Board/OpponentBoard";
 import Toast from "../components/shared/Toast";
 import GameOverOverlay from "../components/GameStatus/GameOverOverlay";
 import { GAME_STATUS } from "../constants/ships";
+import * as gameApi from "../api/gameApi";
 
 const GamePage = () => {
   const { id: gameId } = useParams();
@@ -55,7 +56,10 @@ const GamePage = () => {
     if (!connected || !gameId || subscribedRef.current) return;
     subscribedRef.current = true;
 
-    subscribe(`/topic/game/${gameId}/player-joined`, () => { setCancelDisabled(true); fetchGame(); });
+    subscribe(`/topic/game/${gameId}/player-joined`, () => {
+      setCancelDisabled(true);
+      fetchGame();
+    });
     subscribe(`/topic/game/${gameId}/state`, (payload) => {
       handleStateUpdate(payload);
       fetchGame();
@@ -112,19 +116,24 @@ const GamePage = () => {
   const handleCancelSearch = async () => {
     try {
       await gameApi.cancelGame(gameId);
-      await new Promise(resolve => setTimeout(resolve, 400));
     } catch (e) {
-      // silenciar — o backend trata os dois cenários
-      await new Promise(resolve => setTimeout(resolve, 400));
+      // Mesmo com erro, navegar para lobby
     } finally {
-      navigate('/lobby');
+      navigate("/lobby");
     }
   };
 
   const renderContent = () => {
     switch (game.status) {
       case GAME_STATUS.WAITING:
-        return <WaitingScreen gameId={gameId} myUsername={user?.username} onCancel={handleCancelSearch} canCancel={!cancelDisabled} />;
+        return (
+          <WaitingScreen
+            gameId={gameId}
+            myUsername={user?.username}
+            onCancel={handleCancelSearch}
+            canCancel={!cancelDisabled}
+          />
+        );
 
       case GAME_STATUS.PLACING:
         if (boardConfirmed || game.myBoard?.ready) {
@@ -191,9 +200,6 @@ const GamePage = () => {
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
       <header className="flex justify-between items-center px-panel-padding h-12 bg-surface-container-low border-b border-outline-variant z-40">
-        <h1 className="font-headline-md text-headline-md text-primary tracking-widest glow-text">
-          Aegis Command
-        </h1>
         <div className="flex items-center gap-3">
           <span className="font-mono-data text-mono-data text-on-surface-variant">
             MISSÃO #{gameId?.slice(0, 8).toUpperCase()}
