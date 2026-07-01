@@ -1,3 +1,5 @@
+import { memo } from 'react';
+
 const CELL_STYLES = {
   empty: '',
   ship: 'placed',
@@ -8,7 +10,7 @@ const CELL_STYLES = {
   sunk: 'sunk',
 };
 
-const BoardCell = ({ state = 'empty', onClick, onMouseEnter, onMouseLeave, style }) => (
+const BoardCell = memo(({ state = 'empty', onClick, onMouseEnter, onMouseLeave, style }) => (
   <div
     className={`w-8 h-8 bg-surface-container border border-outline-variant/30 grid-cell ${CELL_STYLES[state] || ''}`}
     onClick={onClick}
@@ -16,6 +18,8 @@ const BoardCell = ({ state = 'empty', onClick, onMouseEnter, onMouseLeave, style
     onMouseLeave={onMouseLeave}
     style={style}
   />
-);
+));
+
+BoardCell.displayName = 'BoardCell';
 
 export default BoardCell;

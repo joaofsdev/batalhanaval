@@ -1,8 +1,6 @@
-import { SHIP_FLEET } from '../../constants/ships';
-
-const ShipSelector = ({ selectedType, placedShips, onSelect, onRemove }) => (
+const ShipSelector = ({ fleet, selectedType, placedShips, onSelect, onRemove }) => (
   <div className="flex flex-col gap-3">
-    {SHIP_FLEET.map((ship) => {
+    {fleet.map((ship) => {
       const isPlaced = placedShips.some((p) => p.type === ship.type);
       const isSelected = selectedType === ship.type;
       return (

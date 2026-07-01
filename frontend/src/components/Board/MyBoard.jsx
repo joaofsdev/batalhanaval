@@ -1,25 +1,33 @@
+import { useMemo } from 'react';
 import BoardCell from './BoardCell';
 
 const ROWS = ['A','B','C','D','E','F','G','H','I','J'];
 
 const MyBoard = ({ cells, ships }) => {
-  const sunkShipIds = new Set(
-    (ships || []).filter((s) => s.sunk).flatMap((s) => {
-      const coords = [];
-      for (let i = 0; i < getShipSize(s.shipType); i++) {
+  const cellMap = useMemo(() => {
+    const map = new Map();
+    (cells || []).forEach((c) => map.set(`${c.row},${c.col}`, c));
+    return map;
+  }, [cells]);
+
+  const sunkCells = useMemo(() => {
+    const set = new Set();
+    (ships || []).filter((s) => s.sunk).forEach((s) => {
+      const size = getShipSize(s.shipType);
+      for (let i = 0; i < size; i++) {
         const r = s.orientation === 'VERTICAL' ? s.originRow + i : s.originRow;
         const c = s.orientation === 'HORIZONTAL' ? s.originCol + i : s.originCol;
-        coords.push(`${r},${c}`);
+        set.add(`${r},${c}`);
       }
-      return coords;
-    })
-  );
+    });
+    return set;
+  }, [ships]);
 
   const getCellState = (row, col) => {
-    const cell = cells?.find((c) => c.row === row && c.col === col);
-    if (!cell) return 'empty';
     const key = `${row},${col}`;
-    if (cell.hit && cell.hasShip && sunkShipIds.has(key)) return 'sunk';
+    const cell = cellMap.get(key);
+    if (!cell) return 'empty';
+    if (cell.hit && cell.hasShip && sunkCells.has(key)) return 'sunk';
     if (cell.hit && cell.hasShip) return 'hit';
     if (cell.hit && !cell.hasShip) return 'miss';
     if (cell.hasShip) return 'ship';

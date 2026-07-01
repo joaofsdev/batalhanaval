@@ -20,6 +20,7 @@ const GamePage = () => {
   const [toast, setToast] = useState(null);
   const [boardConfirmed, setBoardConfirmed] = useState(false);
   const [cancelDisabled, setCancelDisabled] = useState(false);
+  const [rematchInvite, setRematchInvite] = useState(null);
   const subscribedRef = useRef(false);
 
   const {
@@ -84,6 +85,9 @@ const GamePage = () => {
     subscribe("/user/queue/errors", (payload) => {
       setToast({ message: payload.message, type: "error" });
     });
+    subscribe("/user/queue/game/rematch-invite", (payload) => {
+      setRematchInvite(payload);
+    });
   }, [connected, gameId]);
 
   if (loading) {
@@ -120,6 +124,15 @@ const GamePage = () => {
       // Mesmo com erro, navegar para lobby
     } finally {
       navigate("/lobby");
+    }
+  };
+
+  const handleSurrender = async () => {
+    if (!window.confirm("Tem certeza que deseja desistir? Isso contará como derrota.")) return;
+    try {
+      await gameApi.surrender(gameId);
+    } catch (e) {
+      setToast({ message: "Erro ao desistir", type: "error" });
     }
   };
 
@@ -163,6 +176,7 @@ const GamePage = () => {
         return (
           <div className="flex flex-col gap-4">
             <TurnIndicator
+              key={game.currentTurnPlayerId}
               isMyTurn={isMyTurn}
               opponentName={opponent?.username}
             />
@@ -179,17 +193,33 @@ const GamePage = () => {
                 }
               />
             </div>
+            <div className="flex justify-center mt-4">
+              <button
+                onClick={handleSurrender}
+                className="px-6 py-2 border border-error text-error font-label-caps text-label-caps hover:bg-error/10 transition-all flex items-center gap-2"
+              >
+                <span className="material-symbols-outlined text-sm">flag</span>
+                DESISTIR
+              </button>
+            </div>
           </div>
         );
       }
 
-      case GAME_STATUS.FINISHED:
+      case GAME_STATUS.FINISHED: {
+        const myShots = game.opponentBoard?.shotsReceived || [];
+        const totalShots = myShots.length;
+        const totalHits = myShots.filter((s) => s.result === 'HIT' || s.result === 'SUNK').length;
+        const accuracy = totalShots > 0 ? Math.round((totalHits / totalShots) * 100) : 0;
         return (
           <GameOverOverlay
             isWinner={game.winnerId === user.id}
-            onNewGame={() => navigate("/lobby")}
+            stats={{ shots: totalShots, hits: totalHits, accuracy }}
+            gameId={gameId}
+            rematchInvite={rematchInvite}
           />
         );
+      }
 
       default:
         return null;

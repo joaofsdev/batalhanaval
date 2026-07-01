@@ -1,11 +1,12 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import BoardCell from './BoardCell';
 import ShipSelector from '../Placement/ShipSelector';
 import OrientationToggle from '../Placement/OrientationToggle';
-import { SHIP_FLEET, ORIENTATIONS } from '../../constants/ships';
+import { ORIENTATIONS } from '../../constants/ships';
 import * as gameApi from '../../api/gameApi';
 
 const PlacementBoard = ({ gameId, onConfirmed }) => {
+  const [fleet, setFleet] = useState([]);
   const [placedShips, setPlacedShips] = useState([]);
   const [selectedType, setSelectedType] = useState(null);
   const [orientation, setOrientation] = useState(ORIENTATIONS.HORIZONTAL);
@@ -14,12 +15,29 @@ const PlacementBoard = ({ gameId, onConfirmed }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const selectedShip = SHIP_FLEET.find((s) => s.type === selectedType);
+  useEffect(() => {
+    gameApi.getFleetConfig()
+      .then(({ data }) => {
+        setFleet(data.map((s) => ({ type: s.type, size: s.size, label: s.name })));
+      })
+      .catch(() => {
+        // Fallback to avoid being stuck if endpoint fails
+        setFleet([
+          { type: 'CARRIER', size: 5, label: 'Porta-aviões' },
+          { type: 'BATTLESHIP', size: 4, label: 'Encouraçado' },
+          { type: 'CRUISER', size: 3, label: 'Cruzador' },
+          { type: 'SUBMARINE', size: 3, label: 'Submarino' },
+          { type: 'DESTROYER', size: 2, label: 'Contratorpedeiro' },
+        ]);
+      });
+  }, []);
+
+  const selectedShip = fleet.find((s) => s.type === selectedType);
 
   const occupiedCells = useMemo(() => {
     const set = new Set();
     placedShips.forEach((ship) => {
-      const size = SHIP_FLEET.find((s) => s.type === ship.type).size;
+      const size = fleet.find((s) => s.type === ship.type)?.size || 0;
       for (let i = 0; i < size; i++) {
         const r = ship.orientation === ORIENTATIONS.VERTICAL ? ship.originRow + i : ship.originRow;
         const c = ship.orientation === ORIENTATIONS.HORIZONTAL ? ship.originCol + i : ship.originCol;
@@ -27,7 +45,7 @@ const PlacementBoard = ({ gameId, onConfirmed }) => {
       }
     });
     return set;
-  }, [placedShips]);
+  }, [placedShips, fleet]);
 
   const getCellsForPlacement = (row, col, ship, orient) => {
     const cells = [];
@@ -88,6 +106,15 @@ const PlacementBoard = ({ gameId, onConfirmed }) => {
   };
 
   const ROWS = ['A','B','C','D','E','F','G','H','I','J'];
+  const fleetSize = fleet.length;
+
+  if (fleet.length === 0) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <p className="font-mono-data text-mono-data text-primary animate-pulse">CARREGANDO CONFIGURAÇÃO DE FROTA...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col md:flex-row gap-6 items-start justify-center">
@@ -103,6 +130,7 @@ const PlacementBoard = ({ gameId, onConfirmed }) => {
 
         <div className="flex-1 overflow-y-auto">
           <ShipSelector
+            fleet={fleet}
             selectedType={selectedType}
             placedShips={placedShips}
             onSelect={setSelectedType}
@@ -114,16 +142,16 @@ const PlacementBoard = ({ gameId, onConfirmed }) => {
         <div className="mt-auto pt-4 border-t border-outline-variant flex flex-col gap-2">
           <div className="flex justify-between font-mono-data text-mono-data text-primary">
             <span>STATUS:</span>
-            <span>{placedShips.length}/5 NAVIOS POSICIONADOS</span>
+            <span>{placedShips.length}/{fleetSize} NAVIOS POSICIONADOS</span>
           </div>
           <div className="w-full h-1 bg-surface-container-highest">
-            <div className="h-full bg-primary transition-all duration-300" style={{ width: `${(placedShips.length / 5) * 100}%` }} />
+            <div className="h-full bg-primary transition-all duration-300" style={{ width: `${(placedShips.length / fleetSize) * 100}%` }} />
           </div>
           <button
             onClick={handleConfirm}
-            disabled={placedShips.length < 5 || loading}
+            disabled={placedShips.length < fleetSize || loading}
             className={`w-full py-3 mt-2 font-label-caps text-label-caps uppercase transition-all ${
-              placedShips.length === 5 && !loading
+              placedShips.length === fleetSize && !loading
                 ? 'border border-primary text-primary hover:bg-primary-container/20 radar-glow'
                 : 'border border-outline-variant text-on-surface-variant cursor-not-allowed'
             }`}
