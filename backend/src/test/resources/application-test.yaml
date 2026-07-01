@@ -17,3 +17,7 @@ jwt:
 
 cors:
   allowed-origins: http://localhost:3000
+
+rate-limit:
+  auth:
+    requests-per-minute: 1000
