@@ -14,6 +14,9 @@ const LobbyPage = () => {
   const [rankingPage, setRankingPage] = useState(0);
   const [rankingTotalPages, setRankingTotalPages] = useState(0);
   const [rankingPeriod, setRankingPeriod] = useState("all");
+  const [rankingLoading, setRankingLoading] = useState(true);
+  const [rankingError, setRankingError] = useState(false);
+  const [rankingRetry, setRankingRetry] = useState(0);
 
   useEffect(() => {
     gameApi.getActiveGame()
@@ -26,14 +29,20 @@ const LobbyPage = () => {
   }, [navigate]);
 
   useEffect(() => {
+    setRankingLoading(true);
+    setRankingError(false);
     gameApi.getRanking(rankingPage, 20, rankingPeriod)
       .then(({ data }) => {
         setRanking(data.ranking || []);
         setMyPosition(data.myPosition || null);
         setRankingTotalPages(data.totalPages || 0);
       })
-      .catch(() => {});
-  }, [rankingPage, rankingPeriod]);
+      .catch(() => {
+        setRankingError(true);
+        setRanking([]);
+      })
+      .finally(() => setRankingLoading(false));
+  }, [rankingPage, rankingPeriod, rankingRetry]);
 
   const handlePlay = async () => {
     setError("");
@@ -158,7 +167,32 @@ const LobbyPage = () => {
             </div>
 
             {/* Dados do ranking */}
-            {ranking.map((row) => (
+            {rankingLoading ? (
+              // Skeleton rows
+              Array.from({ length: 5 }, (_, i) => (
+                <div key={i} className="grid grid-cols-5 gap-2 px-2 py-2 border-b border-outline-variant/30">
+                  <div className="h-4 w-6 bg-surface-container-high animate-pulse" />
+                  <div className="h-4 w-20 bg-surface-container-high animate-pulse" />
+                  <div className="h-4 w-6 bg-surface-container-high animate-pulse" />
+                  <div className="h-4 w-6 bg-surface-container-high animate-pulse" />
+                  <div className="h-4 w-10 bg-surface-container-high animate-pulse" />
+                </div>
+              ))
+            ) : rankingError ? (
+              <div className="flex flex-col items-center gap-3 py-6">
+                <span className="material-symbols-outlined text-error text-2xl">signal_wifi_off</span>
+                <p className="font-mono-data text-mono-data text-error">
+                  FALHA AO CARREGAR RANKING
+                </p>
+                <button
+                  onClick={() => setRankingRetry((r) => r + 1)}
+                  className="px-4 py-2 border border-primary text-primary font-label-caps text-label-caps hover:bg-primary-container/10 transition-colors"
+                >
+                  TENTAR NOVAMENTE
+                </button>
+              </div>
+            ) : (
+            ranking.map((row) => (
               <div
                 key={row.userId}
                 className="grid grid-cols-5 gap-2 px-2 py-2 border-b border-outline-variant/30 hover:bg-surface-container-high transition-colors"
@@ -182,10 +216,10 @@ const LobbyPage = () => {
                   {row.winRate}%
                 </span>
               </div>
-            ))}
+            )))}
 
             {/* Linha do usuário logado */}
-            {myPosition && (
+            {!rankingLoading && !rankingError && myPosition && (
               <div className="grid grid-cols-5 gap-2 px-2 py-2 bg-secondary-container/30 border border-primary/30">
                 <span className="font-mono-data text-mono-data text-primary-container">
                   {String(myPosition.position).padStart(2, '0')}
