@@ -3,8 +3,10 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import useGame from "../hooks/useGame";
 import useWebSocket from "../hooks/useWebSocket";
+import useSoundEffects from "../hooks/useSoundEffects";
 import WaitingScreen from "../components/GameStatus/WaitingScreen";
 import TurnIndicator from "../components/GameStatus/TurnIndicator";
+import OpponentDisconnectedBanner from "../components/GameStatus/OpponentDisconnectedBanner";
 import PlacementBoard from "../components/Board/PlacementBoard";
 import MyBoard from "../components/Board/MyBoard";
 import OpponentBoard from "../components/Board/OpponentBoard";
@@ -21,6 +23,7 @@ const GamePage = () => {
   const [boardConfirmed, setBoardConfirmed] = useState(false);
   const [cancelDisabled, setCancelDisabled] = useState(false);
   const [rematchInvite, setRematchInvite] = useState(null);
+  const [opponentDisconnected, setOpponentDisconnected] = useState(null);
   const subscribedRef = useRef(false);
 
   const {
@@ -37,6 +40,8 @@ const GamePage = () => {
     token,
     onReconnect: fetchGame,
   });
+
+  const { playHit, playMiss, playSunk, muted, toggleMute } = useSoundEffects();
 
   useEffect(() => {
     fetchGame();
@@ -68,6 +73,9 @@ const GamePage = () => {
     subscribe("/user/queue/game/started", () => fetchGame());
     subscribe("/user/queue/game/shot-result", (payload) => {
       handleShotResult(payload);
+      if (payload.result === 'SUNK') playSunk();
+      else if (payload.result === 'HIT') playHit();
+      else if (payload.result === 'MISS') playMiss();
       if (payload.sunkShipType)
         setToast({
           message: `Você afundou o ${payload.sunkShipType} do oponente! 💥`,
@@ -76,6 +84,9 @@ const GamePage = () => {
     });
     subscribe("/user/queue/game/opponent-shot", (payload) => {
       handleOpponentShot(payload);
+      if (payload.result === 'SUNK') playSunk();
+      else if (payload.result === 'HIT') playHit();
+      else if (payload.result === 'MISS') playMiss();
       if (payload.sunkShipType)
         setToast({
           message: `Seu ${payload.sunkShipType} foi afundado! 🚢`,
@@ -87,6 +98,13 @@ const GamePage = () => {
     });
     subscribe("/user/queue/game/rematch-invite", (payload) => {
       setRematchInvite(payload);
+    });
+    subscribe(`/topic/game/${gameId}/opponent-disconnected`, (payload) => {
+      if (payload.type === 'DISCONNECTED') {
+        setOpponentDisconnected(payload.gracePeriodSeconds);
+      } else if (payload.type === 'RECONNECTED') {
+        setOpponentDisconnected(null);
+      }
     });
   }, [connected, gameId]);
 
@@ -235,7 +253,24 @@ const GamePage = () => {
             MISSÃO #{gameId?.slice(0, 8).toUpperCase()}
           </span>
         </div>
+        <button
+          onClick={toggleMute}
+          className="flex items-center gap-1 text-on-surface-variant hover:text-primary transition-colors"
+          title={muted ? 'Ativar sons' : 'Desativar sons'}
+        >
+          <span className="material-symbols-outlined text-sm">
+            {muted ? 'volume_off' : 'volume_up'}
+          </span>
+        </button>
       </header>
+
+      {/* Opponent disconnection banner */}
+      {opponentDisconnected && (
+        <OpponentDisconnectedBanner
+          gracePeriodSeconds={opponentDisconnected}
+          onExpired={() => setOpponentDisconnected(null)}
+        />
+      )}
 
       {/* Content */}
       <div className="flex-1 flex items-center justify-center p-margin-safe">
