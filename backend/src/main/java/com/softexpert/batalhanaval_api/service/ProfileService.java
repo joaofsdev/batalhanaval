@@ -11,6 +11,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.softexpert.batalhanaval_api.exception.UserNotFoundException;
+
 import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
@@ -26,7 +28,7 @@ public class ProfileService {
     @Transactional(readOnly = true)
     public PlayerProfileResponse getProfile(UUID userId) {
         User user = userRepository.findById(userId)
-            .orElseThrow(() -> new IllegalArgumentException("User not found"));
+            .orElseThrow(UserNotFoundException::new);
 
         // Stats
         List<Object[]> rankingRows = gameRepository.findFullRanking();
