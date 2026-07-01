@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -30,10 +31,10 @@ public class GameService {
 
         User user = userRepository.findById(userId).orElseThrow();
 
-        List<Game> waitingGames = gameRepository.findByStatusAndPlayer1IdNot(GameStatus.WAITING, userId);
+        Optional<Game> waitingGame = gameRepository.findFirstWaitingGameForUpdate(GameStatus.WAITING, userId);
 
-        if (!waitingGames.isEmpty()) {
-            Game game = waitingGames.getFirst();
+        if (waitingGame.isPresent()) {
+            Game game = waitingGame.get();
             game.setPlayer2(user);
             game.setStatus(GameStatus.PLACING);
             createBoardForPlayer(game, user);
@@ -90,6 +91,86 @@ public class GameService {
         Game game = gameRepository.findById(gameId).orElseThrow(GameNotFoundException::new);
         validateParticipant(game, userId);
         return buildGameResponse(game, userId);
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<GameResponse> getActiveGame(UUID userId) {
+        return gameRepository.findActiveGameByUserId(userId, List.of(GameStatus.WAITING, GameStatus.PLACING, GameStatus.IN_PROGRESS))
+            .map(game -> buildGameResponse(game, userId));
+    }
+
+    @Transactional
+    public Game surrender(UUID gameId, UUID userId) {
+        Game game = gameRepository.findById(gameId).orElseThrow(GameNotFoundException::new);
+        validateParticipant(game, userId);
+
+        if (game.getStatus() != GameStatus.IN_PROGRESS) {
+            throw new GameNotInProgressException();
+        }
+
+        User winner = game.getPlayer1().getId().equals(userId)
+            ? game.getPlayer2()
+            : game.getPlayer1();
+
+        game.setStatus(GameStatus.FINISHED);
+        game.setWinner(winner);
+        game.setCurrentTurn(null);
+        gameRepository.save(game);
+        return game;
+    }
+
+    @Transactional
+    public GameResponse requestRematch(UUID originalGameId, UUID userId) {
+        Game originalGame = gameRepository.findById(originalGameId).orElseThrow(GameNotFoundException::new);
+        validateParticipant(originalGame, userId);
+
+        if (originalGame.getStatus() != GameStatus.FINISHED) {
+            throw new GameNotInProgressException();
+        }
+
+        // Check user is not already in an active game
+        gameRepository.findActiveGameByUserId(userId, List.of(GameStatus.WAITING, GameStatus.PLACING, GameStatus.IN_PROGRESS))
+            .ifPresent(g -> { throw new PlayerAlreadyInGameException(); });
+
+        User user = userRepository.findById(userId).orElseThrow();
+
+        Game newGame = new Game();
+        newGame.setPlayer1(user);
+        newGame.setStatus(GameStatus.WAITING);
+        newGame = gameRepository.save(newGame);
+        createBoardForPlayer(newGame, user);
+
+        return buildGameResponse(newGame, userId);
+    }
+
+    public UUID getOpponentId(UUID gameId, UUID userId) {
+        Game game = gameRepository.findById(gameId).orElseThrow(GameNotFoundException::new);
+        if (game.getPlayer1().getId().equals(userId)) {
+            return game.getPlayer2() != null ? game.getPlayer2().getId() : null;
+        }
+        return game.getPlayer1().getId();
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<GameHistoryEntry> getGameHistory(UUID userId, int page, int size) {
+        org.springframework.data.domain.Page<Game> gamePage = gameRepository.findFinishedGamesByUserId(
+            userId, org.springframework.data.domain.PageRequest.of(page, size));
+
+        List<GameHistoryEntry> entries = gamePage.getContent().stream().map(game -> {
+            String opponentUsername;
+            if (game.getPlayer1().getId().equals(userId)) {
+                opponentUsername = game.getPlayer2() != null ? game.getPlayer2().getUsername() : "Desconhecido";
+            } else {
+                opponentUsername = game.getPlayer1().getUsername();
+            }
+
+            boolean won = game.getWinner() != null && game.getWinner().getId().equals(userId);
+            long durationSeconds = java.time.Duration.between(game.getCreatedAt(), game.getUpdatedAt()).getSeconds();
+
+            return new GameHistoryEntry(game.getId(), opponentUsername, game.getStatus(), won, durationSeconds, game.getUpdatedAt());
+        }).toList();
+
+        return new PageResponse<>(entries, page, size, gamePage.getTotalElements(), gamePage.getTotalPages());
     }
 
     @Transactional
