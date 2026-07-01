@@ -2,6 +2,7 @@ package com.softexpert.batalhanaval_api.service;
 
 import com.softexpert.batalhanaval_api.domain.Game;
 import com.softexpert.batalhanaval_api.dto.response.GameStateNotification;
+import com.softexpert.batalhanaval_api.dto.response.OpponentConnectionEvent;
 import com.softexpert.batalhanaval_api.dto.response.OpponentShotNotification;
 import com.softexpert.batalhanaval_api.dto.response.RematchInvite;
 import com.softexpert.batalhanaval_api.dto.response.ShotResultResponse;
@@ -52,6 +53,20 @@ public class NotificationService {
             opponentId.toString(),
             "/queue/game/rematch-invite",
             invite
+        );
+    }
+
+    public void notifyOpponentDisconnected(UUID gameId, int gracePeriodSeconds) {
+        messagingTemplate.convertAndSend(
+            "/topic/game/" + gameId + "/opponent-disconnected",
+            OpponentConnectionEvent.disconnected(gracePeriodSeconds)
+        );
+    }
+
+    public void notifyOpponentReconnected(UUID gameId) {
+        messagingTemplate.convertAndSend(
+            "/topic/game/" + gameId + "/opponent-disconnected",
+            OpponentConnectionEvent.reconnected()
         );
     }
 }

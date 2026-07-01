@@ -36,6 +36,8 @@ public class DisconnectionService {
                 log.info("Player {} disconnected from game {}. Starting {}s grace period.",
                     userId, game.getId(), GRACE_PERIOD_SECONDS);
 
+                notificationService.notifyOpponentDisconnected(game.getId(), (int) GRACE_PERIOD_SECONDS);
+
                 ScheduledFuture<?> future = scheduler.schedule(
                     () -> applyDisconnectionLoss(game.getId(), userId),
                     GRACE_PERIOD_SECONDS,
@@ -51,6 +53,9 @@ public class DisconnectionService {
         if (future != null && !future.isDone()) {
             future.cancel(false);
             log.info("Player {} reconnected. Grace period cancelled.", userId);
+
+            gameRepository.findActiveGameByUserId(userId, List.of(GameStatus.IN_PROGRESS))
+                .ifPresent(game -> notificationService.notifyOpponentReconnected(game.getId()));
         }
     }
 
