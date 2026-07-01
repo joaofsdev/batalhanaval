@@ -1,11 +1,40 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import * as gameApi from '../../api/gameApi';
 
-const GameOverOverlay = ({ isWinner, stats }) => {
+const GameOverOverlay = ({ isWinner, stats, gameId, rematchInvite }) => {
   const navigate = useNavigate();
   const { logout } = useAuth();
+  const [rematchLoading, setRematchLoading] = useState(false);
+  const [rematchSent, setRematchSent] = useState(false);
 
   const displayStats = stats || { shots: '--', hits: '--', accuracy: '--' };
+
+  const handleRematch = async () => {
+    setRematchLoading(true);
+    try {
+      const res = await gameApi.requestRematch(gameId);
+      setRematchSent(true);
+      // Navigate to the new game
+      navigate(`/game/${res.data.id}`);
+    } catch (err) {
+      setRematchLoading(false);
+    }
+  };
+
+  const handleAcceptRematch = async () => {
+    if (rematchInvite?.gameId) {
+      try {
+        // Join the rematch game via normal matchmaking (will find the WAITING game)
+        const res = await gameApi.createOrJoinGame();
+        navigate(`/game/${res.data.id}`);
+      } catch (err) {
+        // Fallback: navigate directly
+        navigate(`/game/${rematchInvite.gameId}`);
+      }
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
@@ -48,8 +77,31 @@ const GameOverOverlay = ({ isWinner, stats }) => {
           ))}
         </div>
 
+        {/* Rematch invite received */}
+        {rematchInvite && (
+          <div className="w-full p-4 border border-tertiary-container bg-tertiary-container/10 flex items-center justify-between">
+            <span className="font-mono-data text-mono-data text-tertiary">
+              🔄 {rematchInvite.opponentUsername?.toUpperCase()} QUER REVANCHE!
+            </span>
+            <button
+              onClick={handleAcceptRematch}
+              className="px-4 py-2 bg-tertiary-container text-on-tertiary-fixed font-label-caps text-label-caps hover:bg-tertiary transition-all"
+            >
+              ACEITAR
+            </button>
+          </div>
+        )}
+
         {/* Botões */}
-        <div className="flex gap-4 w-full">
+        <div className="flex gap-3 w-full">
+          <button
+            onClick={handleRematch}
+            disabled={rematchLoading || rematchSent}
+            className="flex-1 py-3 border border-tertiary-container text-tertiary-container font-label-caps text-label-caps hover:bg-tertiary-container/10 transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            <span className="material-symbols-outlined text-sm">replay</span>
+            {rematchSent ? 'CONVITE ENVIADO' : rematchLoading ? 'ENVIANDO...' : 'REVANCHE'}
+          </button>
           <button
             onClick={() => navigate('/lobby')}
             className="flex-1 py-3 bg-primary-container text-on-primary-fixed font-label-caps text-label-caps hover:bg-primary transition-all flex items-center justify-center gap-2 shadow-[0_0_10px_rgba(34,211,238,0.3)]"
@@ -59,10 +111,9 @@ const GameOverOverlay = ({ isWinner, stats }) => {
           </button>
           <button
             onClick={() => { logout(); navigate('/'); }}
-            className="flex-1 py-3 border border-error text-error font-label-caps text-label-caps hover:bg-error/10 transition-all flex items-center justify-center gap-2"
+            className="py-3 px-4 border border-error text-error font-label-caps text-label-caps hover:bg-error/10 transition-all flex items-center justify-center"
           >
             <span className="material-symbols-outlined text-sm">logout</span>
-            SAIR
           </button>
         </div>
       </div>

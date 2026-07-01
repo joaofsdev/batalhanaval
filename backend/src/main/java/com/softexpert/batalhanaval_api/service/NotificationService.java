@@ -3,6 +3,7 @@ package com.softexpert.batalhanaval_api.service;
 import com.softexpert.batalhanaval_api.domain.Game;
 import com.softexpert.batalhanaval_api.dto.response.GameStateNotification;
 import com.softexpert.batalhanaval_api.dto.response.OpponentShotNotification;
+import com.softexpert.batalhanaval_api.dto.response.RematchInvite;
 import com.softexpert.batalhanaval_api.dto.response.ShotResultResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -43,6 +44,14 @@ public class NotificationService {
         messagingTemplate.convertAndSend(
             "/topic/game/" + game.getId() + "/state",
             notification
+        );
+    }
+
+    public void notifyRematchInvite(UUID opponentId, RematchInvite invite) {
+        messagingTemplate.convertAndSendToUser(
+            opponentId.toString(),
+            "/queue/game/rematch-invite",
+            invite
         );
     }
 }
