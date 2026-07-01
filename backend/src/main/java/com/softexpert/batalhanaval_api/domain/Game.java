@@ -46,6 +46,9 @@ public class Game {
     @JoinColumn(name = "winner_id")
     private User winner;
 
+    @Column(nullable = false)
+    private int consecutiveSkips;
+
     @OneToMany(mappedBy = "game", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Board> boards = new ArrayList<>();
 

@@ -79,6 +79,7 @@ public class ShotService {
             ? game.getPlayer2()
             : game.getPlayer1();
         game.setCurrentTurn(nextTurn);
+        game.setConsecutiveSkips(0);
 
         // Check victory - ensure ship hits are persisted before query
         boolean allSunk = shipRepository.findAllByBoardId(targetBoard.getId()).stream().allMatch(Ship::isSunk);
