@@ -7,5 +7,6 @@ public record RankingEntry(
     UUID userId,
     String username,
     long wins,
-    long totalGames
+    long totalGames,
+    double winRate
 ) {}

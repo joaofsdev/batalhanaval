@@ -4,5 +4,9 @@ import java.util.List;
 
 public record RankingResponse(
     List<RankingEntry> ranking,
-    RankingEntry myPosition
+    RankingEntry myPosition,
+    int page,
+    int size,
+    long totalElements,
+    int totalPages
 ) {}
