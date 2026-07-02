@@ -38,6 +38,22 @@ public class Game {
     @Column(nullable = false)
     private GameStatus status;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private GameMode gameMode = GameMode.CLASSIC;
+
+    @Column(nullable = false)
+    private int currentTurnNumber = 1;
+
+    @Column(nullable = false)
+    private int nextStormTurn = 3;
+
+    @Column(nullable = false)
+    private boolean fogActive;
+
+    @Column(nullable = false)
+    private boolean bonusShot;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "current_turn_id")
     private User currentTurn;

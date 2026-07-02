@@ -11,4 +11,6 @@ public interface ShotRepository extends JpaRepository<Shot, UUID> {
     List<Shot> findAllByGameIdAndAttackerId(UUID gameId, UUID attackerId);
 
     List<Shot> findAllByGameIdOrderByFiredAtAsc(UUID gameId);
+
+    boolean existsByTargetBoardIdAndRowAndCol(UUID targetBoardId, int row, int col);
 }

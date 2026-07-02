@@ -31,6 +31,9 @@ public class DisconnectionService {
     private final Map<UUID, ScheduledFuture<?>> pendingTimeouts = new ConcurrentHashMap<>();
 
     public void handleDisconnect(UUID userId) {
+        // Clean pending rematch requests for this user
+        gameService.getPendingRematches().entrySet().removeIf(entry -> entry.getValue().equals(userId));
+
         gameRepository.findActiveGameByUserId(userId, List.of(GameStatus.IN_PROGRESS))
             .ifPresent(game -> {
                 log.info("Player {} disconnected from game {}. Starting {}s grace period.",

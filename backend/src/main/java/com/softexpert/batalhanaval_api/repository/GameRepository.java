@@ -1,6 +1,7 @@
 package com.softexpert.batalhanaval_api.repository;
 
 import com.softexpert.batalhanaval_api.domain.Game;
+import com.softexpert.batalhanaval_api.domain.GameMode;
 import com.softexpert.batalhanaval_api.domain.GameStatus;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -20,6 +21,10 @@ public interface GameRepository extends JpaRepository<Game, UUID> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT g FROM Game g WHERE g.status = :status AND g.player1.id <> :userId ORDER BY g.createdAt ASC LIMIT 1")
     Optional<Game> findFirstWaitingGameForUpdate(@Param("status") GameStatus status, @Param("userId") UUID userId);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT g FROM Game g WHERE g.status = :status AND g.player1.id <> :userId AND g.gameMode = :gameMode ORDER BY g.createdAt ASC LIMIT 1")
+    Optional<Game> findFirstWaitingGameByModeForUpdate(@Param("status") GameStatus status, @Param("userId") UUID userId, @Param("gameMode") GameMode gameMode);
 
     @Query("SELECT g FROM Game g WHERE (g.player1.id = :userId OR g.player2.id = :userId) AND g.status IN :statuses")
     Optional<Game> findActiveGameByUserId(@Param("userId") UUID userId, @Param("statuses") List<GameStatus> statuses);

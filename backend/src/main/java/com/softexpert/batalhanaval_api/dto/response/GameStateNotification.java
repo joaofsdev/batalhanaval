@@ -7,5 +7,17 @@ import java.util.UUID;
 public record GameStateNotification(
     GameStatus status,
     UUID currentTurnPlayerId,
-    UUID winnerId
-) {}
+    UUID winnerId,
+    int turnNumber,
+    boolean isStormTurn,
+    int turnsUntilStorm,
+    boolean bonusShot,
+    boolean fogActive
+) {
+    /**
+     * Constructor for classic mode (backward compatible).
+     */
+    public GameStateNotification(GameStatus status, UUID currentTurnPlayerId, UUID winnerId) {
+        this(status, currentTurnPlayerId, winnerId, 0, false, 0, false, false);
+    }
+}

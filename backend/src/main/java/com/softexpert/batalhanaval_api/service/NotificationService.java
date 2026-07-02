@@ -1,11 +1,13 @@
 package com.softexpert.batalhanaval_api.service;
 
 import com.softexpert.batalhanaval_api.domain.Game;
+import com.softexpert.batalhanaval_api.dto.response.AbilityResultResponse;
 import com.softexpert.batalhanaval_api.dto.response.GameStateNotification;
 import com.softexpert.batalhanaval_api.dto.response.OpponentConnectionEvent;
 import com.softexpert.batalhanaval_api.dto.response.OpponentShotNotification;
 import com.softexpert.batalhanaval_api.dto.response.RematchInvite;
 import com.softexpert.batalhanaval_api.dto.response.ShotResultResponse;
+import com.softexpert.batalhanaval_api.dto.response.StormEventNotification;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
@@ -41,7 +43,15 @@ public class NotificationService {
         UUID currentTurnId = game.getCurrentTurn() != null ? game.getCurrentTurn().getId() : null;
         UUID winnerId = game.getWinner() != null ? game.getWinner().getId() : null;
 
-        GameStateNotification notification = new GameStateNotification(game.getStatus(), currentTurnId, winnerId);
+        int turnsUntilStorm = Math.max(0, game.getNextStormTurn() - game.getCurrentTurnNumber());
+        boolean isStormTurn = game.getCurrentTurnNumber() == game.getNextStormTurn();
+
+        GameStateNotification notification = new GameStateNotification(
+            game.getStatus(), currentTurnId, winnerId,
+            game.getCurrentTurnNumber(), isStormTurn, turnsUntilStorm,
+            game.isBonusShot(), game.isFogActive()
+        );
+
         messagingTemplate.convertAndSend(
             "/topic/game/" + game.getId() + "/state",
             notification
@@ -56,6 +66,14 @@ public class NotificationService {
         );
     }
 
+    public void notifyRematchMatched(UUID originalGameId, UUID newGameId) {
+        Object payload = java.util.Map.of("status", "MATCHED", "gameId", newGameId.toString());
+        messagingTemplate.convertAndSend(
+            "/topic/game/" + originalGameId + "/rematch",
+            payload
+        );
+    }
+
     public void notifyOpponentDisconnected(UUID gameId, int gracePeriodSeconds) {
         messagingTemplate.convertAndSend(
             "/topic/game/" + gameId + "/opponent-disconnected",
@@ -67,6 +85,21 @@ public class NotificationService {
         messagingTemplate.convertAndSend(
             "/topic/game/" + gameId + "/opponent-disconnected",
             OpponentConnectionEvent.reconnected()
+        );
+    }
+
+    public void broadcastStormEvent(UUID gameId, StormEventNotification notification) {
+        messagingTemplate.convertAndSend(
+            "/topic/game/" + gameId + "/storm",
+            notification
+        );
+    }
+
+    public void notifyAbilityResult(UUID userId, UUID gameId, AbilityResultResponse result) {
+        messagingTemplate.convertAndSendToUser(
+            userId.toString(),
+            "/queue/game/ability-result",
+            result
         );
     }
 }

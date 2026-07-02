@@ -3,6 +3,7 @@ package com.softexpert.batalhanaval_api.controller;
 import com.softexpert.batalhanaval_api.domain.Game;
 import com.softexpert.batalhanaval_api.domain.ShipType;
 import com.softexpert.batalhanaval_api.domain.User;
+import com.softexpert.batalhanaval_api.dto.request.CreateGameRequest;
 import com.softexpert.batalhanaval_api.dto.request.PlaceShipsRequest;
 import com.softexpert.batalhanaval_api.dto.response.FleetConfigResponse;
 import com.softexpert.batalhanaval_api.dto.response.GameHistoryEntry;
@@ -10,6 +11,7 @@ import com.softexpert.batalhanaval_api.dto.response.GameResponse;
 import com.softexpert.batalhanaval_api.dto.response.PageResponse;
 import com.softexpert.batalhanaval_api.dto.response.PlaceShipsResponse;
 import com.softexpert.batalhanaval_api.dto.response.RematchInvite;
+import com.softexpert.batalhanaval_api.dto.response.RematchResponse;
 import com.softexpert.batalhanaval_api.repository.UserRepository;
 import com.softexpert.batalhanaval_api.service.GameService;
 import com.softexpert.batalhanaval_api.service.NotificationService;
@@ -61,9 +63,12 @@ public class GameController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public GameResponse createOrJoinGame(@AuthenticationPrincipal UserDetails userDetails) {
+    public GameResponse createOrJoinGame(
+        @Valid @RequestBody CreateGameRequest request,
+        @AuthenticationPrincipal UserDetails userDetails
+    ) {
         UUID userId = resolveUserId(userDetails);
-        return gameService.createOrJoinGame(userId);
+        return gameService.createOrJoinGame(userId, request.gameMode());
     }
 
     @GetMapping("/{id}")
@@ -98,19 +103,26 @@ public class GameController {
     }
 
     @PostMapping("/{id}/rematch")
-    @ResponseStatus(HttpStatus.CREATED)
-    public GameResponse requestRematch(@PathVariable UUID id, @AuthenticationPrincipal UserDetails userDetails) {
+    public ResponseEntity<RematchResponse> requestRematch(@PathVariable UUID id, @AuthenticationPrincipal UserDetails userDetails) {
         UUID userId = resolveUserId(userDetails);
         User user = userRepository.findByUsername(userDetails.getUsername()).orElseThrow();
-        GameResponse newGame = gameService.requestRematch(id, userId);
+        RematchResponse response = gameService.requestRematch(id, userId);
 
-        // Notify opponent about rematch invite
         UUID opponentId = gameService.getOpponentId(id, userId);
-        if (opponentId != null) {
-            notificationService.notifyRematchInvite(opponentId, new RematchInvite(newGame.id(), user.getUsername()));
+
+        if (response.status() == RematchResponse.RematchStatus.MATCHED) {
+            // Both requested — notify both players about the new game
+            if (opponentId != null) {
+                notificationService.notifyRematchMatched(id, response.gameId());
+            }
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
         }
 
-        return newGame;
+        // First request — notify opponent that this player wants rematch
+        if (opponentId != null) {
+            notificationService.notifyRematchInvite(opponentId, new RematchInvite(id, user.getUsername()));
+        }
+        return ResponseEntity.ok(response);
     }
 
     private UUID resolveUserId(UserDetails userDetails) {

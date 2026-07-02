@@ -11,8 +11,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 @RequiredArgsConstructor
@@ -23,15 +25,19 @@ public class GameService {
     private final UserRepository userRepository;
     private final ShotRepository shotRepository;
     private final PlacementService placementService;
+    private final AbilityService abilityService;
+
+    // Key: originalGameId, Value: userId que pediu rematch primeiro
+    private final Map<UUID, UUID> pendingRematches = new ConcurrentHashMap<>();
 
     @Transactional
-    public GameResponse createOrJoinGame(UUID userId) {
+    public GameResponse createOrJoinGame(UUID userId, GameMode gameMode) {
         gameRepository.findActiveGameByUserId(userId, List.of(GameStatus.WAITING, GameStatus.PLACING, GameStatus.IN_PROGRESS))
             .ifPresent(g -> { throw new PlayerAlreadyInGameException(); });
 
         User user = userRepository.findById(userId).orElseThrow();
 
-        Optional<Game> waitingGame = gameRepository.findFirstWaitingGameForUpdate(GameStatus.WAITING, userId);
+        Optional<Game> waitingGame = gameRepository.findFirstWaitingGameByModeForUpdate(GameStatus.WAITING, userId, gameMode);
 
         if (waitingGame.isPresent()) {
             Game game = waitingGame.get();
@@ -45,6 +51,7 @@ public class GameService {
         Game game = new Game();
         game.setPlayer1(user);
         game.setStatus(GameStatus.WAITING);
+        game.setGameMode(gameMode);
         game = gameRepository.save(game);
         createBoardForPlayer(game, user);
         return buildGameResponse(game, userId);
@@ -81,6 +88,10 @@ public class GameService {
             User player1 = userRepository.findById(game.getPlayer1().getId()).orElseThrow();
             game.setCurrentTurn(player1);
             gameRepository.save(game);
+
+            if (game.getGameMode() == GameMode.STORM) {
+                abilityService.initializeAbilities(game);
+            }
         }
 
         return new PlaceShipsResponse("Fleet placed successfully", true, game.getStatus());
@@ -120,7 +131,7 @@ public class GameService {
     }
 
     @Transactional
-    public GameResponse requestRematch(UUID originalGameId, UUID userId) {
+    public RematchResponse requestRematch(UUID originalGameId, UUID userId) {
         Game originalGame = gameRepository.findById(originalGameId).orElseThrow(GameNotFoundException::new);
         validateParticipant(originalGame, userId);
 
@@ -133,14 +144,62 @@ public class GameService {
             .ifPresent(g -> { throw new PlayerAlreadyInGameException(); });
 
         User user = userRepository.findById(userId).orElseThrow();
+        GameMode mode = originalGame.getGameMode();
 
-        Game newGame = new Game();
-        newGame.setPlayer1(user);
-        newGame.setStatus(GameStatus.WAITING);
-        newGame = gameRepository.save(newGame);
-        createBoardForPlayer(newGame, user);
+        // Use atomic compute() to eliminate race condition between concurrent rematch requests
+        final UUID[] matchedWith = {null};
 
-        return buildGameResponse(newGame, userId);
+        UUID remaining = pendingRematches.compute(originalGameId, (key, existingRequesterId) -> {
+            if (existingRequesterId == null) {
+                // No pending request — register this player and wait
+                return userId;
+            }
+
+            if (existingRequesterId.equals(userId)) {
+                // Same player clicking again — keep waiting
+                return userId;
+            }
+
+            // Opponent already requested — verify they are still available
+            boolean firstRequesterBusy = gameRepository.findActiveGameByUserId(
+                existingRequesterId, List.of(GameStatus.WAITING, GameStatus.PLACING, GameStatus.IN_PROGRESS)
+            ).isPresent();
+
+            if (firstRequesterBusy) {
+                // First requester moved on — replace with this player
+                return userId;
+            }
+
+            // Match found! Signal via matchedWith and remove entry (return null)
+            matchedWith[0] = existingRequesterId;
+            return null;
+        });
+
+        if (matchedWith[0] != null) {
+            // Both players matched — create new game
+            User firstRequester = userRepository.findById(matchedWith[0]).orElseThrow();
+
+            Game newGame = new Game();
+            newGame.setPlayer1(firstRequester);
+            newGame.setPlayer2(user);
+            newGame.setStatus(GameStatus.PLACING);
+            newGame.setGameMode(mode);
+            newGame = gameRepository.save(newGame);
+            createBoardForPlayer(newGame, firstRequester);
+            createBoardForPlayer(newGame, user);
+
+            return new RematchResponse(RematchResponse.RematchStatus.MATCHED, newGame.getId());
+        }
+
+        return new RematchResponse(RematchResponse.RematchStatus.WAITING, null);
+    }
+
+    public void cancelPendingRematch(UUID originalGameId, UUID userId) {
+        pendingRematches.remove(originalGameId, userId);
+    }
+
+    public Map<UUID, UUID> getPendingRematches() {
+        return pendingRematches;
     }
 
     public UUID getOpponentId(UUID gameId, UUID userId) {
@@ -252,7 +311,7 @@ public class GameService {
         BoardResponse myBoard = buildMyBoard(game, userId);
         OpponentBoardResponse opponentBoard = buildOpponentBoard(game, userId);
 
-        return new GameResponse(game.getId(), game.getStatus(), p1, p2, currentTurnId, winnerId, myBoard, opponentBoard, game.getCreatedAt());
+        return new GameResponse(game.getId(), game.getStatus(), game.getGameMode(), p1, p2, currentTurnId, winnerId, myBoard, opponentBoard, game.getCreatedAt());
     }
 
     private BoardResponse buildMyBoard(Game game, UUID userId) {
