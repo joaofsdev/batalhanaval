@@ -1,6 +1,7 @@
 import axiosClient from './axiosClient';
 
-export const createOrJoinGame = () => axiosClient.post('/api/games');
+export const createOrJoinGame = (gameMode) =>
+  axiosClient.post('/api/games', { gameMode: gameMode || 'CLASSIC' });
 
 export const getGame = (id) => axiosClient.get(`/api/games/${id}`);
 
@@ -25,3 +26,9 @@ export const getRanking = (page = 0, size = 20, period = 'all') =>
 
 export const getGameHistory = (page = 0, size = 10) =>
   axiosClient.get(`/api/games/history?page=${page}&size=${size}`);
+
+export const getAbility = (id) =>
+  axiosClient.get(`/api/games/${id}/ability`);
+
+export const useAbility = (id, payload) =>
+  axiosClient.post(`/api/games/${id}/ability`, payload);

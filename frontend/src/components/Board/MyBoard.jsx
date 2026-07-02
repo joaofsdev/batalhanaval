@@ -3,7 +3,7 @@ import BoardCell from './BoardCell';
 
 const ROWS = ['A','B','C','D','E','F','G','H','I','J'];
 
-const MyBoard = ({ cells, ships }) => {
+const MyBoard = ({ cells, ships, currentShake }) => {
   const cellMap = useMemo(() => {
     const map = new Map();
     (cells || []).forEach((c) => map.set(`${c.row},${c.col}`, c));
@@ -36,7 +36,9 @@ const MyBoard = ({ cells, ships }) => {
 
   return (
     <div className="flex flex-col items-center gap-2">
-      <div className="bg-surface-container border border-outline-variant p-3">
+      <div className={`bg-surface-container border border-outline-variant p-3 transition-transform ${
+        currentShake ? 'animate-current-shake' : ''
+      }`}>
         {/* Cabeçalho de colunas */}
         <div className="flex mb-1 ml-6">
           {Array.from({ length: 10 }, (_, i) => (

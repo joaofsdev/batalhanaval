@@ -12,6 +12,9 @@ import MyBoard from "../components/Board/MyBoard";
 import OpponentBoard from "../components/Board/OpponentBoard";
 import Toast from "../components/shared/Toast";
 import GameOverOverlay from "../components/GameStatus/GameOverOverlay";
+import AbilityPanel from "../components/Storm/AbilityPanel";
+import StormTracker from "../components/Storm/StormTracker";
+import useStormWebSocket from "../hooks/useStormWebSocket";
 import { GAME_STATUS } from "../constants/ships";
 import * as gameApi from "../api/gameApi";
 
@@ -43,6 +46,15 @@ const GamePage = () => {
 
   const { playHit, playMiss, playSunk, muted, toggleMute } = useSoundEffects();
 
+  const isStormMode = game?.gameMode === 'STORM';
+
+  const { stormData, abilityResult, fogActive, blockedRow, currentShake, syncFog } = useStormWebSocket({
+    gameId: isStormMode ? gameId : null,
+    subscribe,
+    connected,
+    setToast,
+  });
+
   useEffect(() => {
     fetchGame();
   }, [fetchGame]);
@@ -68,6 +80,9 @@ const GamePage = () => {
     });
     subscribe(`/topic/game/${gameId}/state`, (payload) => {
       handleStateUpdate(payload);
+      if (payload.fogActive !== undefined) {
+        syncFog(!!payload.fogActive);
+      }
       fetchGame();
     });
     subscribe("/user/queue/game/started", () => fetchGame());
@@ -198,10 +213,18 @@ const GamePage = () => {
               isMyTurn={isMyTurn}
               opponentName={opponent?.username}
             />
+            {isStormMode && (
+              <StormTracker
+                turnsUntilStorm={stormData.turnsUntilStorm}
+                isStormTurn={stormData.isStormTurn}
+                stormEvent={stormData.stormEvent}
+              />
+            )}
             <div className="flex flex-col md:flex-row gap-6 justify-center items-start">
               <MyBoard
                 cells={game.myBoard?.cells}
                 ships={game.myBoard?.ships}
+                currentShake={currentShake}
               />
               <OpponentBoard
                 shotsReceived={game.opponentBoard?.shotsReceived}
@@ -209,8 +232,23 @@ const GamePage = () => {
                 onFire={(row, col) =>
                   publish(`/app/game/${gameId}/fire`, { row, col })
                 }
+                fogActive={fogActive}
+                blockedRow={blockedRow}
               />
             </div>
+            {isStormMode && (
+              <div className="flex justify-center">
+                <AbilityPanel
+                  gameId={gameId}
+                  isMyTurn={isMyTurn}
+                  isStormTurn={stormData.isStormTurn}
+                  abilityResult={abilityResult}
+                  onUseAbility={(payload) =>
+                    gameApi.useAbility(gameId, payload)
+                  }
+                />
+              </div>
+            )}
             <div className="flex justify-center mt-4">
               <button
                 onClick={handleSurrender}

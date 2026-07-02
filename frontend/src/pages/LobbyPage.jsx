@@ -9,6 +9,7 @@ const LobbyPage = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [selectedMode, setSelectedMode] = useState("CLASSIC");
   const [ranking, setRanking] = useState([]);
   const [myPosition, setMyPosition] = useState(null);
   const [rankingPage, setRankingPage] = useState(0);
@@ -48,7 +49,7 @@ const LobbyPage = () => {
     setError("");
     setLoading(true);
     try {
-      const res = await gameApi.createOrJoinGame();
+      const res = await gameApi.createOrJoinGame(selectedMode);
       navigate(`/game/${res.data.id}`);
     } catch (err) {
       const code = err.response?.data?.code;
@@ -278,7 +279,14 @@ const LobbyPage = () => {
             </header>
 
             {/* Card Clássico */}
-            <div className="flex-1 border border-outline-variant p-panel-padding flex flex-col gap-4 hover:border-primary transition-colors hover:bg-primary-container/5">
+            <div
+              onClick={() => setSelectedMode("CLASSIC")}
+              className={`flex-1 border p-panel-padding flex flex-col gap-4 cursor-pointer transition-colors hover:bg-primary-container/5 ${
+                selectedMode === "CLASSIC"
+                  ? "border-primary bg-primary-container/5"
+                  : "border-outline-variant hover:border-primary"
+              }`}
+            >
               <div className="flex items-start gap-4">
                 <div className="w-16 h-16 border border-outline-variant flex items-center justify-center text-primary bg-surface-container-high">
                   <span className="material-symbols-outlined text-3xl">
@@ -295,44 +303,51 @@ const LobbyPage = () => {
                   </p>
                 </div>
               </div>
-              <button
-                onClick={handlePlay}
-                disabled={loading}
-                className="w-full py-3 bg-surface-container-high border border-primary text-primary font-label-caps text-label-caps hover:bg-primary-container hover:text-on-primary-fixed transition-all radar-glow disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                {loading ? "CONECTANDO..." : "INICIAR MISSÃO"}
-              </button>
+              {selectedMode === "CLASSIC" && (
+                <button
+                  onClick={handlePlay}
+                  disabled={loading}
+                  className="w-full py-3 bg-surface-container-high border border-primary text-primary font-label-caps text-label-caps hover:bg-primary-container hover:text-on-primary-fixed transition-all radar-glow disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  {loading ? "CONECTANDO..." : "INICIAR MISSÃO"}
+                </button>
+              )}
             </div>
 
-            {/* Card Especial — DESABILITADO */}
-            <div className="flex-1 border border-outline-variant/40 p-panel-padding flex flex-col gap-4 opacity-50 cursor-not-allowed">
+            {/* Card Especial — TEMPESTADE */}
+            <div
+              onClick={() => setSelectedMode("STORM")}
+              className={`flex-1 border p-panel-padding flex flex-col gap-4 cursor-pointer transition-colors hover:bg-primary-container/5 ${
+                selectedMode === "STORM"
+                  ? "border-primary bg-primary-container/5"
+                  : "border-outline-variant hover:border-primary"
+              }`}
+            >
               <div className="flex items-start gap-4">
-                <div className="w-16 h-16 border border-outline-variant/40 flex items-center justify-center text-on-surface-variant bg-surface-container-high">
+                <div className="w-16 h-16 border border-outline-variant flex items-center justify-center text-primary bg-surface-container-high">
                   <span className="material-symbols-outlined text-3xl">
                     auto_awesome
                   </span>
                 </div>
                 <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="font-headline-md text-headline-md text-on-surface-variant">
-                      ESPECIAL
-                    </h3>
-                    <span className="font-label-caps text-label-caps text-tertiary-container border border-tertiary-container px-2 py-0.5 text-[10px]">
-                      EM BREVE
-                    </span>
-                  </div>
+                  <h3 className="font-headline-md text-headline-md text-on-surface mb-1">
+                    TEMPESTADE
+                  </h3>
                   <p className="font-body-md text-body-md text-on-surface-variant">
-                    Habilidades táticas. Poderes especiais. Condições
-                    climáticas extremas. Para operadores avançados.
+                    Habilidades táticas únicas. Eventos climáticos aleatórios.
+                    Para operadores avançados.
                   </p>
                 </div>
               </div>
-              <button
-                disabled
-                className="w-full py-3 bg-surface-container-low border border-outline-variant/40 text-on-surface-variant font-label-caps text-label-caps cursor-not-allowed"
-              >
-                EM DESENVOLVIMENTO
-              </button>
+              {selectedMode === "STORM" && (
+                <button
+                  onClick={handlePlay}
+                  disabled={loading}
+                  className="w-full py-3 bg-surface-container-high border border-primary text-primary font-label-caps text-label-caps hover:bg-primary-container hover:text-on-primary-fixed transition-all radar-glow disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  {loading ? "CONECTANDO..." : "INICIAR MISSÃO"}
+                </button>
+              )}
             </div>
 
             {error && (
