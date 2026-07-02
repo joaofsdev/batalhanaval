@@ -63,7 +63,7 @@ class GameControllerTest {
     @WithMockUser(username = "player1")
     void createGame_authenticated_shouldReturn201() throws Exception {
         mockUserResolution();
-        GameResponse response = new GameResponse(gameId, GameStatus.WAITING,
+        GameResponse response = new GameResponse(gameId, GameStatus.WAITING, GameMode.CLASSIC,
             new PlayerSummary(userId, "player1"), null, null, null, null, new OpponentBoardResponse(List.of()), Instant.now());
         when(gameService.createOrJoinGame(userId)).thenReturn(response);
 
@@ -87,7 +87,7 @@ class GameControllerTest {
     @WithMockUser(username = "player1")
     void getGameState_shouldReturn200() throws Exception {
         mockUserResolution();
-        GameResponse response = new GameResponse(gameId, GameStatus.IN_PROGRESS,
+        GameResponse response = new GameResponse(gameId, GameStatus.IN_PROGRESS, GameMode.CLASSIC,
             new PlayerSummary(userId, "player1"), new PlayerSummary(UUID.randomUUID(), "player2"),
             userId, null, null, new OpponentBoardResponse(List.of()), Instant.now());
         when(gameService.getGameState(gameId, userId)).thenReturn(response);

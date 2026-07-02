@@ -11,7 +11,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -26,6 +25,9 @@ class ShotServiceTest {
     @Mock private CellRepository cellRepository;
     @Mock private ShipRepository shipRepository;
     @Mock private ShotRepository shotRepository;
+    @Mock private StormService stormService;
+    @Mock private AbilityService abilityService;
+    @Mock private VictoryService victoryService;
 
     @InjectMocks private ShotService shotService;
 
@@ -61,14 +63,10 @@ class ShotServiceTest {
         cell.setHasShip(false);
         cell.setHit(false);
 
-        Ship aliveShip = new Ship();
-        aliveShip.setShipType(ShipType.CARRIER);
-        aliveShip.setHits(0);
-
         when(gameRepository.findById(gameId)).thenReturn(Optional.of(game));
         when(boardRepository.findByGameIdAndOwnerId(gameId, defender.getId())).thenReturn(Optional.of(targetBoard));
         when(cellRepository.findByBoardIdAndRowAndCol(targetBoard.getId(), 3, 7)).thenReturn(Optional.of(cell));
-        when(shipRepository.findAllByBoardId(targetBoard.getId())).thenReturn(List.of(aliveShip));
+        when(victoryService.checkVictoryCondition(game, attacker.getId(), targetBoard)).thenReturn(false);
 
         ShotResultResponse result = shotService.processShot(gameId, attacker.getId(), 3, 7);
 
@@ -91,7 +89,7 @@ class ShotServiceTest {
         when(gameRepository.findById(gameId)).thenReturn(Optional.of(game));
         when(boardRepository.findByGameIdAndOwnerId(gameId, defender.getId())).thenReturn(Optional.of(targetBoard));
         when(cellRepository.findByBoardIdAndRowAndCol(targetBoard.getId(), 2, 3)).thenReturn(Optional.of(cell));
-        when(shipRepository.findAllByBoardId(targetBoard.getId())).thenReturn(List.of(ship));
+        when(victoryService.checkVictoryCondition(game, attacker.getId(), targetBoard)).thenReturn(false);
 
         ShotResultResponse result = shotService.processShot(gameId, attacker.getId(), 2, 3);
 
@@ -110,15 +108,10 @@ class ShotServiceTest {
         cell.setHit(false);
         cell.setShip(ship);
 
-        // Other ship still alive
-        Ship otherShip = new Ship();
-        otherShip.setShipType(ShipType.CARRIER);
-        otherShip.setHits(0);
-
         when(gameRepository.findById(gameId)).thenReturn(Optional.of(game));
         when(boardRepository.findByGameIdAndOwnerId(gameId, defender.getId())).thenReturn(Optional.of(targetBoard));
         when(cellRepository.findByBoardIdAndRowAndCol(targetBoard.getId(), 5, 5)).thenReturn(Optional.of(cell));
-        when(shipRepository.findAllByBoardId(targetBoard.getId())).thenReturn(List.of(ship, otherShip));
+        when(victoryService.checkVictoryCondition(game, attacker.getId(), targetBoard)).thenReturn(false);
 
         ShotResultResponse result = shotService.processShot(gameId, attacker.getId(), 5, 5);
 
@@ -140,13 +133,12 @@ class ShotServiceTest {
         when(gameRepository.findById(gameId)).thenReturn(Optional.of(game));
         when(boardRepository.findByGameIdAndOwnerId(gameId, defender.getId())).thenReturn(Optional.of(targetBoard));
         when(cellRepository.findByBoardIdAndRowAndCol(targetBoard.getId(), 0, 0)).thenReturn(Optional.of(cell));
-        when(shipRepository.findAllByBoardId(targetBoard.getId())).thenReturn(List.of(ship));
+        when(victoryService.checkVictoryCondition(game, attacker.getId(), targetBoard)).thenReturn(true);
 
         ShotResultResponse result = shotService.processShot(gameId, attacker.getId(), 0, 0);
 
         assertThat(result.result()).isEqualTo(ShotResult.SUNK);
-        assertThat(game.getStatus()).isEqualTo(GameStatus.FINISHED);
-        assertThat(game.getWinner()).isEqualTo(attacker);
+        verify(victoryService).checkVictoryCondition(game, attacker.getId(), targetBoard);
     }
 
     @Test
@@ -186,14 +178,10 @@ class ShotServiceTest {
         cell.setHasShip(false);
         cell.setHit(false);
 
-        Ship aliveShip = new Ship();
-        aliveShip.setShipType(ShipType.CARRIER);
-        aliveShip.setHits(0);
-
         when(gameRepository.findById(gameId)).thenReturn(Optional.of(game));
         when(boardRepository.findByGameIdAndOwnerId(gameId, defender.getId())).thenReturn(Optional.of(targetBoard));
         when(cellRepository.findByBoardIdAndRowAndCol(targetBoard.getId(), 1, 1)).thenReturn(Optional.of(cell));
-        when(shipRepository.findAllByBoardId(targetBoard.getId())).thenReturn(List.of(aliveShip));
+        when(victoryService.checkVictoryCondition(game, attacker.getId(), targetBoard)).thenReturn(false);
 
         shotService.processShot(gameId, attacker.getId(), 1, 1);
 
