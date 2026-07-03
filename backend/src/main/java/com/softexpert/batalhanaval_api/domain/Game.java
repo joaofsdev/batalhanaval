@@ -42,6 +42,18 @@ public class Game {
     @Column(nullable = false)
     private GameMode gameMode = GameMode.CLASSIC;
 
+    @Column(unique = true)
+    private String roomToken;
+
+    @Column(nullable = false)
+    private boolean privateRoom = false;
+
+    @Column(nullable = false)
+    private boolean player1Ready = false;
+
+    @Column(nullable = false)
+    private boolean player2Ready = false;
+
     @Column(nullable = false)
     private int currentTurnNumber = 1;
 

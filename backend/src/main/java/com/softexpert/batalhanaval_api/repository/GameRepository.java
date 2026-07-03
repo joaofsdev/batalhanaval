@@ -19,11 +19,11 @@ public interface GameRepository extends JpaRepository<Game, UUID> {
     List<Game> findByStatusAndPlayer1IdNot(@Param("status") GameStatus status, @Param("userId") UUID userId);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("SELECT g FROM Game g WHERE g.status = :status AND g.player1.id <> :userId ORDER BY g.createdAt ASC LIMIT 1")
+    @Query("SELECT g FROM Game g WHERE g.status = :status AND g.player1.id <> :userId AND g.privateRoom = false ORDER BY g.createdAt ASC LIMIT 1")
     Optional<Game> findFirstWaitingGameForUpdate(@Param("status") GameStatus status, @Param("userId") UUID userId);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("SELECT g FROM Game g WHERE g.status = :status AND g.player1.id <> :userId AND g.gameMode = :gameMode ORDER BY g.createdAt ASC LIMIT 1")
+    @Query("SELECT g FROM Game g WHERE g.status = :status AND g.player1.id <> :userId AND g.gameMode = :gameMode AND g.privateRoom = false ORDER BY g.createdAt ASC LIMIT 1")
     Optional<Game> findFirstWaitingGameByModeForUpdate(@Param("status") GameStatus status, @Param("userId") UUID userId, @Param("gameMode") GameMode gameMode);
 
     @Query("SELECT g FROM Game g WHERE (g.player1.id = :userId OR g.player2.id = :userId) AND g.status IN :statuses")
@@ -64,4 +64,6 @@ public interface GameRepository extends JpaRepository<Game, UUID> {
 
     @Query("SELECT g FROM Game g WHERE (g.player1.id = :userId OR g.player2.id = :userId) AND g.status = 'FINISHED' ORDER BY g.updatedAt DESC")
     org.springframework.data.domain.Page<Game> findFinishedGamesByUserId(@Param("userId") UUID userId, org.springframework.data.domain.Pageable pageable);
+
+    Optional<Game> findByRoomToken(String roomToken);
 }

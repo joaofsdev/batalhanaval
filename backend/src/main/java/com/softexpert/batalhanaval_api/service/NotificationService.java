@@ -102,4 +102,19 @@ public class NotificationService {
             result
         );
     }
+
+    public void notifyRoomUpdate(UUID gameId, Object roomResponse) {
+        messagingTemplate.convertAndSend(
+            "/topic/room/" + gameId,
+            roomResponse
+        );
+    }
+
+    public void notifyRoomCancelled(UUID gameId) {
+        Object payload = java.util.Map.of("status", "CANCELLED");
+        messagingTemplate.convertAndSend(
+            "/topic/room/" + gameId,
+            payload
+        );
+    }
 }
