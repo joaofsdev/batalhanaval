@@ -304,13 +304,21 @@ const LobbyPage = () => {
                 </div>
               </div>
               {selectedMode === "CLASSIC" && (
-                <button
-                  onClick={handlePlay}
-                  disabled={loading}
-                  className="w-full py-3 bg-surface-container-high border border-primary text-primary font-label-caps text-label-caps hover:bg-primary-container hover:text-on-primary-fixed transition-all radar-glow disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  {loading ? "CONECTANDO..." : "INICIAR MISSÃO"}
-                </button>
+                <div className="flex flex-col gap-2">
+                  <button
+                    onClick={handlePlay}
+                    disabled={loading}
+                    className="w-full py-3 border border-primary text-primary font-label-caps text-label-caps transition-all duration-200 hover:bg-primary hover:text-on-primary hover:scale-[1.02] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:bg-transparent disabled:hover:text-primary"
+                  >
+                    {loading ? "CONECTANDO..." : "INICIAR MISSÃO"}
+                  </button>
+                  <button
+                    onClick={() => navigate("/room?mode=CLASSIC")}
+                    className="w-full py-3 border border-primary text-primary font-label-caps text-label-caps transition-all duration-200 hover:bg-primary hover:text-on-primary hover:scale-[1.02]"
+                  >
+                    SALA DE GUERRA
+                  </button>
+                </div>
               )}
             </div>
 
@@ -340,13 +348,21 @@ const LobbyPage = () => {
                 </div>
               </div>
               {selectedMode === "STORM" && (
-                <button
-                  onClick={handlePlay}
-                  disabled={loading}
-                  className="w-full py-3 bg-surface-container-high border border-primary text-primary font-label-caps text-label-caps hover:bg-primary-container hover:text-on-primary-fixed transition-all radar-glow disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  {loading ? "CONECTANDO..." : "INICIAR MISSÃO"}
-                </button>
+                <div className="flex flex-col gap-2">
+                  <button
+                    onClick={handlePlay}
+                    disabled={loading}
+                    className="w-full py-3 border border-primary text-primary font-label-caps text-label-caps transition-all duration-200 hover:bg-primary hover:text-on-primary hover:scale-[1.02] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:bg-transparent disabled:hover:text-primary"
+                  >
+                    {loading ? "CONECTANDO..." : "INICIAR MISSÃO"}
+                  </button>
+                  <button
+                    onClick={() => navigate("/room?mode=STORM")}
+                    className="w-full py-3 border border-primary text-primary font-label-caps text-label-caps transition-all duration-200 hover:bg-primary hover:text-on-primary hover:scale-[1.02]"
+                  >
+                    SALA DE GUERRA
+                  </button>
+                </div>
               )}
             </div>
 

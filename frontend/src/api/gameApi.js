@@ -32,3 +32,19 @@ export const getAbility = (id) =>
 
 export const useAbility = (id, payload) =>
   axiosClient.post(`/api/games/${id}/ability`, payload);
+
+// Room (private match) API
+export const createRoom = (gameMode) =>
+  axiosClient.post('/api/rooms', { gameMode });
+
+export const joinRoom = (token) =>
+  axiosClient.post('/api/rooms/join', { token });
+
+export const confirmReady = (id) =>
+  axiosClient.post(`/api/rooms/${id}/ready`);
+
+export const getRoomState = (id) =>
+  axiosClient.get(`/api/rooms/${id}`);
+
+export const cancelRoom = (id) =>
+  axiosClient.delete(`/api/rooms/${id}`);
