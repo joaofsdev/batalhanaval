@@ -44,7 +44,7 @@ class GameFlowIntegrationTest {
         MvcResult result1 = mockMvc.perform(post("/api/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
-                    {"username":"player1_%d","email":"p1_%d@test.com","password":"password123"}
+                    {"username":"player1_%d","email":"p1_%d@test.com","password":"pass@123"}
                     """.formatted(System.nanoTime(), System.nanoTime())))
             .andExpect(status().isCreated())
             .andReturn();
@@ -57,7 +57,7 @@ class GameFlowIntegrationTest {
         MvcResult result2 = mockMvc.perform(post("/api/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
-                    {"username":"player2_%d","email":"p2_%d@test.com","password":"password123"}
+                    {"username":"player2_%d","email":"p2_%d@test.com","password":"pass@123"}
                     """.formatted(System.nanoTime(), System.nanoTime())))
             .andExpect(status().isCreated())
             .andReturn();

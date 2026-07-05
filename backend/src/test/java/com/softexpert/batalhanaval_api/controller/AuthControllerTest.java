@@ -40,7 +40,7 @@ class AuthControllerTest {
 
         mockMvc.perform(post("/api/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"username\":\"jogador1\",\"email\":\"j1@email.com\",\"password\":\"senha1234\"}"))
+                .content("{\"username\":\"jogador1\",\"email\":\"j1@email.com\",\"password\":\"senha@123\"}"))
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.username").value("jogador1"))
             .andExpect(jsonPath("$.token").value("token123"));
@@ -52,7 +52,7 @@ class AuthControllerTest {
 
         mockMvc.perform(post("/api/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"username\":\"jogador1\",\"email\":\"j1@email.com\",\"password\":\"senha1234\"}"))
+                .content("{\"username\":\"jogador1\",\"email\":\"j1@email.com\",\"password\":\"senha@123\"}"))
             .andExpect(status().isConflict())
             .andExpect(jsonPath("$.code").value("USERNAME_TAKEN"));
     }
