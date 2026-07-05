@@ -23,8 +23,18 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationException(MethodArgumentNotValidException ex) {
         String message = ex.getBindingResult().getFieldErrors().stream()
-            .map(error -> error.getField() + ": " + error.getDefaultMessage())
-            .collect(Collectors.joining(", "));
+            .map(error -> {
+                String field = error.getField();
+                String defaultMsg = error.getDefaultMessage();
+                return switch (field) {
+                    case "email" -> "Email inválido";
+                    case "password" -> defaultMsg != null && !defaultMsg.isBlank() ? defaultMsg : "Senha inválida";
+                    case "username" -> "Usuário deve ter entre 3 e 30 caracteres (apenas letras, números e _)";
+                    default -> field + ": " + defaultMsg;
+                };
+            })
+            .distinct()
+            .collect(Collectors.joining("; "));
         return ResponseEntity
             .badRequest()
             .body(ErrorResponse.of("VALIDATION_ERROR", message));

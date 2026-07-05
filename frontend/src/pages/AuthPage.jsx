@@ -16,6 +16,23 @@ const AuthPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
+    if (mode === 'register') {
+      const emailRegex = /^[\w.+-]+@[\w-]+\.[a-zA-Z]{2,}$/;
+      if (!emailRegex.test(form.email)) {
+        setError('Email inválido. Use um email real (ex: usuario@dominio.com)');
+        return;
+      }
+      if (form.password.length < 6) {
+        setError('A senha deve ter no mínimo 6 caracteres');
+        return;
+      }
+      if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?]/.test(form.password)) {
+        setError('A senha deve conter pelo menos 1 símbolo (ex: @, !, #, $)');
+        return;
+      }
+    }
+
     setLoading(true);
 
     try {
