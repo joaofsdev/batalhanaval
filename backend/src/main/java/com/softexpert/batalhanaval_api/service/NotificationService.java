@@ -8,6 +8,7 @@ import com.softexpert.batalhanaval_api.dto.response.OpponentShotNotification;
 import com.softexpert.batalhanaval_api.dto.response.RematchInvite;
 import com.softexpert.batalhanaval_api.dto.response.ShotResultResponse;
 import com.softexpert.batalhanaval_api.dto.response.StormEventNotification;
+import com.softexpert.batalhanaval_api.repository.StormEventRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,7 @@ import java.util.UUID;
 public class NotificationService {
 
     private final SimpMessagingTemplate messagingTemplate;
+    private final StormEventRepository stormEventRepository;
 
     public void notifyShotResult(UUID attackerId, ShotResultResponse result) {
         messagingTemplate.convertAndSendToUser(
@@ -44,7 +46,7 @@ public class NotificationService {
         UUID winnerId = game.getWinner() != null ? game.getWinner().getId() : null;
 
         int turnsUntilStorm = Math.max(0, game.getNextStormTurn() - game.getCurrentTurnNumber());
-        boolean isStormTurn = game.getCurrentTurnNumber() == game.getNextStormTurn();
+        boolean isStormTurn = stormEventRepository.findByGameIdAndResolvedFalse(game.getId()).isPresent();
 
         GameStateNotification notification = new GameStateNotification(
             game.getStatus(), currentTurnId, winnerId,

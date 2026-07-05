@@ -70,6 +70,13 @@ const useStormWebSocket = ({ gameId, subscribe, connected, setToast }) => {
   const clearFog = useCallback(() => setFogActive(false), []);
   const clearBlockedRow = useCallback(() => setBlockedRow(null), []);
   const syncFog = useCallback((active) => setFogActive(active), []);
+  const syncStormState = useCallback((payload) => {
+    setStormData((prev) => ({
+      ...prev,
+      isStormTurn: !!payload.isStormTurn,
+      turnsUntilStorm: payload.turnsUntilStorm ?? prev.turnsUntilStorm,
+    }));
+  }, []);
 
   return {
     stormData,
@@ -80,6 +87,7 @@ const useStormWebSocket = ({ gameId, subscribe, connected, setToast }) => {
     clearFog,
     clearBlockedRow,
     syncFog,
+    syncStormState,
   };
 };
 

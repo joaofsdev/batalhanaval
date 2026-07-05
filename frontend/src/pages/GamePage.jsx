@@ -48,7 +48,7 @@ const GamePage = () => {
 
   const isStormMode = game?.gameMode === 'STORM';
 
-  const { stormData, abilityResult, fogActive, blockedRow, currentShake, syncFog } = useStormWebSocket({
+  const { stormData, abilityResult, fogActive, blockedRow, currentShake, syncFog, syncStormState } = useStormWebSocket({
     gameId: isStormMode ? gameId : null,
     subscribe,
     connected,
@@ -82,6 +82,9 @@ const GamePage = () => {
       handleStateUpdate(payload);
       if (payload.fogActive !== undefined) {
         syncFog(!!payload.fogActive);
+      }
+      if (payload.isStormTurn !== undefined) {
+        syncStormState(payload);
       }
       fetchGame();
     });
