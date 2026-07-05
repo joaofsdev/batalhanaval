@@ -127,11 +127,11 @@ public class StormService {
     public void clearExpiredEffects(Game game) {
         int currentTurn = game.getCurrentTurnNumber();
 
-        // Clear fog if it expired (lasted 2 turns from the event turn)
+        // Clear fog if it expired (lasted 4 turns from the event turn)
         if (game.isFogActive()) {
             stormEventRepository.findLastResolvedByType(game.getId(), StormEventType.FOG)
                 .ifPresent(event -> {
-                    if (currentTurn > event.getTurnNumber() + 1) {
+                    if (currentTurn > event.getTurnNumber() + 3) {
                         game.setFogActive(false);
                     }
                 });
@@ -255,7 +255,7 @@ public class StormService {
 
     private String buildStormMessage(StormEvent event, Boolean shipMoved) {
         return switch (event.getEventType()) {
-            case FOG -> "Nevoeiro! Resultados dos tiros ficam ocultos por 2 turnos.";
+            case FOG -> "Nevoeiro! Resultados dos tiros ficam ocultos por 4 turnos.";
             case TIDE -> "Maré Alta! Linha " + event.getAffectedAxis().replace("ROW_", "") + " está inacessível por 2 turnos.";
             case CURRENT -> Boolean.TRUE.equals(shipMoved)
                 ? "Corrente Marítima! Navios se deslocaram 1 célula."

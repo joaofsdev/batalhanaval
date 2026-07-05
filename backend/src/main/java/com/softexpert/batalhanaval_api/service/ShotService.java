@@ -55,25 +55,11 @@ public class ShotService {
             throw new CellAlreadyAttackedException();
         }
 
-        // Also check if a shot was registered but cell not marked (e.g., shield blocked)
-        if (shotRepository.existsByTargetBoardIdAndRowAndCol(targetBoard.getId(), row, col)) {
-            throw new CellAlreadyAttackedException();
-        }
-
         // Storm mode: check if defender has active shield
         if (game.getGameMode() == GameMode.STORM && abilityService.isShieldActiveAndNotConsumed(gameId, defenderId)) {
             // Shield absorbs the shot entirely — cell is NOT marked as hit
+            // No Shot record is saved so the cell remains attackable in future turns
             abilityService.consumeShield(gameId, defenderId);
-
-            Shot shot = new Shot();
-            shot.setGame(game);
-            shot.setAttacker(game.getCurrentTurn());
-            shot.setTargetBoard(targetBoard);
-            shot.setRow(row);
-            shot.setCol(col);
-            shot.setResult(ShotResult.MISS); // Shield turns any shot into a miss
-            shot.setSunkShipType(null);
-            shotRepository.save(shot);
 
             advanceTurn(game, attackerId);
             gameRepository.save(game);
