@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import BoardCell from './BoardCell';
 
 const ROWS = ['A','B','C','D','E','F','G','H','I','J'];
@@ -7,14 +8,45 @@ const OpponentBoard = ({ shotsReceived, isMyTurn, onFire, fogActive = false, blo
     (shotsReceived || []).map((s) => [`${s.row},${s.col}`, s.result])
   );
 
+  // Build set of all cells that belong to a sunk ship via linear flood-fill from SUNK cells
+  const sunkCells = useMemo(() => {
+    const shots = shotsReceived || [];
+    const resultMap = new Map(shots.map((s) => [`${s.row},${s.col}`, s.result]));
+    const sunk = new Set();
+    const directions = [[0, 1], [0, -1], [1, 0], [-1, 0]];
+
+    shots.filter((s) => s.result === 'SUNK').forEach((s) => {
+      sunk.add(`${s.row},${s.col}`);
+      // Flood-fill in each direction collecting connected HIT cells
+      for (const [dr, dc] of directions) {
+        let r = s.row + dr;
+        let c = s.col + dc;
+        while (r >= 0 && r < 10 && c >= 0 && c < 10) {
+          const key = `${r},${c}`;
+          const res = resultMap.get(key);
+          if (res === 'HIT' || res === 'SUNK') {
+            sunk.add(key);
+            r += dr;
+            c += dc;
+          } else {
+            break;
+          }
+        }
+      }
+    });
+
+    return sunk;
+  }, [shotsReceived]);
+
   const getCellState = (row, col) => {
-    const result = shotMap.get(`${row},${col}`);
+    const key = `${row},${col}`;
+    const result = shotMap.get(key);
     if (!result) return 'empty';
     // HIDDEN result from backend (shot during fog) — always show as hidden
     if (result === 'HIDDEN') return 'fog-hidden';
     // Under active fog, mask all results as unknown
     if (fogActive) return 'fog-hidden';
-    if (result === 'SUNK') return 'sunk';
+    if (sunkCells.has(key)) return 'sunk';
     if (result === 'HIT') return 'hit';
     if (result === 'MISS') return 'miss';
     return 'empty';
