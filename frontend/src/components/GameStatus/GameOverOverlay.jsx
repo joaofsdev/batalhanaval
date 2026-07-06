@@ -15,8 +15,8 @@ const GameOverOverlay = ({ isWinner, isCancelled, stats, gameId, rematchInvite }
     setRematchLoading(true);
     try {
       const res = await gameApi.requestRematch(gameId);
-      if (res.data.status === 'MATCHED' && res.data.game_id) {
-        navigate(`/game/${res.data.game_id}`);
+      if (res.data.status === 'MATCHED' && res.data.gameId) {
+        navigate(`/game/${res.data.gameId}`);
       } else {
         // Waiting for opponent — stay on current screen
         setRematchSent(true);
@@ -27,11 +27,11 @@ const GameOverOverlay = ({ isWinner, isCancelled, stats, gameId, rematchInvite }
   };
 
   const handleAcceptRematch = async () => {
-    if (rematchInvite?.game_id) {
+    if (rematchInvite?.gameId) {
       try {
-        const res = await gameApi.requestRematch(rematchInvite.game_id);
-        if (res.data.status === 'MATCHED' && res.data.game_id) {
-          navigate(`/game/${res.data.game_id}`);
+        const res = await gameApi.requestRematch(rematchInvite.gameId);
+        if (res.data.status === 'MATCHED' && res.data.gameId) {
+          navigate(`/game/${res.data.gameId}`);
         }
       } catch (err) {
         // Fallback: navigate to lobby
@@ -98,7 +98,7 @@ const GameOverOverlay = ({ isWinner, isCancelled, stats, gameId, rematchInvite }
         {!isCancelled && rematchInvite && (
           <div className="w-full p-4 border border-tertiary-container bg-tertiary-container/10 flex items-center justify-between">
             <span className="font-mono-data text-mono-data text-tertiary">
-              🔄 {rematchInvite.opponent_username?.toUpperCase()} QUER REVANCHE!
+              🔄 {rematchInvite.opponentUsername?.toUpperCase()} QUER REVANCHE!
             </span>
             <button
               onClick={handleAcceptRematch}

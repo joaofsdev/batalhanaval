@@ -14,6 +14,8 @@ import com.softexpert.batalhanaval_api.service.NotificationService;
 import com.softexpert.batalhanaval_api.service.ShotService;
 import com.softexpert.batalhanaval_api.service.StormService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -22,6 +24,7 @@ import org.springframework.stereotype.Controller;
 import java.security.Principal;
 import java.util.UUID;
 
+@Slf4j
 @Controller
 @RequiredArgsConstructor
 public class GameWebSocketHandler {
@@ -63,6 +66,14 @@ public class GameWebSocketHandler {
                 attackerId.toString(),
                 "/queue/errors",
                 ErrorResponse.of(ex.getErrorCode(), ex.getMessage())
+            );
+        } catch (DataIntegrityViolationException ex) {
+            log.warn("Duplicate shot ignored: game={}, attacker={}, row={}, col={}",
+                gameId, attackerId, request.row(), request.col());
+            messagingTemplate.convertAndSendToUser(
+                attackerId.toString(),
+                "/queue/errors",
+                ErrorResponse.of("CELL_ALREADY_ATTACKED", "Você já atacou esta posição.")
             );
         }
     }
