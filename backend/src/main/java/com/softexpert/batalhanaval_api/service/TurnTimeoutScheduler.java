@@ -74,20 +74,18 @@ public class TurnTimeoutScheduler {
     }
 
     /**
-     * Cancels games stuck in WAITING or PLACING status for more than 30 seconds
-     * without any activity. This prevents players from being trapped in a game
-     * that will never start (e.g., opponent never joined or never placed ships).
+     * Cancels games stuck in PLACING status for more than 30 seconds when one player
+     * has already placed their fleet but the opponent remains inactive.
+     * This prevents players from being trapped waiting for an AFK opponent.
      */
     @Scheduled(fixedDelay = 10000)
     @Transactional
     public void checkPlacementTimeouts() {
         Instant cutoff = Instant.now().minusSeconds(PLACEMENT_TIMEOUT_SECONDS);
 
-        List<Game> staleGames = gameRepository.findStaleGamesByStatuses(
-            List.of(GameStatus.WAITING, GameStatus.PLACING), cutoff);
+        List<Game> staleGames = gameRepository.findStalePlacingGames(cutoff);
 
         for (Game game : staleGames) {
-            GameStatus previousStatus = game.getStatus();
             game.setStatus(GameStatus.FINISHED);
             game.setWinner(null);
             game.setCurrentTurn(null);
@@ -95,8 +93,8 @@ public class TurnTimeoutScheduler {
 
             notificationService.broadcastGameState(game);
 
-            log.info("Placement timeout: game={} cancelled (was {} with no activity for {}s)",
-                game.getId(), previousStatus, PLACEMENT_TIMEOUT_SECONDS);
+            log.info("Placement timeout: game={} cancelled (opponent inactive for {}s)",
+                game.getId(), PLACEMENT_TIMEOUT_SECONDS);
         }
     }
 }
