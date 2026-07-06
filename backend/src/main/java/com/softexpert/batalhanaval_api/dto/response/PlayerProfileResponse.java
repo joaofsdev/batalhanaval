@@ -13,5 +13,9 @@ public record PlayerProfileResponse(
     double winRate,
     int rank,
     Instant memberSince,
+    long totalShots,
+    long shotsHit,
+    long shipsSunk,
+    double accuracy,
     List<GameHistoryEntry> recentGames
 ) {}

@@ -1,10 +1,12 @@
 package com.softexpert.batalhanaval_api.service;
 
 import com.softexpert.batalhanaval_api.domain.Game;
+import com.softexpert.batalhanaval_api.domain.ShotResult;
 import com.softexpert.batalhanaval_api.domain.User;
 import com.softexpert.batalhanaval_api.dto.response.GameHistoryEntry;
 import com.softexpert.batalhanaval_api.dto.response.PlayerProfileResponse;
 import com.softexpert.batalhanaval_api.repository.GameRepository;
+import com.softexpert.batalhanaval_api.repository.ShotRepository;
 import com.softexpert.batalhanaval_api.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -23,6 +25,7 @@ public class ProfileService {
 
     private final UserRepository userRepository;
     private final GameRepository gameRepository;
+    private final ShotRepository shotRepository;
     private final RankingService rankingService;
 
     @Transactional(readOnly = true)
@@ -55,6 +58,12 @@ public class ProfileService {
         long losses = totalGames - wins;
         double winRate = totalGames > 0 ? Math.round((double) wins / totalGames * 1000.0) / 10.0 : 0.0;
 
+        // Combat stats
+        long totalShots = shotRepository.countByAttackerId(userId);
+        long shotsHit = shotRepository.countByAttackerIdAndResultIn(userId, List.of(ShotResult.HIT, ShotResult.SUNK));
+        long shipsSunk = shotRepository.countByAttackerIdAndResult(userId, ShotResult.SUNK);
+        double accuracy = totalShots > 0 ? Math.round((double) shotsHit / totalShots * 1000.0) / 10.0 : 0.0;
+
         // Recent games (last 5)
         List<Game> recentGames = gameRepository.findFinishedGamesByUserId(userId, PageRequest.of(0, 5)).getContent();
         List<GameHistoryEntry> recentEntries = recentGames.stream().map(game -> {
@@ -78,6 +87,10 @@ public class ProfileService {
             winRate,
             rank,
             user.getCreatedAt(),
+            totalShots,
+            shotsHit,
+            shipsSunk,
+            accuracy,
             recentEntries
         );
     }
