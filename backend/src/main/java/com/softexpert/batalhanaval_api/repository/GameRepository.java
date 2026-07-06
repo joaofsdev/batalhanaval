@@ -62,6 +62,9 @@ public interface GameRepository extends JpaRepository<Game, UUID> {
     @Query("SELECT g FROM Game g WHERE g.status = :status AND g.currentTurn IS NOT NULL AND g.updatedAt < :cutoff")
     List<Game> findGamesWithExpiredTurn(@Param("status") GameStatus status, @Param("cutoff") java.time.Instant cutoff);
 
+    @Query("SELECT g FROM Game g WHERE g.status IN :statuses AND g.updatedAt < :cutoff")
+    List<Game> findStaleGamesByStatuses(@Param("statuses") List<GameStatus> statuses, @Param("cutoff") java.time.Instant cutoff);
+
     @Query("SELECT g FROM Game g WHERE (g.player1.id = :userId OR g.player2.id = :userId) AND g.status = 'FINISHED' ORDER BY g.updatedAt DESC")
     org.springframework.data.domain.Page<Game> findFinishedGamesByUserId(@Param("userId") UUID userId, org.springframework.data.domain.Pageable pageable);
 

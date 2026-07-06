@@ -270,9 +270,11 @@ const GamePage = () => {
         const totalShots = myShots.length;
         const totalHits = myShots.filter((s) => s.result === 'HIT' || s.result === 'SUNK').length;
         const accuracy = totalShots > 0 ? Math.round((totalHits / totalShots) * 100) : 0;
+        const isCancelled = !game.winnerId;
         return (
           <GameOverOverlay
             isWinner={game.winnerId === user.id}
+            isCancelled={isCancelled}
             stats={{ shots: totalShots, hits: totalHits, accuracy }}
             gameId={gameId}
             rematchInvite={rematchInvite}

@@ -20,6 +20,7 @@ import java.util.List;
 public class TurnTimeoutScheduler {
 
     private static final long TURN_TIMEOUT_SECONDS = 60;
+    private static final long PLACEMENT_TIMEOUT_SECONDS = 30;
 
     @Value("${game.afk.max-consecutive-skips:3}")
     private int maxConsecutiveSkips;
@@ -69,6 +70,33 @@ public class TurnTimeoutScheduler {
                 log.info("Turn timeout: game={}, skipped player={}, consecutive skips={}",
                     game.getId(), currentPlayer.getUsername(), game.getConsecutiveSkips());
             }
+        }
+    }
+
+    /**
+     * Cancels games stuck in WAITING or PLACING status for more than 30 seconds
+     * without any activity. This prevents players from being trapped in a game
+     * that will never start (e.g., opponent never joined or never placed ships).
+     */
+    @Scheduled(fixedDelay = 10000)
+    @Transactional
+    public void checkPlacementTimeouts() {
+        Instant cutoff = Instant.now().minusSeconds(PLACEMENT_TIMEOUT_SECONDS);
+
+        List<Game> staleGames = gameRepository.findStaleGamesByStatuses(
+            List.of(GameStatus.WAITING, GameStatus.PLACING), cutoff);
+
+        for (Game game : staleGames) {
+            GameStatus previousStatus = game.getStatus();
+            game.setStatus(GameStatus.FINISHED);
+            game.setWinner(null);
+            game.setCurrentTurn(null);
+            gameRepository.save(game);
+
+            notificationService.broadcastGameState(game);
+
+            log.info("Placement timeout: game={} cancelled (was {} with no activity for {}s)",
+                game.getId(), previousStatus, PLACEMENT_TIMEOUT_SECONDS);
         }
     }
 }

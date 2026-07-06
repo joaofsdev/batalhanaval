@@ -87,12 +87,14 @@ public class GameService {
             game.setStatus(GameStatus.IN_PROGRESS);
             User player1 = userRepository.findById(game.getPlayer1().getId()).orElseThrow();
             game.setCurrentTurn(player1);
-            gameRepository.save(game);
 
             if (game.getGameMode() == GameMode.STORM) {
                 abilityService.initializeAbilities(game);
             }
         }
+
+        // Always save game to refresh updatedAt (prevents placement timeout while players are active)
+        gameRepository.save(game);
 
         return new PlaceShipsResponse("Fleet placed successfully", true, game.getStatus());
     }
