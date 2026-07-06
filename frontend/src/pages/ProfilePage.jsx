@@ -1,21 +1,24 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import * as userApi from '../api/userApi';
 
 const ProfilePage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     setLoading(true);
-    userApi.getProfile(id)
+    const request = user?.id === id ? userApi.getMyProfile() : userApi.getProfile(id);
+    request
       .then(({ data }) => setProfile(data))
       .catch((err) => setError(err.response?.data?.message || 'Erro ao carregar perfil'))
       .finally(() => setLoading(false));
-  }, [id]);
+  }, [id, user?.id]);
 
   const formatDate = (isoDate) => {
     if (!isoDate) return '--';
@@ -100,6 +103,30 @@ const ProfilePage = () => {
             <div className="bg-surface-container-high p-4 flex items-center justify-center gap-2 border border-outline-variant w-full">
               <span className="font-label-caps text-label-caps text-on-surface-variant">TOTAL DE PARTIDAS:</span>
               <span className="font-mono-data text-mono-data text-primary">{profile.totalGames}</span>
+            </div>
+          </section>
+
+          {/* Combat stats */}
+          <section className="bg-surface-container border border-outline-variant p-panel-padding flex flex-col gap-4">
+            <header className="border-b border-outline-variant pb-2 flex items-center gap-2">
+              <span className="material-symbols-outlined text-primary text-sm">target</span>
+              <h2 className="font-headline-md text-headline-md text-primary tracking-widest">
+                STATS DE COMBATE
+              </h2>
+            </header>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full">
+              {[
+                { label: 'TIROS', value: profile.totalShots ?? 0 },
+                { label: 'ACERTOS', value: profile.shotsHit ?? 0 },
+                { label: 'NAVIOS AFUNDADOS', value: profile.shipsSunk ?? 0 },
+                { label: 'PRECISÃO', value: `${profile.accuracy ?? 0}%` },
+              ].map((stat) => (
+                <div key={stat.label} className="bg-surface-container-high p-4 flex flex-col items-center gap-2 border border-outline-variant">
+                  <span className="font-label-caps text-label-caps text-on-surface-variant">{stat.label}</span>
+                  <span className="font-display-tactical text-headline-md text-primary">{stat.value}</span>
+                </div>
+              ))}
             </div>
           </section>
 
