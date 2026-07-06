@@ -117,6 +117,11 @@ const GamePage = () => {
     subscribe("/user/queue/game/rematch-invite", (payload) => {
       setRematchInvite(payload);
     });
+    subscribe(`/topic/game/${gameId}/rematch`, (payload) => {
+      if (payload.status === 'MATCHED' && payload.gameId) {
+        navigate(`/game/${payload.gameId}`);
+      }
+    });
     subscribe(`/topic/game/${gameId}/opponent-disconnected`, (payload) => {
       if (payload.type === 'DISCONNECTED') {
         setOpponentDisconnected(payload.gracePeriodSeconds);

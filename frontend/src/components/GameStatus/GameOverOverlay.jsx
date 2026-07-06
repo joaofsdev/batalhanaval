@@ -15,23 +15,27 @@ const GameOverOverlay = ({ isWinner, isCancelled, stats, gameId, rematchInvite }
     setRematchLoading(true);
     try {
       const res = await gameApi.requestRematch(gameId);
-      setRematchSent(true);
-      // Navigate to the new game
-      navigate(`/game/${res.data.id}`);
+      if (res.data.status === 'MATCHED' && res.data.game_id) {
+        navigate(`/game/${res.data.game_id}`);
+      } else {
+        // Waiting for opponent — stay on current screen
+        setRematchSent(true);
+      }
     } catch (err) {
       setRematchLoading(false);
     }
   };
 
   const handleAcceptRematch = async () => {
-    if (rematchInvite?.gameId) {
+    if (rematchInvite?.game_id) {
       try {
-        // Join the rematch game via normal matchmaking (will find the WAITING game)
-        const res = await gameApi.createOrJoinGame();
-        navigate(`/game/${res.data.id}`);
+        const res = await gameApi.requestRematch(rematchInvite.game_id);
+        if (res.data.status === 'MATCHED' && res.data.game_id) {
+          navigate(`/game/${res.data.game_id}`);
+        }
       } catch (err) {
-        // Fallback: navigate directly
-        navigate(`/game/${rematchInvite.gameId}`);
+        // Fallback: navigate to lobby
+        navigate('/lobby');
       }
     }
   };
@@ -94,7 +98,7 @@ const GameOverOverlay = ({ isWinner, isCancelled, stats, gameId, rematchInvite }
         {!isCancelled && rematchInvite && (
           <div className="w-full p-4 border border-tertiary-container bg-tertiary-container/10 flex items-center justify-between">
             <span className="font-mono-data text-mono-data text-tertiary">
-              🔄 {rematchInvite.opponentUsername?.toUpperCase()} QUER REVANCHE!
+              🔄 {rematchInvite.opponent_username?.toUpperCase()} QUER REVANCHE!
             </span>
             <button
               onClick={handleAcceptRematch}
