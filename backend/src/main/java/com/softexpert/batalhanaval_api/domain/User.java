@@ -29,12 +29,30 @@ public class User {
     @Column(nullable = false, length = 255)
     private String passwordHash;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private UserRole role = UserRole.PLAYER;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private UserStatus status = UserStatus.ACTIVE;
+
+    @Column
+    private Instant suspendedUntil;
+
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
 
     @PrePersist
     protected void onCreate() {
         this.createdAt = Instant.now();
+    }
+
+    public boolean isActive() {
+        if (status == UserStatus.SUSPENDED && suspendedUntil != null && Instant.now().isAfter(suspendedUntil)) {
+            return true;
+        }
+        return status == UserStatus.ACTIVE;
     }
 
     @Override

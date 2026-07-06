@@ -34,6 +34,7 @@ public class SecurityConfig {
                 .requestMatchers("/ws/**").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                 .requestMatchers("/h2-console/**").permitAll()
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
             )
             .headers(headers -> headers.frameOptions(frame -> frame.disable()))
@@ -42,6 +43,11 @@ public class SecurityConfig {
                     response.setStatus(401);
                     response.setContentType("application/json");
                     response.getWriter().write("{\"code\":\"UNAUTHORIZED\",\"message\":\"Authentication required\"}");
+                })
+                .accessDeniedHandler((request, response, accessDeniedException) -> {
+                    response.setStatus(403);
+                    response.setContentType("application/json");
+                    response.getWriter().write("{\"code\":\"FORBIDDEN\",\"message\":\"Admin access required\"}");
                 })
             )
             .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)

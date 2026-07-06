@@ -4,6 +4,7 @@ import com.softexpert.batalhanaval_api.domain.User;
 import com.softexpert.batalhanaval_api.dto.request.LoginRequest;
 import com.softexpert.batalhanaval_api.dto.request.RegisterRequest;
 import com.softexpert.batalhanaval_api.dto.response.AuthResponse;
+import com.softexpert.batalhanaval_api.exception.AccountDisabledException;
 import com.softexpert.batalhanaval_api.exception.EmailAlreadyTakenException;
 import com.softexpert.batalhanaval_api.exception.InvalidCredentialsException;
 import com.softexpert.batalhanaval_api.exception.UsernameAlreadyTakenException;
@@ -36,7 +37,7 @@ public class AuthService {
         user = userRepository.save(user);
 
         String token = jwtService.generateToken(user.getId(), user.getUsername());
-        return new AuthResponse(user.getId(), user.getUsername(), user.getEmail(), token);
+        return new AuthResponse(user.getId(), user.getUsername(), user.getEmail(), user.getRole(), token);
     }
 
     public AuthResponse login(LoginRequest request) {
@@ -47,7 +48,11 @@ public class AuthService {
             throw new InvalidCredentialsException();
         }
 
+        if (!user.isActive()) {
+            throw new AccountDisabledException();
+        }
+
         String token = jwtService.generateToken(user.getId(), user.getUsername());
-        return new AuthResponse(user.getId(), user.getUsername(), user.getEmail(), token);
+        return new AuthResponse(user.getId(), user.getUsername(), user.getEmail(), user.getRole(), token);
     }
 }
