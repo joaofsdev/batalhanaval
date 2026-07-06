@@ -107,6 +107,15 @@ const LobbyPage = () => {
               <span className="material-symbols-outlined">radar</span>
               VISÃO TATICA
             </div>
+            {user?.role === 'ADMIN' && (
+              <div
+                onClick={() => navigate('/admin')}
+                className="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-secondary-container hover:text-on-secondary-container cursor-pointer transition-colors font-label-caps text-label-caps"
+              >
+                <span className="material-symbols-outlined">admin_panel_settings</span>
+                PAINEL ADMIN
+              </div>
+            )}
           </nav>
 
           {/* Logout */}
