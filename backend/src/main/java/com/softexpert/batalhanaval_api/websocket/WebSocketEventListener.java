@@ -11,6 +11,10 @@ import org.springframework.web.socket.messaging.SessionConnectEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
 import java.security.Principal;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 @Component
@@ -19,12 +23,19 @@ public class WebSocketEventListener {
 
     private final DisconnectionService disconnectionService;
 
+    /** Tracks the number of active WebSocket sessions per user. */
+    private final Map<UUID, AtomicInteger> activeSessionCounts = new ConcurrentHashMap<>();
+
     @EventListener
     public void handleSessionConnect(SessionConnectEvent event) {
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(event.getMessage());
         Principal principal = accessor.getUser();
         if (principal instanceof StompPrincipal stompPrincipal) {
-            disconnectionService.handleReconnect(stompPrincipal.userId());
+            UUID userId = stompPrincipal.userId();
+            activeSessionCounts.computeIfAbsent(userId, k -> new AtomicInteger(0)).incrementAndGet();
+            log.debug("WebSocket session connected for user {}. Active sessions: {}",
+                userId, activeSessionCounts.get(userId).get());
+            disconnectionService.handleReconnect(userId);
         }
     }
 
@@ -33,7 +44,17 @@ public class WebSocketEventListener {
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(event.getMessage());
         Principal principal = accessor.getUser();
         if (principal instanceof StompPrincipal stompPrincipal) {
-            disconnectionService.handleDisconnect(stompPrincipal.userId());
+            UUID userId = stompPrincipal.userId();
+            AtomicInteger count = activeSessionCounts.get(userId);
+            int remaining = (count != null) ? count.decrementAndGet() : 0;
+            log.debug("WebSocket session disconnected for user {}. Active sessions: {}",
+                userId, remaining);
+
+            // Only trigger disconnect logic when no active sessions remain
+            if (remaining <= 0) {
+                activeSessionCounts.remove(userId);
+                disconnectionService.handleDisconnect(userId);
+            }
         }
     }
 }
