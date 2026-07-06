@@ -86,9 +86,10 @@ const ProfilePage = () => {
             </p>
 
             {/* Stats grid */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full mt-4">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 w-full mt-4">
               {[
                 { label: 'RANK', value: `#${profile.rank}` },
+                { label: 'ELO', value: profile.eloRating },
                 { label: 'VITÓRIAS', value: profile.wins },
                 { label: 'DERROTAS', value: profile.losses },
                 { label: 'WIN RATE', value: `${profile.winRate}%` },

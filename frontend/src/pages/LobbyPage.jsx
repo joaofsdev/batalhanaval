@@ -175,8 +175,8 @@ const LobbyPage = () => {
               </div>
             </header>
 
-            <div className="grid grid-cols-5 gap-2 px-2 py-1 border-b border-outline-variant">
-              {["#", "OPERADOR", "V", "P", "WIN%"].map((col) => (
+            <div className="grid grid-cols-6 gap-2 px-2 py-1 border-b border-outline-variant">
+              {["#", "OPERADOR", "ELO", "V", "P", "WIN%"].map((col) => (
                 <span
                   key={col}
                   className="font-label-caps text-label-caps text-on-surface-variant"
@@ -190,9 +190,10 @@ const LobbyPage = () => {
             {rankingLoading ? (
               // Skeleton rows
               Array.from({ length: 5 }, (_, i) => (
-                <div key={i} className="grid grid-cols-5 gap-2 px-2 py-2 border-b border-outline-variant/30">
+                <div key={i} className="grid grid-cols-6 gap-2 px-2 py-2 border-b border-outline-variant/30">
                   <div className="h-4 w-6 bg-surface-container-high animate-pulse" />
                   <div className="h-4 w-20 bg-surface-container-high animate-pulse" />
+                  <div className="h-4 w-8 bg-surface-container-high animate-pulse" />
                   <div className="h-4 w-6 bg-surface-container-high animate-pulse" />
                   <div className="h-4 w-6 bg-surface-container-high animate-pulse" />
                   <div className="h-4 w-10 bg-surface-container-high animate-pulse" />
@@ -215,7 +216,7 @@ const LobbyPage = () => {
             ranking.map((row) => (
               <div
                 key={row.userId}
-                className="grid grid-cols-5 gap-2 px-2 py-2 border-b border-outline-variant/30 hover:bg-surface-container-high transition-colors"
+                className="grid grid-cols-6 gap-2 px-2 py-2 border-b border-outline-variant/30 hover:bg-surface-container-high transition-colors"
               >
                 <span className="font-mono-data text-mono-data text-primary-container">
                   {String(row.position).padStart(2, '0')}
@@ -225,6 +226,9 @@ const LobbyPage = () => {
                   onClick={() => navigate(`/profile/${row.userId}`)}
                 >
                   {row.username?.toUpperCase()}
+                </span>
+                <span className="font-mono-data text-mono-data text-tertiary">
+                  {row.eloRating}
                 </span>
                 <span className="font-mono-data text-mono-data text-primary">
                   {row.wins}
@@ -240,12 +244,15 @@ const LobbyPage = () => {
 
             {/* Linha do usuário logado */}
             {!rankingLoading && !rankingError && myPosition && (
-              <div className="grid grid-cols-5 gap-2 px-2 py-2 bg-secondary-container/30 border border-primary/30">
+              <div className="grid grid-cols-6 gap-2 px-2 py-2 bg-secondary-container/30 border border-primary/30">
                 <span className="font-mono-data text-mono-data text-primary-container">
                   {String(myPosition.position).padStart(2, '0')}
                 </span>
                 <span className="font-mono-data text-mono-data text-primary truncate">
                   {myPosition.username?.toUpperCase()} (VOCÊ)
+                </span>
+                <span className="font-mono-data text-mono-data text-tertiary">
+                  {myPosition.eloRating}
                 </span>
                 <span className="font-mono-data text-mono-data text-primary">
                   {myPosition.wins}
