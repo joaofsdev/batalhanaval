@@ -219,6 +219,10 @@ public class StormService {
         for (int[] coord : newCoords) {
             if (coord[0] < 0 || coord[0] > 9 || coord[1] < 0 || coord[1] > 9) return false;
             if (otherShipCells.contains(coord[0] + "," + coord[1])) return false;
+
+            // Prevent moving ship onto a cell that was already shot (hit or miss)
+            Optional<Cell> cell = cellRepository.findByBoardIdAndRowAndCol(board.getId(), coord[0], coord[1]);
+            if (cell.isPresent() && cell.get().isHit()) return false;
         }
         return true;
     }

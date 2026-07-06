@@ -336,4 +336,74 @@ class StormServiceTest {
 
         assertThat(stormService.isStormTurn(gameId, 4)).isFalse();
     }
+
+    @Test
+    void currentEvent_doesNotMoveShipOntoAlreadyHitCell() {
+        // Setup a CURRENT storm event
+        StormEvent currentEvent = new StormEvent();
+        currentEvent.setId(UUID.randomUUID());
+        currentEvent.setGame(game);
+        currentEvent.setEventType(StormEventType.CURRENT);
+        currentEvent.setResolved(false);
+        currentEvent.setTurnNumber(3);
+
+        Board board = new Board();
+        board.setId(UUID.randomUUID());
+        board.setOwner(player1);
+
+        // Ship at (0,0) horizontal size 2: occupies (0,0) and (0,1)
+        // Only valid directions: down (row+1) or right (col+1) since top/left are OOB
+        Ship movingShip = new Ship();
+        movingShip.setId(UUID.randomUUID());
+        movingShip.setShipType(ShipType.DESTROYER); // size 2
+        movingShip.setOriginRow(0);
+        movingShip.setOriginCol(0);
+        movingShip.setOrientation(Orientation.HORIZONTAL);
+        movingShip.setHits(0);
+
+        List<Ship> allShips = List.of(movingShip);
+
+        when(gameRepository.findById(gameId)).thenReturn(Optional.of(game));
+        when(stormEventRepository.findByGameIdAndResolvedFalse(gameId))
+            .thenReturn(Optional.of(currentEvent));
+        when(boardRepository.findByGameId(gameId)).thenReturn(List.of(board));
+        when(shipRepository.findAllByBoardId(board.getId())).thenReturn(allShips);
+
+        // Moving down would place ship at (1,0) and (1,1) — mark (1,0) as already hit
+        Cell hitCell = new Cell();
+        hitCell.setHasShip(false);
+        hitCell.setHit(true); // already shot by opponent
+        when(cellRepository.findByBoardIdAndRowAndCol(board.getId(), 1, 0))
+            .thenReturn(Optional.of(hitCell));
+
+        // Moving right would place ship at (0,1) and (0,2) — mark (0,2) as already hit
+        Cell hitCell2 = new Cell();
+        hitCell2.setHasShip(false);
+        hitCell2.setHit(true); // already shot by opponent
+        when(cellRepository.findByBoardIdAndRowAndCol(board.getId(), 0, 2))
+            .thenReturn(Optional.of(hitCell2));
+
+        // Other cells that might be checked should be not-hit
+        Cell safeCell = new Cell();
+        safeCell.setHasShip(false);
+        safeCell.setHit(false);
+        when(cellRepository.findByBoardIdAndRowAndCol(eq(board.getId()), anyInt(), anyInt()))
+            .thenReturn(Optional.of(safeCell));
+        // Override the specific hit cells
+        when(cellRepository.findByBoardIdAndRowAndCol(board.getId(), 1, 0))
+            .thenReturn(Optional.of(hitCell));
+        when(cellRepository.findByBoardIdAndRowAndCol(board.getId(), 0, 2))
+            .thenReturn(Optional.of(hitCell2));
+
+        stormService.resolveStormEvent(gameId);
+
+        // Ship should NOT have moved to positions with hit cells
+        // It may have moved to a direction with safe cells, or stayed in place
+        // The key assertion: ship never ends up at a position where a hit cell exists
+        // Since down is blocked by hit at (1,0) and right is blocked by hit at (0,2),
+        // and up/left are OOB, the ship should stay at original position
+        assertThat(movingShip.getOriginRow()).isEqualTo(0);
+        assertThat(movingShip.getOriginCol()).isEqualTo(0);
+        verify(shipRepository, never()).save(movingShip);
+    }
 }
