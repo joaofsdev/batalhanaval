@@ -55,6 +55,15 @@ const GamePage = () => {
     setToast,
   });
 
+  // Reset local state when navigating to a different game (e.g., rematch)
+  useEffect(() => {
+    setBoardConfirmed(false);
+    setCancelDisabled(false);
+    setRematchInvite(null);
+    setOpponentDisconnected(null);
+    subscribedRef.current = false;
+  }, [gameId]);
+
   useEffect(() => {
     fetchGame();
   }, [fetchGame]);

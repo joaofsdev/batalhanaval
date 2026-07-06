@@ -1,10 +1,12 @@
-import { useReducer, useCallback } from 'react';
+import { useReducer, useCallback, useEffect } from 'react';
 import * as gameApi from '../api/gameApi';
 
 const initialState = { game: null, loading: true, error: null };
 
 const reducer = (state, action) => {
   switch (action.type) {
+    case 'RESET':
+      return initialState;
     case 'SET_GAME':
       return { game: action.payload, loading: false, error: null };
     case 'SET_ERROR':
@@ -59,6 +61,10 @@ const reducer = (state, action) => {
 
 const useGame = (gameId) => {
   const [state, dispatch] = useReducer(reducer, initialState);
+
+  useEffect(() => {
+    dispatch({ type: 'RESET' });
+  }, [gameId]);
 
   const fetchGame = useCallback(async () => {
     try {
