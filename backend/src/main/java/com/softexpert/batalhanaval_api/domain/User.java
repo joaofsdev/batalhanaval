@@ -37,6 +37,9 @@ public class User {
     @Column(nullable = false, length = 20)
     private UserStatus status = UserStatus.ACTIVE;
 
+    @Column(nullable = false)
+    private int eloRating = 1000;
+
     @Column
     private Instant suspendedUntil;
 

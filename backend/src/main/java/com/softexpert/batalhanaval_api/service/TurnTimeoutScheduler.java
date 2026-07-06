@@ -27,6 +27,7 @@ public class TurnTimeoutScheduler {
 
     private final GameRepository gameRepository;
     private final NotificationService notificationService;
+    private final EloService eloService;
 
     @Scheduled(fixedDelay = 15000)
     @Transactional
@@ -50,6 +51,7 @@ public class TurnTimeoutScheduler {
                 game.setStatus(GameStatus.FINISHED);
                 game.setWinner(winner);
                 game.setCurrentTurn(null);
+                eloService.updateElo(game);
                 gameRepository.save(game);
 
                 notificationService.broadcastGameState(game);

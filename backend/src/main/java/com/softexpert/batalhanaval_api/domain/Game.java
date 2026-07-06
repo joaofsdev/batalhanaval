@@ -74,6 +74,12 @@ public class Game {
     @JoinColumn(name = "winner_id")
     private User winner;
 
+    @Column(name = "player1_elo_before")
+    private Integer player1EloBefore;
+
+    @Column(name = "player2_elo_before")
+    private Integer player2EloBefore;
+
     @Column(nullable = false)
     private int consecutiveSkips;
 

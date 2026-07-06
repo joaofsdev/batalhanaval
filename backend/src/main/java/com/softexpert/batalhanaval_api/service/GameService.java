@@ -26,6 +26,7 @@ public class GameService {
     private final ShotRepository shotRepository;
     private final PlacementService placementService;
     private final AbilityService abilityService;
+    private final EloService eloService;
 
     // Key: originalGameId, Value: userId que pediu rematch primeiro
     private final Map<UUID, UUID> pendingRematches = new ConcurrentHashMap<>();
@@ -128,6 +129,7 @@ public class GameService {
         game.setStatus(GameStatus.FINISHED);
         game.setWinner(winner);
         game.setCurrentTurn(null);
+        eloService.updateElo(game);
         gameRepository.save(game);
         return game;
     }

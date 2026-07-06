@@ -26,6 +26,8 @@ class GameServiceTest {
     @Mock private UserRepository userRepository;
     @Mock private ShotRepository shotRepository;
     @Mock private PlacementService placementService;
+    @Mock private AbilityService abilityService;
+    @Mock private EloService eloService;
 
     @InjectMocks private GameService gameService;
 

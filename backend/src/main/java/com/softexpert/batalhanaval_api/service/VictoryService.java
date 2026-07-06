@@ -15,6 +15,7 @@ public class VictoryService {
 
     private final ShipRepository shipRepository;
     private final GameRepository gameRepository;
+    private final EloService eloService;
 
     /**
      * Check if all ships on the target board are sunk.
@@ -29,6 +30,7 @@ public class VictoryService {
             game.setStatus(GameStatus.FINISHED);
             game.setWinner(game.getPlayer1().getId().equals(attackerId) ? game.getPlayer1() : game.getPlayer2());
             game.setCurrentTurn(null);
+            eloService.updateElo(game);
             gameRepository.save(game);
             return true;
         }
