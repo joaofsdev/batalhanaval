@@ -78,7 +78,10 @@ const LobbyPage = () => {
           </span>
         </nav>
 
-        <div className="flex items-center gap-3">
+        <div
+          onClick={() => navigate(`/profile/${user?.id}`)}
+          className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
+        >
           <div className="w-8 h-8 rounded-full border border-primary bg-secondary-container flex items-center justify-center font-label-caps text-label-caps text-primary">
             {user?.username?.[0]?.toUpperCase()}
           </div>
@@ -106,6 +109,13 @@ const LobbyPage = () => {
             <div className="flex items-center gap-3 px-4 py-3 bg-secondary-container text-on-secondary-container border-l-4 border-primary font-label-caps text-label-caps">
               <span className="material-symbols-outlined">radar</span>
               VISÃO TATICA
+            </div>
+            <div
+              onClick={() => navigate(`/profile/${user?.id}`)}
+              className="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-secondary-container hover:text-on-secondary-container cursor-pointer transition-colors font-label-caps text-label-caps"
+            >
+              <span className="material-symbols-outlined">person</span>
+              MEU PERFIL
             </div>
             {user?.role === 'ADMIN' && (
               <div
