@@ -13,7 +13,8 @@ import java.util.UUID;
 @Table(name = "shots", uniqueConstraints = {
     @UniqueConstraint(name = "uk_shot_board_row_col", columnNames = {"target_board_id", "shot_row", "shot_col"})
 }, indexes = {
-    @Index(name = "idx_shot_game", columnList = "game_id")
+    @Index(name = "idx_shot_game", columnList = "game_id"),
+    @Index(name = "idx_shot_attacker", columnList = "attacker_id")
 })
 @Getter
 @Setter
