@@ -32,9 +32,10 @@ public class RankingService {
             String username = (String) row[1];
             long wins = (long) row[2];
             long totalGames = (long) row[3];
+            int eloRating = (int) row[4];
             double winRate = totalGames > 0 ? Math.round((double) wins / totalGames * 1000.0) / 10.0 : 0.0;
 
-            RankingEntry entry = new RankingEntry(i + 1, userId, username, wins, totalGames, winRate);
+            RankingEntry entry = new RankingEntry(i + 1, userId, username, wins, totalGames, winRate, eloRating);
             allEntries.add(entry);
 
             if (userId.equals(currentUserId)) {
@@ -43,7 +44,7 @@ public class RankingService {
         }
 
         if (myPosition == null) {
-            myPosition = new RankingEntry(allEntries.size() + 1, currentUserId, currentUsername, 0, 0, 0.0);
+            myPosition = new RankingEntry(allEntries.size() + 1, currentUserId, currentUsername, 0, 0, 0.0, 1000);
         }
 
         // Paginate

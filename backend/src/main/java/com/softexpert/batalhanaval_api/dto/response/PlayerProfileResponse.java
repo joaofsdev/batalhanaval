@@ -7,6 +7,7 @@ import java.util.UUID;
 public record PlayerProfileResponse(
     UUID id,
     String username,
+    int eloRating,
     long totalGames,
     long wins,
     long losses,

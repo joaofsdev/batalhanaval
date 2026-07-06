@@ -38,24 +38,26 @@ public interface GameRepository extends JpaRepository<Game, UUID> {
     @Query("""
         SELECT u.id, u.username,
                COALESCE(SUM(CASE WHEN g.winner.id = u.id THEN 1 ELSE 0 END), 0),
-               COUNT(g)
+               COUNT(g),
+               u.eloRating
         FROM Game g
         JOIN User u ON (g.player1.id = u.id OR g.player2.id = u.id)
         WHERE g.status = 'FINISHED'
-        GROUP BY u.id, u.username
-        ORDER BY COALESCE(SUM(CASE WHEN g.winner.id = u.id THEN 1 ELSE 0 END), 0) DESC, COUNT(g) ASC
+        GROUP BY u.id, u.username, u.eloRating
+        ORDER BY u.eloRating DESC, COALESCE(SUM(CASE WHEN g.winner.id = u.id THEN 1 ELSE 0 END), 0) DESC
         """)
     List<Object[]> findFullRanking();
 
     @Query("""
         SELECT u.id, u.username,
                COALESCE(SUM(CASE WHEN g.winner.id = u.id THEN 1 ELSE 0 END), 0),
-               COUNT(g)
+               COUNT(g),
+               u.eloRating
         FROM Game g
         JOIN User u ON (g.player1.id = u.id OR g.player2.id = u.id)
         WHERE g.status = 'FINISHED' AND g.updatedAt >= :since
-        GROUP BY u.id, u.username
-        ORDER BY COALESCE(SUM(CASE WHEN g.winner.id = u.id THEN 1 ELSE 0 END), 0) DESC, COUNT(g) ASC
+        GROUP BY u.id, u.username, u.eloRating
+        ORDER BY u.eloRating DESC, COALESCE(SUM(CASE WHEN g.winner.id = u.id THEN 1 ELSE 0 END), 0) DESC
         """)
     List<Object[]> findFullRankingSince(@Param("since") java.time.Instant since);
 

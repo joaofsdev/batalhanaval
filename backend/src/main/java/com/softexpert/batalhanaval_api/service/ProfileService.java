@@ -81,6 +81,7 @@ public class ProfileService {
         return new PlayerProfileResponse(
             user.getId(),
             user.getUsername(),
+            user.getEloRating(),
             totalGames,
             wins,
             losses,

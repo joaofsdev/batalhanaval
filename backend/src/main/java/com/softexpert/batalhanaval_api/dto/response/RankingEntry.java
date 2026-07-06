@@ -8,5 +8,6 @@ public record RankingEntry(
     String username,
     long wins,
     long totalGames,
-    double winRate
+    double winRate,
+    int eloRating
 ) {}
