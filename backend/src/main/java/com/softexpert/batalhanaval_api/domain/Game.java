@@ -49,6 +49,9 @@ public class Game {
     private boolean privateRoom = false;
 
     @Column(nullable = false)
+    private boolean ranked = false;
+
+    @Column(nullable = false)
     private boolean player1Ready = false;
 
     @Column(nullable = false)

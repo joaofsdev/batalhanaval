@@ -38,6 +38,7 @@ public class RoomService {
         game.setStatus(GameStatus.WAITING);
         game.setGameMode(gameMode);
         game.setPrivateRoom(true);
+        game.setRanked(false);
         game.setRoomToken(token);
         game = gameRepository.save(game);
 

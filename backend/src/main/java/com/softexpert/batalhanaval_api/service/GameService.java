@@ -53,6 +53,7 @@ public class GameService {
         game.setPlayer1(user);
         game.setStatus(GameStatus.WAITING);
         game.setGameMode(gameMode);
+        game.setRanked(true);
         game = gameRepository.save(game);
         createBoardForPlayer(game, user);
         return buildGameResponse(game, userId);
@@ -188,6 +189,7 @@ public class GameService {
             newGame.setPlayer2(user);
             newGame.setStatus(GameStatus.PLACING);
             newGame.setGameMode(mode);
+            newGame.setRanked(originalGame.isRanked());
             newGame = gameRepository.save(newGame);
             createBoardForPlayer(newGame, firstRequester);
             createBoardForPlayer(newGame, user);
