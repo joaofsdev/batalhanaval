@@ -2,12 +2,14 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import * as gameApi from '../../api/gameApi';
+import PostGameBoards from './PostGameBoards';
 
-const GameOverOverlay = ({ isWinner, isCancelled, stats, gameId, rematchInvite }) => {
+const GameOverOverlay = ({ isWinner, isCancelled, stats, gameId, rematchInvite, eloDelta, myBoard, opponentBoard }) => {
   const navigate = useNavigate();
   const { logout } = useAuth();
   const [rematchLoading, setRematchLoading] = useState(false);
   const [rematchSent, setRematchSent] = useState(false);
+  const [showBoards, setShowBoards] = useState(false);
 
   const displayStats = stats || { shots: '--', hits: '--', accuracy: '--' };
 
@@ -18,7 +20,6 @@ const GameOverOverlay = ({ isWinner, isCancelled, stats, gameId, rematchInvite }
       if (res.data.status === 'MATCHED' && res.data.gameId) {
         navigate(`/game/${res.data.gameId}`);
       } else {
-        // Waiting for opponent — stay on current screen
         setRematchSent(true);
       }
     } catch (err) {
@@ -34,11 +35,20 @@ const GameOverOverlay = ({ isWinner, isCancelled, stats, gameId, rematchInvite }
           navigate(`/game/${res.data.gameId}`);
         }
       } catch (err) {
-        // Fallback: navigate to lobby
         navigate('/lobby');
       }
     }
   };
+
+  if (showBoards) {
+    return (
+      <PostGameBoards
+        myBoard={myBoard}
+        opponentBoard={opponentBoard}
+        onBack={() => setShowBoards(false)}
+      />
+    );
+  }
 
   const borderColor = isCancelled ? '#94a3b8' : isWinner ? '#ffb13b' : '#ef4444';
   const borderClass = isCancelled
@@ -49,6 +59,14 @@ const GameOverOverlay = ({ isWinner, isCancelled, stats, gameId, rematchInvite }
   const iconClass = isCancelled ? 'text-outline-variant' : isWinner ? 'text-tertiary-container' : 'text-error';
   const icon = isCancelled ? 'block' : isWinner ? 'emoji_events' : 'anchor';
   const title = isCancelled ? '[ PARTIDA CANCELADA ]' : isWinner ? '[ MISSÃO CUMPRIDA ]' : '[ MISSÃO FRACASSADA ]';
+
+  // Elo formatting
+  const eloText = eloDelta != null
+    ? (eloDelta >= 0 ? `+${eloDelta}` : `${eloDelta}`)
+    : null;
+  const eloColor = eloDelta != null
+    ? (eloDelta >= 0 ? 'text-tertiary-container' : 'text-error')
+    : '';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
@@ -68,6 +86,17 @@ const GameOverOverlay = ({ isWinner, isCancelled, stats, gameId, rematchInvite }
         <h2 className={`font-display-tactical text-display-tactical uppercase tracking-widest text-center whitespace-nowrap ${iconClass}`} style={{ fontSize: 'clamp(1rem, 3vw, 1.5rem)' }}>
           {title}
         </h2>
+
+        {/* Elo Delta */}
+        {eloText && !isCancelled && (
+          <div className="flex items-center gap-2 px-4 py-2 bg-surface-container-high border border-outline-variant">
+            <span className="material-symbols-outlined text-lg text-on-surface-variant">trending_up</span>
+            <span className="font-label-caps text-label-caps text-on-surface-variant">ELO</span>
+            <span className={`font-display-tactical text-headline-lg ${eloColor}`}>
+              {eloText}
+            </span>
+          </div>
+        )}
 
         {/* Stats */}
         {!isCancelled && (
@@ -119,6 +148,15 @@ const GameOverOverlay = ({ isWinner, isCancelled, stats, gameId, rematchInvite }
           >
             <span className="material-symbols-outlined text-sm">replay</span>
             {rematchSent ? 'CONVITE ENVIADO' : rematchLoading ? 'ENVIANDO...' : 'REVANCHE'}
+          </button>
+          )}
+          {!isCancelled && (
+          <button
+            onClick={() => setShowBoards(true)}
+            className="flex-1 py-3 border border-primary-container text-primary-container font-label-caps text-label-caps hover:bg-primary-container/10 transition-all flex items-center justify-center gap-2"
+          >
+            <span className="material-symbols-outlined text-sm">grid_on</span>
+            VER TABULEIROS
           </button>
           )}
           <button

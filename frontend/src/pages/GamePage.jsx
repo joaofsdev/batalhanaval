@@ -292,6 +292,9 @@ const GamePage = () => {
             stats={{ shots: totalShots, hits: totalHits, accuracy }}
             gameId={gameId}
             rematchInvite={rematchInvite}
+            eloDelta={game.eloDelta}
+            myBoard={game.myBoard}
+            opponentBoard={game.opponentBoard}
           />
         );
       }
