@@ -6,91 +6,57 @@ const ROWS = ['A','B','C','D','E','F','G','H','I','J'];
 
 const SHIP_SIZES = { CARRIER: 5, BATTLESHIP: 4, CRUISER: 3, SUBMARINE: 3, DESTROYER: 2 };
 
+/**
+ * Given ship origin, orientation and size, return all cell keys belonging to it.
+ */
+const getShipCellKeys = (originRow, originCol, orientation, size) => {
+  const keys = [];
+  for (let i = 0; i < size; i++) {
+    const r = orientation === 'VERTICAL' ? originRow + i : originRow;
+    const c = orientation === 'HORIZONTAL' ? originCol + i : originCol;
+    keys.push(`${r},${c}`);
+  }
+  return keys;
+};
+
 const OpponentBoard = ({ shotsReceived, isMyTurn, onFire, fogActive = false, blockedRow = null }) => {
   const shotMap = new Map(
     (shotsReceived || []).map((s) => [`${s.row},${s.col}`, s.result])
   );
 
-  // Build set of all cells that belong to a sunk ship via linear flood-fill from SUNK cells
-  const sunkCells = useMemo(() => {
-    const shots = shotsReceived || [];
-    const resultMap = new Map(shots.map((s) => [`${s.row},${s.col}`, s.result]));
-    const sunk = new Set();
-    const directions = [[0, 1], [0, -1], [1, 0], [-1, 0]];
-
-    shots.filter((s) => s.result === 'SUNK').forEach((s) => {
-      sunk.add(`${s.row},${s.col}`);
-      for (const [dr, dc] of directions) {
-        let r = s.row + dr;
-        let c = s.col + dc;
-        while (r >= 0 && r < 10 && c >= 0 && c < 10) {
-          const key = `${r},${c}`;
-          const res = resultMap.get(key);
-          if (res === 'HIT' || res === 'SUNK') {
-            sunk.add(key);
-            r += dr;
-            c += dc;
-          } else {
-            break;
-          }
-        }
-      }
-    });
-
-    return sunk;
-  }, [shotsReceived]);
-
-  // Derive sunk ship sprites from SUNK shots + flood-fill
+  // Derive sunk ships directly from backend data (origin + orientation)
   const sunkShips = useMemo(() => {
     const shots = shotsReceived || [];
-    const resultMap = new Map(shots.map((s) => [`${s.row},${s.col}`, s.result]));
-    const directions = [[0, 1], [0, -1], [1, 0], [-1, 0]];
-    const visited = new Set();
+    const seen = new Set();
     const ships = [];
 
-    shots.filter((s) => s.result === 'SUNK' && s.sunkShipType).forEach((s) => {
-      const key = `${s.row},${s.col}`;
-      if (visited.has(key)) return;
-
-      // Flood-fill to find all cells of this ship
-      const shipCells = [{ row: s.row, col: s.col }];
-      visited.add(key);
-
-      for (const [dr, dc] of directions) {
-        let r = s.row + dr;
-        let c = s.col + dc;
-        while (r >= 0 && r < 10 && c >= 0 && c < 10) {
-          const cellKey = `${r},${c}`;
-          const res = resultMap.get(cellKey);
-          if ((res === 'HIT' || res === 'SUNK') && !visited.has(cellKey)) {
-            shipCells.push({ row: r, col: c });
-            visited.add(cellKey);
-            r += dr;
-            c += dc;
-          } else {
-            break;
-          }
-        }
-      }
-
-      // Determine origin and orientation from cells
-      const rows = shipCells.map((c) => c.row);
-      const cols = shipCells.map((c) => c.col);
-      const minRow = Math.min(...rows);
-      const minCol = Math.min(...cols);
-      const isVertical = new Set(cols).size === 1;
+    shots.filter((s) => s.result === 'SUNK' && s.sunkShipType && s.sunkShipOriginRow != null && s.sunkShipOrientation).forEach((s) => {
+      // Deduplicate by ship type + origin (same ship won't have two different origins)
+      const shipKey = `${s.sunkShipType}-${s.sunkShipOriginRow}-${s.sunkShipOriginCol}`;
+      if (seen.has(shipKey)) return;
+      seen.add(shipKey);
 
       ships.push({
         shipType: s.sunkShipType,
-        originRow: minRow,
-        originCol: minCol,
-        orientation: isVertical ? 'VERTICAL' : 'HORIZONTAL',
-        size: SHIP_SIZES[s.sunkShipType] || shipCells.length,
+        originRow: s.sunkShipOriginRow,
+        originCol: s.sunkShipOriginCol,
+        orientation: s.sunkShipOrientation,
+        size: SHIP_SIZES[s.sunkShipType] || 1,
       });
     });
 
     return ships;
   }, [shotsReceived]);
+
+  // Build set of cells that belong to sunk ships (for cell coloring)
+  const sunkCells = useMemo(() => {
+    const sunk = new Set();
+    sunkShips.forEach((ship) => {
+      const keys = getShipCellKeys(ship.originRow, ship.originCol, ship.orientation, ship.size);
+      keys.forEach((k) => sunk.add(k));
+    });
+    return sunk;
+  }, [sunkShips]);
 
   const getCellState = (row, col) => {
     const key = `${row},${col}`;
