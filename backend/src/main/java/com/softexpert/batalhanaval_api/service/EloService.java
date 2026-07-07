@@ -22,6 +22,10 @@ public class EloService {
      */
     @Transactional
     public void updateElo(Game game) {
+        if (!game.isRanked()) {
+            return; // Unranked game (e.g., private room) — no Elo update
+        }
+
         User winner = game.getWinner();
         if (winner == null) {
             return; // No winner (e.g., draw or cancelled) — no Elo update

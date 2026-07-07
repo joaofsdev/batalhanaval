@@ -32,7 +32,7 @@ public interface GameRepository extends JpaRepository<Game, UUID> {
     @Query("SELECT g.winner.id, g.winner.username, COUNT(g) FROM Game g WHERE g.status = 'FINISHED' AND g.winner IS NOT NULL GROUP BY g.winner.id, g.winner.username ORDER BY COUNT(g) DESC")
     List<Object[]> findWinsRanking();
 
-    @Query("SELECT COUNT(g) FROM Game g WHERE (g.player1.id = :userId OR g.player2.id = :userId) AND g.status = 'FINISHED'")
+    @Query("SELECT COUNT(g) FROM Game g WHERE (g.player1.id = :userId OR g.player2.id = :userId) AND g.status = 'FINISHED' AND g.ranked = true")
     long countFinishedGamesByUserId(@Param("userId") UUID userId);
 
     @Query("""
@@ -42,7 +42,7 @@ public interface GameRepository extends JpaRepository<Game, UUID> {
                u.eloRating
         FROM Game g
         JOIN User u ON (g.player1.id = u.id OR g.player2.id = u.id)
-        WHERE g.status = 'FINISHED'
+        WHERE g.status = 'FINISHED' AND g.ranked = true
         GROUP BY u.id, u.username, u.eloRating
         ORDER BY u.eloRating DESC, COALESCE(SUM(CASE WHEN g.winner.id = u.id THEN 1 ELSE 0 END), 0) DESC
         """)
@@ -55,7 +55,7 @@ public interface GameRepository extends JpaRepository<Game, UUID> {
                u.eloRating
         FROM Game g
         JOIN User u ON (g.player1.id = u.id OR g.player2.id = u.id)
-        WHERE g.status = 'FINISHED' AND g.updatedAt >= :since
+        WHERE g.status = 'FINISHED' AND g.ranked = true AND g.updatedAt >= :since
         GROUP BY u.id, u.username, u.eloRating
         ORDER BY u.eloRating DESC, COALESCE(SUM(CASE WHEN g.winner.id = u.id THEN 1 ELSE 0 END), 0) DESC
         """)
@@ -67,7 +67,7 @@ public interface GameRepository extends JpaRepository<Game, UUID> {
     @Query("SELECT g FROM Game g WHERE g.status IN :statuses AND g.updatedAt < :cutoff")
     List<Game> findStaleGamesByStatuses(@Param("statuses") List<GameStatus> statuses, @Param("cutoff") java.time.Instant cutoff);
 
-    @Query("SELECT g FROM Game g WHERE (g.player1.id = :userId OR g.player2.id = :userId) AND g.status = 'FINISHED' ORDER BY g.updatedAt DESC")
+    @Query("SELECT g FROM Game g WHERE (g.player1.id = :userId OR g.player2.id = :userId) AND g.status = 'FINISHED' AND g.ranked = true ORDER BY g.updatedAt DESC")
     org.springframework.data.domain.Page<Game> findFinishedGamesByUserId(@Param("userId") UUID userId, org.springframework.data.domain.Pageable pageable);
 
     Optional<Game> findByRoomToken(String roomToken);
