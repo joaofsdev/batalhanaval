@@ -94,7 +94,7 @@ public class GameService {
             }
         }
 
-        // Always save game to refresh updatedAt (prevents placement timeout while players are active)
+        // Save game to persist status transition
         gameRepository.save(game);
 
         return new PlaceShipsResponse("Fleet placed successfully", true, game.getStatus());

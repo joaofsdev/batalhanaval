@@ -20,7 +20,6 @@ import java.util.List;
 public class TurnTimeoutScheduler {
 
     private static final long TURN_TIMEOUT_SECONDS = 60;
-    private static final long PLACEMENT_TIMEOUT_SECONDS = 30;
 
     @Value("${game.afk.max-consecutive-skips:3}")
     private int maxConsecutiveSkips;
@@ -75,28 +74,4 @@ public class TurnTimeoutScheduler {
         }
     }
 
-    /**
-     * Cancels games stuck in PLACING status for more than 30 seconds when one player
-     * has already placed their fleet but the opponent remains inactive.
-     * This prevents players from being trapped waiting for an AFK opponent.
-     */
-    @Scheduled(fixedDelay = 10000)
-    @Transactional
-    public void checkPlacementTimeouts() {
-        Instant cutoff = Instant.now().minusSeconds(PLACEMENT_TIMEOUT_SECONDS);
-
-        List<Game> staleGames = gameRepository.findStalePlacingGames(cutoff);
-
-        for (Game game : staleGames) {
-            game.setStatus(GameStatus.FINISHED);
-            game.setWinner(null);
-            game.setCurrentTurn(null);
-            gameRepository.save(game);
-
-            notificationService.broadcastGameState(game);
-
-            log.info("Placement timeout: game={} cancelled (opponent inactive for {}s)",
-                game.getId(), PLACEMENT_TIMEOUT_SECONDS);
-        }
-    }
 }
