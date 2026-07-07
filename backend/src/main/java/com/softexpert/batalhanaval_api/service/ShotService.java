@@ -64,7 +64,7 @@ public class ShotService {
             advanceTurn(game, attackerId);
             gameRepository.save(game);
 
-            return new ShotResultResponse(gameId, row, col, ShotResult.MISS, null);
+            return new ShotResultResponse(gameId, row, col, ShotResult.MISS, null, null, null, null);
         }
 
         // Normal shot processing
@@ -72,6 +72,9 @@ public class ShotService {
 
         ShotResult result;
         ShipType sunkShipType = null;
+        Integer sunkShipOriginRow = null;
+        Integer sunkShipOriginCol = null;
+        Orientation sunkShipOrientation = null;
 
         if (cell.isHasShip()) {
             Ship ship = cell.getShip();
@@ -80,6 +83,9 @@ public class ShotService {
             if (ship.isSunk()) {
                 result = ShotResult.SUNK;
                 sunkShipType = ship.getShipType();
+                sunkShipOriginRow = ship.getOriginRow();
+                sunkShipOriginCol = ship.getOriginCol();
+                sunkShipOrientation = ship.getOrientation();
             } else {
                 result = ShotResult.HIT;
             }
@@ -95,12 +101,15 @@ public class ShotService {
         shot.setCol(col);
         shot.setResult(result);
         shot.setSunkShipType(sunkShipType);
+        shot.setSunkShipOriginRow(sunkShipOriginRow);
+        shot.setSunkShipOriginCol(sunkShipOriginCol);
+        shot.setSunkShipOrientation(sunkShipOrientation);
         shotRepository.save(shot);
 
         // Check victory
         boolean allSunk = victoryService.checkVictoryCondition(game, attackerId, targetBoard);
         if (allSunk) {
-            return new ShotResultResponse(gameId, row, col, result, sunkShipType);
+            return new ShotResultResponse(gameId, row, col, result, sunkShipType, sunkShipOriginRow, sunkShipOriginCol, sunkShipOrientation);
         }
 
         // Capture fog state before advancing (advanceTurn may clear expired fog)
@@ -112,10 +121,10 @@ public class ShotService {
 
         // Fog: mask the result from the attacker (shot is still processed normally)
         if (fogActiveForThisShot) {
-            return new ShotResultResponse(gameId, row, col, ShotResult.HIDDEN, null);
+            return new ShotResultResponse(gameId, row, col, ShotResult.HIDDEN, null, null, null, null);
         }
 
-        return new ShotResultResponse(gameId, row, col, result, sunkShipType);
+        return new ShotResultResponse(gameId, row, col, result, sunkShipType, sunkShipOriginRow, sunkShipOriginCol, sunkShipOrientation);
     }
 
     public UUID getDefenderId(Game game, UUID attackerId) {

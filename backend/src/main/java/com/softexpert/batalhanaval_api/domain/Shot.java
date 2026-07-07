@@ -50,6 +50,13 @@ public class Shot {
     @Enumerated(EnumType.STRING)
     private ShipType sunkShipType;
 
+    private Integer sunkShipOriginRow;
+
+    private Integer sunkShipOriginCol;
+
+    @Enumerated(EnumType.STRING)
+    private Orientation sunkShipOrientation;
+
     @Column(nullable = false)
     private Instant firedAt;
 

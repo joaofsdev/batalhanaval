@@ -193,13 +193,16 @@ public class AbilityService {
 
         if (cell == null || cell.isHit()) {
             // Already hit or invalid — return miss for this position
-            return new ShotResultResponse(game.getId(), row, col, ShotResult.MISS, null);
+            return new ShotResultResponse(game.getId(), row, col, ShotResult.MISS, null, null, null, null);
         }
 
         cell.setHit(true);
 
         ShotResult result;
         ShipType sunkShipType = null;
+        Integer sunkShipOriginRow = null;
+        Integer sunkShipOriginCol = null;
+        Orientation sunkShipOrientation = null;
 
         if (cell.isHasShip()) {
             Ship ship = cell.getShip();
@@ -208,6 +211,9 @@ public class AbilityService {
             if (ship.isSunk()) {
                 result = ShotResult.SUNK;
                 sunkShipType = ship.getShipType();
+                sunkShipOriginRow = ship.getOriginRow();
+                sunkShipOriginCol = ship.getOriginCol();
+                sunkShipOrientation = ship.getOrientation();
             } else {
                 result = ShotResult.HIT;
             }
@@ -224,6 +230,9 @@ public class AbilityService {
         shot.setCol(col);
         shot.setResult(result);
         shot.setSunkShipType(sunkShipType);
+        shot.setSunkShipOriginRow(sunkShipOriginRow);
+        shot.setSunkShipOriginCol(sunkShipOriginCol);
+        shot.setSunkShipOrientation(sunkShipOrientation);
         shotRepository.save(shot);
 
         // Check victory condition after sinking a ship
@@ -231,7 +240,7 @@ public class AbilityService {
             victoryService.checkVictoryCondition(game, userId, targetBoard);
         }
 
-        return new ShotResultResponse(game.getId(), row, col, result, sunkShipType);
+        return new ShotResultResponse(game.getId(), row, col, result, sunkShipType, sunkShipOriginRow, sunkShipOriginCol, sunkShipOrientation);
     }
 
     private void createPlayerAbility(Game game, User player, AbilityType type) {
