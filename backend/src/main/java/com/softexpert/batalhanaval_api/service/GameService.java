@@ -315,7 +315,9 @@ public class GameService {
         BoardResponse myBoard = buildMyBoard(game, userId);
         OpponentBoardResponse opponentBoard = buildOpponentBoard(game, userId);
 
-        return new GameResponse(game.getId(), game.getStatus(), game.getGameMode(), p1, p2, currentTurnId, winnerId, myBoard, opponentBoard, game.getCreatedAt());
+        Integer eloDelta = calculateEloDelta(game, userId);
+
+        return new GameResponse(game.getId(), game.getStatus(), game.getGameMode(), p1, p2, currentTurnId, winnerId, myBoard, opponentBoard, eloDelta, game.getCreatedAt());
     }
 
     private BoardResponse buildMyBoard(Game game, UUID userId) {
@@ -337,8 +339,39 @@ public class GameService {
     private OpponentBoardResponse buildOpponentBoard(Game game, UUID userId) {
         List<Shot> myShots = shotRepository.findAllByGameIdAndAttackerId(game.getId(), userId);
         List<ShotSummary> shots = myShots.stream()
-            .map(s -> new ShotSummary(s.getRow(), s.getCol(), s.getResult(), s.getSunkShipType()))
+            .map(s -> new ShotSummary(s.getRow(), s.getCol(), s.getResult(), s.getSunkShipType(), s.getSunkShipOriginRow(), s.getSunkShipOriginCol(), s.getSunkShipOrientation()))
             .toList();
-        return new OpponentBoardResponse(shots);
+
+        // Reveal opponent ships only when game is finished
+        List<ShipResponse> opponentShips = null;
+        if (game.getStatus() == GameStatus.FINISHED) {
+            UUID opponentId = game.getPlayer1().getId().equals(userId)
+                ? game.getPlayer2().getId()
+                : game.getPlayer1().getId();
+            Board opponentBoard = boardRepository.findByGameIdAndOwnerId(game.getId(), opponentId).orElse(null);
+            if (opponentBoard != null) {
+                opponentShips = opponentBoard.getShips().stream()
+                    .map(s -> new ShipResponse(s.getShipType(), s.getOriginRow(), s.getOriginCol(), s.getOrientation(), s.getHits(), s.isSunk()))
+                    .toList();
+            }
+        }
+
+        return new OpponentBoardResponse(shots, opponentShips);
+    }
+
+    private Integer calculateEloDelta(Game game, UUID userId) {
+        if (game.getStatus() != GameStatus.FINISHED || game.getWinner() == null) {
+            return null;
+        }
+
+        boolean isPlayer1 = game.getPlayer1().getId().equals(userId);
+        Integer eloBefore = isPlayer1 ? game.getPlayer1EloBefore() : game.getPlayer2EloBefore();
+
+        if (eloBefore == null) {
+            return null;
+        }
+
+        User player = isPlayer1 ? game.getPlayer1() : game.getPlayer2();
+        return player.getEloRating() - eloBefore;
     }
 }
