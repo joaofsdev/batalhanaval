@@ -1,7 +1,10 @@
 import { useMemo } from 'react';
 import BoardCell from './BoardCell';
+import { ShipSprite } from './ShipSprite';
 
 const ROWS = ['A','B','C','D','E','F','G','H','I','J'];
+
+const SHIP_SIZES = { CARRIER: 5, BATTLESHIP: 4, CRUISER: 3, SUBMARINE: 3, DESTROYER: 2 };
 
 const OpponentBoard = ({ shotsReceived, isMyTurn, onFire, fogActive = false, blockedRow = null }) => {
   const shotMap = new Map(
@@ -17,7 +20,6 @@ const OpponentBoard = ({ shotsReceived, isMyTurn, onFire, fogActive = false, blo
 
     shots.filter((s) => s.result === 'SUNK').forEach((s) => {
       sunk.add(`${s.row},${s.col}`);
-      // Flood-fill in each direction collecting connected HIT cells
       for (const [dr, dc] of directions) {
         let r = s.row + dr;
         let c = s.col + dc;
@@ -38,13 +40,63 @@ const OpponentBoard = ({ shotsReceived, isMyTurn, onFire, fogActive = false, blo
     return sunk;
   }, [shotsReceived]);
 
+  // Derive sunk ship sprites from SUNK shots + flood-fill
+  const sunkShips = useMemo(() => {
+    const shots = shotsReceived || [];
+    const resultMap = new Map(shots.map((s) => [`${s.row},${s.col}`, s.result]));
+    const directions = [[0, 1], [0, -1], [1, 0], [-1, 0]];
+    const visited = new Set();
+    const ships = [];
+
+    shots.filter((s) => s.result === 'SUNK' && s.sunkShipType).forEach((s) => {
+      const key = `${s.row},${s.col}`;
+      if (visited.has(key)) return;
+
+      // Flood-fill to find all cells of this ship
+      const shipCells = [{ row: s.row, col: s.col }];
+      visited.add(key);
+
+      for (const [dr, dc] of directions) {
+        let r = s.row + dr;
+        let c = s.col + dc;
+        while (r >= 0 && r < 10 && c >= 0 && c < 10) {
+          const cellKey = `${r},${c}`;
+          const res = resultMap.get(cellKey);
+          if ((res === 'HIT' || res === 'SUNK') && !visited.has(cellKey)) {
+            shipCells.push({ row: r, col: c });
+            visited.add(cellKey);
+            r += dr;
+            c += dc;
+          } else {
+            break;
+          }
+        }
+      }
+
+      // Determine origin and orientation from cells
+      const rows = shipCells.map((c) => c.row);
+      const cols = shipCells.map((c) => c.col);
+      const minRow = Math.min(...rows);
+      const minCol = Math.min(...cols);
+      const isVertical = new Set(cols).size === 1;
+
+      ships.push({
+        shipType: s.sunkShipType,
+        originRow: minRow,
+        originCol: minCol,
+        orientation: isVertical ? 'VERTICAL' : 'HORIZONTAL',
+        size: SHIP_SIZES[s.sunkShipType] || shipCells.length,
+      });
+    });
+
+    return ships;
+  }, [shotsReceived]);
+
   const getCellState = (row, col) => {
     const key = `${row},${col}`;
     const result = shotMap.get(key);
     if (!result) return 'empty';
-    // HIDDEN result from backend (shot during fog) — always show as hidden
     if (result === 'HIDDEN') return 'fog-hidden';
-    // Under active fog, mask all results as unknown
     if (fogActive) return 'fog-hidden';
     if (sunkCells.has(key)) return 'sunk';
     if (result === 'HIT') return 'hit';
@@ -84,36 +136,53 @@ const OpponentBoard = ({ shotsReceived, isMyTurn, onFire, fogActive = false, blo
           </div>
 
           {/* Grid */}
-          <div className="grid grid-cols-10 gap-grid-gap bg-outline-variant/50 border border-outline-variant">
-            {Array.from({ length: 100 }, (_, i) => {
-              const row = Math.floor(i / 10);
-              const col = i % 10;
-              const hasShot = shotMap.has(`${row},${col}`);
-              const cellState = getCellState(row, col);
-              const blocked = isRowBlocked(row);
+          <div className="relative">
+            <div className="grid grid-cols-10 gap-grid-gap bg-outline-variant/50 border border-outline-variant">
+              {Array.from({ length: 100 }, (_, i) => {
+                const row = Math.floor(i / 10);
+                const col = i % 10;
+                const hasShot = shotMap.has(`${row},${col}`);
+                const cellState = getCellState(row, col);
+                const blocked = isRowBlocked(row);
 
-              return (
-                <div key={i} className="relative">
-                  <BoardCell
-                    state={cellState === 'fog-hidden' ? 'empty' : cellState}
-                    onClick={() => handleClick(row, col)}
-                    style={{
-                      cursor: isMyTurn && !hasShot && !blocked ? 'crosshair' : 'default',
-                    }}
+                return (
+                  <div key={i} className="relative">
+                    <BoardCell
+                      state={cellState === 'fog-hidden' ? 'empty' : cellState}
+                      onClick={() => handleClick(row, col)}
+                      style={{
+                        cursor: isMyTurn && !hasShot && !blocked ? 'crosshair' : 'default',
+                      }}
+                    />
+                    {fogActive && hasShot && (
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <span className="font-mono-data text-sm text-on-surface/70">?</span>
+                      </div>
+                    )}
+                    {blocked && !hasShot && (
+                      <div className="absolute inset-0 bg-blue-900/40 pointer-events-none border border-blue-400/30" />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Sunk ship sprites overlay */}
+            {sunkShips.length > 0 && !fogActive && (
+              <div className="absolute z-10 pointer-events-none" style={{ top: 1, left: 1 }}>
+                {sunkShips.map((ship) => (
+                  <ShipSprite
+                    key={`${ship.shipType}-${ship.originRow}-${ship.originCol}`}
+                    shipType={ship.shipType}
+                    originRow={ship.originRow}
+                    originCol={ship.originCol}
+                    orientation={ship.orientation}
+                    size={ship.size}
+                    isSunk
                   />
-                  {/* Fog: show "?" over cells that have shots */}
-                  {fogActive && hasShot && (
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <span className="font-mono-data text-sm text-on-surface/70">?</span>
-                    </div>
-                  )}
-                  {/* Tide: blocked row visual indicator */}
-                  {blocked && !hasShot && (
-                    <div className="absolute inset-0 bg-blue-900/40 pointer-events-none border border-blue-400/30" />
-                  )}
-                </div>
-              );
-            })}
+                ))}
+              </div>
+            )}
           </div>
         </div>
 

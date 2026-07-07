@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import BoardCell from './BoardCell';
+import { ShipSprite } from './ShipSprite';
 import ShipSelector from '../Placement/ShipSelector';
 import OrientationToggle from '../Placement/OrientationToggle';
 import { ORIENTATIONS } from '../../constants/ships';
@@ -12,6 +13,7 @@ const PlacementBoard = ({ gameId, onConfirmed }) => {
   const [orientation, setOrientation] = useState(ORIENTATIONS.HORIZONTAL);
   const [hoverCells, setHoverCells] = useState([]);
   const [hoverValid, setHoverValid] = useState(true);
+  const [hoverOrigin, setHoverOrigin] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -63,9 +65,13 @@ const PlacementBoard = ({ gameId, onConfirmed }) => {
     const valid = cells.every((c) => c.row < 10 && c.col < 10);
     setHoverCells(cells);
     setHoverValid(valid);
+    setHoverOrigin({ row, col });
   };
 
-  const handleMouseLeave = () => setHoverCells([]);
+  const handleMouseLeave = () => {
+    setHoverCells([]);
+    setHoverOrigin(null);
+  };
 
   const handleClick = (row, col) => {
     if (!selectedShip) return;
@@ -76,6 +82,7 @@ const PlacementBoard = ({ gameId, onConfirmed }) => {
     setPlacedShips((prev) => [...prev.filter((s) => s.type !== selectedShip.type), newShip]);
     setSelectedType(null);
     setHoverCells([]);
+    setHoverOrigin(null);
   };
 
   const handleRemove = (type) => {
@@ -98,10 +105,8 @@ const PlacementBoard = ({ gameId, onConfirmed }) => {
   };
 
   const getCellState = (row, col) => {
-    const key = `${row},${col}`;
     const isHover = hoverCells.some((c) => c.row === row && c.col === col);
     if (isHover) return hoverValid ? 'preview' : 'preview-invalid';
-    if (occupiedCells.has(key)) return 'ship';
     return 'empty';
   };
 
@@ -193,21 +198,54 @@ const PlacementBoard = ({ gameId, onConfirmed }) => {
             </div>
 
             {/* Grid 10x10 */}
-            <div className="grid grid-cols-10 gap-grid-gap bg-outline-variant/50 border border-outline-variant">
-              {Array.from({ length: 100 }, (_, i) => {
-                const row = Math.floor(i / 10);
-                const col = i % 10;
-                return (
-                  <BoardCell
-                    key={i}
-                    state={getCellState(row, col)}
-                    onClick={() => handleClick(row, col)}
-                    onMouseEnter={() => handleMouseEnter(row, col)}
-                    onMouseLeave={handleMouseLeave}
-                    style={{ cursor: selectedShip ? 'crosshair' : 'default' }}
+            <div className="relative">
+              <div className="grid grid-cols-10 gap-grid-gap bg-outline-variant/50 border border-outline-variant">
+                {Array.from({ length: 100 }, (_, i) => {
+                  const row = Math.floor(i / 10);
+                  const col = i % 10;
+                  return (
+                    <BoardCell
+                      key={i}
+                      state={getCellState(row, col)}
+                      onClick={() => handleClick(row, col)}
+                      onMouseEnter={() => handleMouseEnter(row, col)}
+                      onMouseLeave={handleMouseLeave}
+                      style={{ cursor: selectedShip ? 'crosshair' : 'default' }}
+                    />
+                  );
+                })}
+              </div>
+
+              {/* Sprite overlay — offset by 1px to account for grid border */}
+              <div className="absolute z-10 pointer-events-none" style={{ top: 1, left: 1 }}>
+                {/* Sprites dos navios confirmados */}
+                {placedShips.map((ship) => {
+                  const shipDef = fleet.find((s) => s.type === ship.type);
+                  if (!shipDef) return null;
+                  return (
+                    <ShipSprite
+                      key={ship.type}
+                      shipType={ship.type}
+                      originRow={ship.originRow}
+                      originCol={ship.originCol}
+                      orientation={ship.orientation}
+                      size={shipDef.size}
+                    />
+                  );
+                })}
+
+                {/* Sprite preview do navio sendo posicionado */}
+                {selectedShip && hoverOrigin && hoverValid && (
+                  <ShipSprite
+                    shipType={selectedShip.type}
+                    originRow={hoverOrigin.row}
+                    originCol={hoverOrigin.col}
+                    orientation={orientation}
+                    size={selectedShip.size}
+                    isPreview
                   />
-                );
-              })}
+                )}
+              </div>
             </div>
           </div>
         </div>

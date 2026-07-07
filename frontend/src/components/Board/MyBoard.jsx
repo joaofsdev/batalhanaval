@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import BoardCell from './BoardCell';
+import { ShipSprite } from './ShipSprite';
 
 const ROWS = ['A','B','C','D','E','F','G','H','I','J'];
 
@@ -27,10 +28,9 @@ const MyBoard = ({ cells, ships, currentShake }) => {
     const key = `${row},${col}`;
     const cell = cellMap.get(key);
     if (!cell) return 'empty';
-    if (cell.hit && cell.hasShip && sunkCells.has(key)) return 'sunk';
+    if (cell.hit && cell.hasShip && sunkCells.has(key)) return 'empty';
     if (cell.hit && cell.hasShip) return 'hit';
     if (cell.hit && !cell.hasShip) return 'miss';
-    if (cell.hasShip) return 'ship';
     return 'empty';
   };
 
@@ -59,12 +59,29 @@ const MyBoard = ({ cells, ships, currentShake }) => {
           </div>
 
           {/* Grid */}
-          <div className="grid grid-cols-10 gap-grid-gap bg-outline-variant/50 border border-outline-variant">
-            {Array.from({ length: 100 }, (_, i) => {
-              const row = Math.floor(i / 10);
-              const col = i % 10;
-              return <BoardCell key={i} state={getCellState(row, col)} />;
-            })}
+          <div className="relative">
+            <div className="grid grid-cols-10 gap-grid-gap bg-outline-variant/50 border border-outline-variant">
+              {Array.from({ length: 100 }, (_, i) => {
+                const row = Math.floor(i / 10);
+                const col = i % 10;
+                return <BoardCell key={i} state={getCellState(row, col)} />;
+              })}
+            </div>
+
+            {/* Sprite overlay */}
+            <div className="absolute z-10 pointer-events-none" style={{ top: 1, left: 1 }}>
+              {(ships || []).map((ship) => (
+                <ShipSprite
+                  key={ship.shipType}
+                  shipType={ship.shipType}
+                  originRow={ship.originRow}
+                  originCol={ship.originCol}
+                  orientation={ship.orientation}
+                  size={getShipSize(ship.shipType)}
+                  isSunk={ship.sunk}
+                />
+              ))}
+            </div>
           </div>
         </div>
       </div>
