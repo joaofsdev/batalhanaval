@@ -7,6 +7,7 @@ const useStormWebSocket = ({ gameId, subscribe, connected, setToast }) => {
     stormEvent: null,
   });
   const [abilityResult, setAbilityResult] = useState(null);
+  const [abilityRotation, setAbilityRotation] = useState(null);
   const [fogActive, setFogActive] = useState(false);
   const [blockedRow, setBlockedRow] = useState(null);
   const [currentShake, setCurrentShake] = useState(false);
@@ -65,6 +66,17 @@ const useStormWebSocket = ({ gameId, subscribe, connected, setToast }) => {
     subscribe('/user/queue/game/ability-result', (payload) => {
       setAbilityResult(payload);
     });
+
+    // Ability rotation (user-specific queue)
+    subscribe('/user/queue/game/ability-rotated', (payload) => {
+      setAbilityRotation(payload);
+
+      const toastMessage = payload.previousWasDiscarded
+        ? `Habilidade rotacionada! Seu ${payload.previousAbilityName || payload.previousAbility} foi descartado. Nova habilidade: ${payload.newAbilityName}`
+        : `Nova habilidade: ${payload.newAbilityName}`;
+
+      setToast({ message: toastMessage, type: 'info' });
+    });
   }, [connected, gameId, subscribe, setToast]);
 
   const clearFog = useCallback(() => setFogActive(false), []);
@@ -81,6 +93,7 @@ const useStormWebSocket = ({ gameId, subscribe, connected, setToast }) => {
   return {
     stormData,
     abilityResult,
+    abilityRotation,
     fogActive,
     blockedRow,
     currentShake,

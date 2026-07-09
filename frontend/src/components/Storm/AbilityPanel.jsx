@@ -134,7 +134,7 @@ const AbilityResultDisplay = ({ result }) => {
   );
 };
 
-const AbilityPanel = ({ gameId, isMyTurn, isStormTurn, abilityResult, onUseAbility }) => {
+const AbilityPanel = ({ gameId, isMyTurn, isStormTurn, abilityResult, abilityRotation, onUseAbility }) => {
   const [ability, setAbility] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -169,6 +169,19 @@ const AbilityPanel = ({ gameId, isMyTurn, isStormTurn, abilityResult, onUseAbili
       setUsed(true);
     }
   }, [abilityResult]);
+
+  useEffect(() => {
+    if (abilityRotation) {
+      setAbility({
+        abilityType: abilityRotation.newAbility,
+        name: abilityRotation.newAbilityName,
+        description: abilityRotation.newAbilityDescription,
+        used: false,
+      });
+      setUsed(false);
+      setLocalResult(null);
+    }
+  }, [abilityRotation]);
 
   if (loading) {
     return (

@@ -48,7 +48,7 @@ const GamePage = () => {
 
   const isStormMode = game?.gameMode === 'STORM';
 
-  const { stormData, abilityResult, fogActive, blockedRow, currentShake, syncFog, syncStormState } = useStormWebSocket({
+  const { stormData, abilityResult, abilityRotation, fogActive, blockedRow, currentShake, syncFog, syncStormState } = useStormWebSocket({
     gameId: isStormMode ? gameId : null,
     subscribe,
     connected,
@@ -260,6 +260,7 @@ const GamePage = () => {
                   isMyTurn={isMyTurn}
                   isStormTurn={stormData.isStormTurn}
                   abilityResult={abilityResult}
+                  abilityRotation={abilityRotation}
                   onUseAbility={(payload) =>
                     gameApi.useAbility(gameId, payload)
                   }
