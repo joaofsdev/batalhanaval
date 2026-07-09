@@ -2,6 +2,8 @@ package com.softexpert.batalhanaval_api.service;
 
 import com.softexpert.batalhanaval_api.domain.Game;
 import com.softexpert.batalhanaval_api.dto.response.AbilityResultResponse;
+import com.softexpert.batalhanaval_api.dto.response.AbilityRotationNotification;
+import com.softexpert.batalhanaval_api.dto.response.AbilityRotationResult;
 import com.softexpert.batalhanaval_api.dto.response.GameStateNotification;
 import com.softexpert.batalhanaval_api.dto.response.OpponentConnectionEvent;
 import com.softexpert.batalhanaval_api.dto.response.OpponentShotNotification;
@@ -13,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -118,5 +121,20 @@ public class NotificationService {
             "/topic/room/" + gameId,
             payload
         );
+    }
+
+    /**
+     * Notify each player individually about their ability rotation.
+     * Each player receives only their own new ability info via private queue.
+     */
+    public void notifyAbilityRotated(List<AbilityRotationResult> rotationResults) {
+        for (AbilityRotationResult result : rotationResults) {
+            AbilityRotationNotification notification = AbilityRotationNotification.from(result);
+            messagingTemplate.convertAndSendToUser(
+                result.playerId().toString(),
+                "/queue/game/ability-rotated",
+                notification
+            );
+        }
     }
 }

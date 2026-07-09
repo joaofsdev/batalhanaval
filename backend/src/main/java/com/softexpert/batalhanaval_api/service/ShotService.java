@@ -1,6 +1,7 @@
 package com.softexpert.batalhanaval_api.service;
 
 import com.softexpert.batalhanaval_api.domain.*;
+import com.softexpert.batalhanaval_api.dto.response.AbilityRotationResult;
 import com.softexpert.batalhanaval_api.dto.response.ShotResultResponse;
 import com.softexpert.batalhanaval_api.exception.*;
 import com.softexpert.batalhanaval_api.repository.*;
@@ -8,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -22,6 +24,7 @@ public class ShotService {
     private final StormService stormService;
     private final AbilityService abilityService;
     private final VictoryService victoryService;
+    private final NotificationService notificationService;
 
     @Transactional
     public ShotResultResponse processShot(UUID gameId, UUID attackerId, int row, int col) {
@@ -163,6 +166,12 @@ public class ShotService {
         // Storm mode: check if we need to generate next storm event
         if (game.getGameMode() == GameMode.STORM && game.getCurrentTurnNumber() == game.getNextStormTurn()) {
             stormService.generateNextStormEvent(game.getId());
+        }
+
+        // Storm mode: check if we need to rotate abilities
+        if (game.getGameMode() == GameMode.STORM && game.getCurrentTurnNumber() == game.getNextAbilityRotationTurn()) {
+            List<AbilityRotationResult> rotationResults = abilityService.rotateAbilities(game);
+            notificationService.notifyAbilityRotated(rotationResults);
         }
     }
 }

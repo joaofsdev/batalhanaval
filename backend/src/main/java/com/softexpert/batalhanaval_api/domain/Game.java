@@ -64,6 +64,9 @@ public class Game {
     private int nextStormTurn = 3;
 
     @Column(nullable = false)
+    private int nextAbilityRotationTurn = 4;
+
+    @Column(nullable = false)
     private boolean fogActive;
 
     @Column(nullable = false)

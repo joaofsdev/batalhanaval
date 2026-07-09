@@ -2,6 +2,7 @@ package com.softexpert.batalhanaval_api.service;
 
 import com.softexpert.batalhanaval_api.domain.*;
 import com.softexpert.batalhanaval_api.dto.response.AbilityResultResponse;
+import com.softexpert.batalhanaval_api.dto.response.AbilityRotationResult;
 import com.softexpert.batalhanaval_api.dto.response.ShotResultResponse;
 import com.softexpert.batalhanaval_api.exception.*;
 import com.softexpert.batalhanaval_api.repository.*;
@@ -28,10 +29,11 @@ public class AbilityService {
     private final ShotRepository shotRepository;
     private final StormService stormService;
     private final VictoryService victoryService;
+    private final NotificationService notificationService;
 
     /**
      * Initialize abilities for both players when a STORM mode game starts.
-     * Assigns 1 random ability per player.
+     * Assigns 1 random ability per player and schedules first rotation at turn 4.
      */
     @Transactional
     public void initializeAbilities(Game game) {
@@ -45,7 +47,56 @@ public class AbilityService {
         createPlayerAbility(game, game.getPlayer1(), p1Ability);
         createPlayerAbility(game, game.getPlayer2(), p2Ability);
 
-        log.info("Abilities initialized: game={}, p1={}, p2={}", game.getId(), p1Ability, p2Ability);
+        // Schedule first ability rotation after 3 turns (turn 4)
+        game.setNextAbilityRotationTurn(game.getCurrentTurnNumber() + 3);
+
+        log.info("Abilities initialized: game={}, p1={}, p2={}, nextRotation={}",
+            game.getId(), p1Ability, p2Ability, game.getNextAbilityRotationTurn());
+    }
+
+    /**
+     * Rotate abilities for all players in a STORM mode game.
+     * Called when currentTurnNumber reaches nextAbilityRotationTurn.
+     * Discards unused abilities, assigns new random ones, and schedules next rotation.
+     *
+     * @return list of rotation results per player (for notification in Phase 2)
+     */
+    @Transactional
+    public List<AbilityRotationResult> rotateAbilities(Game game) {
+        List<PlayerAbility> abilities = playerAbilityRepository.findByGameId(game.getId());
+        List<AbilityRotationResult> results = new ArrayList<>();
+
+        AbilityType[] types = AbilityType.values();
+
+        for (PlayerAbility ability : abilities) {
+            AbilityType oldType = ability.getAbilityType();
+            boolean wasDiscarded = !ability.isUsed();
+
+            // Assign new random ability (may repeat)
+            AbilityType newType = types[ThreadLocalRandom.current().nextInt(types.length)];
+
+            ability.setAbilityType(newType);
+            ability.setUsed(false);
+            ability.setUsedOnTurn(null);
+            playerAbilityRepository.save(ability);
+
+            results.add(new AbilityRotationResult(
+                ability.getUser().getId(),
+                newType,
+                newType.getDisplayName(),
+                newType.getDescription(),
+                oldType,
+                wasDiscarded
+            ));
+        }
+
+        // Schedule next rotation
+        game.setNextAbilityRotationTurn(game.getCurrentTurnNumber() + 3);
+
+        log.info("Abilities rotated: game={}, turn={}, nextRotation={}, results={}",
+            game.getId(), game.getCurrentTurnNumber(), game.getNextAbilityRotationTurn(), results);
+
+        return results;
     }
 
     /**
@@ -320,6 +371,12 @@ public class AbilityService {
         // Storm mode: check if we need to generate next storm event
         if (game.getGameMode() == GameMode.STORM && game.getCurrentTurnNumber() == game.getNextStormTurn()) {
             stormService.generateNextStormEvent(game.getId());
+        }
+
+        // Storm mode: check if we need to rotate abilities
+        if (game.getGameMode() == GameMode.STORM && game.getCurrentTurnNumber() == game.getNextAbilityRotationTurn()) {
+            List<AbilityRotationResult> rotationResults = rotateAbilities(game);
+            notificationService.notifyAbilityRotated(rotationResults);
         }
     }
 }
