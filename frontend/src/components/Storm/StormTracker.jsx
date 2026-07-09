@@ -1,37 +1,78 @@
-import { useState, useEffect } from 'react';
+const ROWS = ['A','B','C','D','E','F','G','H','I','J'];
 
-const STORM_DESCRIPTIONS = {
-  FOG: 'Neblina — resultados de tiros ocultos até o próximo turno',
-  TIDE: 'Maré — uma linha do tabuleiro está bloqueada',
-  CURRENT: 'Corrente — navios foram deslocados',
-  CALM: 'Calmaria — turno bônus concedido',
+const ACTIVE_EVENT_CONFIG = {
+  FOG: {
+    icon: '🌫️',
+    label: 'NEBLINA ATIVA',
+    description: 'Resultados de tiro ocultos até o próximo turno',
+    borderColor: 'border-secondary/40',
+    bgColor: 'bg-secondary/10',
+    textColor: 'text-secondary',
+  },
+  TIDE: {
+    icon: '🌊',
+    label: 'MARÉ ALTA',
+    borderColor: 'border-blue-400/40',
+    bgColor: 'bg-blue-900/10',
+    textColor: 'text-blue-400',
+  },
 };
 
-const getCurrentDescription = (stormEvent) => {
-  if (stormEvent.shipMoved === true) {
-    return 'Corrente Marítima! Seus navios podem ter se deslocado.';
+const ActiveEventBanner = ({ fogActive, blockedRow }) => {
+  if (fogActive) {
+    const cfg = ACTIVE_EVENT_CONFIG.FOG;
+    return (
+      <div className={`flex items-center gap-2 px-3 py-2 border ${cfg.borderColor} ${cfg.bgColor}`}>
+        <span className="text-base leading-none">{cfg.icon}</span>
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className={`font-label-caps text-label-caps ${cfg.textColor}`}>{cfg.label}</span>
+          <span className="text-xs text-on-surface-variant">— {cfg.description}</span>
+        </div>
+      </div>
+    );
   }
-  if (stormEvent.shipMoved === false) {
-    return 'Corrente Marítima passou sem efeito desta vez.';
+
+  if (blockedRow != null) {
+    const cfg = ACTIVE_EVENT_CONFIG.TIDE;
+    const rowLetter = ROWS[blockedRow] || blockedRow;
+    return (
+      <div className={`flex items-center gap-2 px-3 py-2 border ${cfg.borderColor} ${cfg.bgColor}`}>
+        <span className="text-base leading-none">{cfg.icon}</span>
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className={`font-label-caps text-label-caps ${cfg.textColor}`}>{cfg.label}</span>
+          <span className="text-xs text-on-surface-variant">— linha {rowLetter} bloqueada para disparos</span>
+        </div>
+      </div>
+    );
   }
-  return STORM_DESCRIPTIONS.CURRENT;
+
+  return null;
 };
 
-const StormTracker = ({ turnsUntilStorm, isStormTurn, stormEvent }) => {
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    if (isStormTurn && stormEvent) {
-      setVisible(true);
-    } else {
-      setVisible(false);
-    }
-  }, [isStormTurn, stormEvent]);
+const StormTracker = ({ turnsUntilStorm, isStormTurn, fogActive, blockedRow }) => {
+  const hasActiveEffect = fogActive || blockedRow != null;
+  const isStormPending = isStormTurn && !hasActiveEffect;
 
   return (
     <div className="flex flex-col gap-2">
-      {/* Countdown */}
-      {!isStormTurn && turnsUntilStorm != null && turnsUntilStorm > 0 && (
+      {/* Storm pending banner — storm turn active but no effect resolved yet */}
+      {isStormPending && (
+        <div className="flex items-center gap-2 px-3 py-2 border border-warning/40 bg-warning/10 animate-pulse">
+          <span className="material-symbols-outlined text-warning text-sm">thunderstorm</span>
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="font-label-caps text-label-caps text-warning">TEMPESTADE IMINENTE</span>
+            <span className="text-xs text-on-surface-variant">— evento será resolvido com seu próximo disparo</span>
+          </div>
+        </div>
+      )}
+
+      {/* Active effect banner — persists while effect is active */}
+      {hasActiveEffect && (
+        <ActiveEventBanner fogActive={fogActive} blockedRow={blockedRow} />
+      )}
+
+      {/* Countdown — hidden during storm turn or when an effect is active */}
+      {!isStormTurn && !hasActiveEffect && turnsUntilStorm != null && turnsUntilStorm > 0 && (
         <div className="flex items-center gap-2 bg-surface-container px-3 py-2 border border-outline-variant">
           <span className="material-symbols-outlined text-warning text-sm">thunderstorm</span>
           <span className="font-mono-data text-mono-data text-on-surface-variant">
@@ -39,29 +80,6 @@ const StormTracker = ({ turnsUntilStorm, isStormTurn, stormEvent }) => {
           </span>
         </div>
       )}
-
-      {/* Storm banner */}
-      <div
-        className={`overflow-hidden transition-all duration-500 ease-out ${
-          visible ? 'max-h-32 opacity-100' : 'max-h-0 opacity-0'
-        }`}
-      >
-        {stormEvent && (
-          <div className="bg-warning/10 border border-warning/40 px-4 py-3 flex items-center gap-3">
-            <span className="material-symbols-outlined text-warning text-xl">thunderstorm</span>
-            <div>
-              <p className="font-label-caps text-label-caps text-warning">
-                TEMPESTADE — {stormEvent.type}
-              </p>
-              <p className="text-xs text-on-surface-variant">
-                {stormEvent.type === 'CURRENT'
-                  ? getCurrentDescription(stormEvent)
-                  : (stormEvent.message || STORM_DESCRIPTIONS[stormEvent.type] || 'Evento de tempestade ativo')}
-              </p>
-            </div>
-          </div>
-        )}
-      </div>
     </div>
   );
 };

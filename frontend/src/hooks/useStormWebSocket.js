@@ -50,7 +50,7 @@ const useStormWebSocket = ({ gameId, subscribe, connected, setToast }) => {
             setToast({ message: event.message || 'Corrente Marítima — posições alteradas', type: 'info' });
             break;
           case 'CALM':
-            setToast({ message: 'Calmaria — turno bônus!', type: 'success' });
+            setToast({ message: 'Calmaria — tiro bônus concedido ao jogador da vez!', type: 'success' });
             break;
           default:
             break;

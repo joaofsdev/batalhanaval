@@ -298,7 +298,7 @@ const AbilityPanel = ({ gameId, isMyTurn, isStormTurn, abilityResult, abilityRot
       {/* Disabled reason hint */}
       {!used && !canUse && (
         <p className="text-xs text-on-surface-variant/70 text-center">
-          {isStormTurn ? 'Bloqueado por tempestade' : 'Aguarde seu turno'}
+          {isStormTurn ? 'Aguarde — tempestade será resolvida com seu disparo' : 'Aguarde seu turno'}
         </p>
       )}
 

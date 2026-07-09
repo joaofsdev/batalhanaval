@@ -122,3 +122,16 @@
 .animate-current-shake {
   animation: current-shake 0.6s ease-in-out;
 }
+
+/* Turn timer urgency shake */
+@keyframes urgency-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-2px); }
+  40% { transform: translateX(2px); }
+  60% { transform: translateX(-1px); }
+  80% { transform: translateX(1px); }
+}
+
+.animate-shake {
+  animation: urgency-shake 0.4s ease-in-out infinite;
+}

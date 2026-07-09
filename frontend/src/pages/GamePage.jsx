@@ -14,6 +14,7 @@ import Toast from "../components/shared/Toast";
 import GameOverOverlay from "../components/GameStatus/GameOverOverlay";
 import AbilityPanel from "../components/Storm/AbilityPanel";
 import StormTracker from "../components/Storm/StormTracker";
+import StormTutorial, { STORAGE_KEY as STORM_TUTORIAL_KEY } from "../components/Storm/StormTutorial";
 import useStormWebSocket from "../hooks/useStormWebSocket";
 import { GAME_STATUS } from "../constants/ships";
 import * as gameApi from "../api/gameApi";
@@ -60,6 +61,20 @@ const GamePage = () => {
     connected,
     setToast,
   });
+
+  // Storm tutorial state
+  const [showTutorial, setShowTutorial] = useState(false);
+
+  // Auto-show tutorial on first Storm game
+  useEffect(() => {
+    if (
+      isStormMode &&
+      game?.status === GAME_STATUS.IN_PROGRESS &&
+      !localStorage.getItem(STORM_TUTORIAL_KEY)
+    ) {
+      setShowTutorial(true);
+    }
+  }, [isStormMode, game?.status]);
 
   // Reset local state when navigating to a different game (e.g., rematch)
   useEffect(() => {
@@ -261,12 +276,15 @@ const GamePage = () => {
               key={game.currentTurnPlayerId}
               isMyTurn={isMyTurn}
               opponentName={opponent?.username}
+              muted={muted}
+              onTimeout={() => setToast({ message: 'Turno pulado! Mais 2 e você perde por AFK.', type: 'error' })}
             />
             {isStormMode && (
               <StormTracker
                 turnsUntilStorm={stormData.turnsUntilStorm}
                 isStormTurn={stormData.isStormTurn}
-                stormEvent={stormData.stormEvent}
+                fogActive={fogActive}
+                blockedRow={blockedRow}
               />
             )}
             <div className="flex flex-col md:flex-row gap-6 justify-center items-start">
@@ -369,6 +387,15 @@ const GamePage = () => {
               </span>
             </button>
           )}
+          {isStormMode && (
+            <button
+              onClick={() => setShowTutorial(true)}
+              className="flex items-center gap-1 text-on-surface-variant hover:text-primary transition-colors"
+              title="Tutorial Modo Tempestade"
+            >
+              <span className="material-symbols-outlined text-sm">help</span>
+            </button>
+          )}
           <button
             onClick={toggleMute}
             className="flex items-center gap-1 text-on-surface-variant hover:text-primary transition-colors"
@@ -399,6 +426,13 @@ const GamePage = () => {
           message={toast.message}
           type={toast.type}
           onClose={() => setToast(null)}
+        />
+      )}
+
+      {isStormMode && (
+        <StormTutorial
+          open={showTutorial}
+          onClose={() => setShowTutorial(false)}
         />
       )}
     </div>

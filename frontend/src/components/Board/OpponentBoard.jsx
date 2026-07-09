@@ -174,7 +174,7 @@ const OpponentBoard = ({ shotsReceived, isMyTurn, onFire, fogActive = false, blo
         )}
       </div>
       <span className="font-label-caps text-label-caps text-primary">
-        {fogActive ? 'NEBLINA ATIVA' : blockedRow != null ? `MARÉ — LINHA ${ROWS[blockedRow]} BLOQUEADA` : isMyTurn ? 'SELECIONE O ALVO' : 'FOG OF WAR'}
+        {isMyTurn ? 'SELECIONE O ALVO' : 'TABULEIRO INIMIGO'}
       </span>
     </div>
   );
