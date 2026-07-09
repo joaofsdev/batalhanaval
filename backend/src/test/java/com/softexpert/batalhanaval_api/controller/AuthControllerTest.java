@@ -1,6 +1,7 @@
 package com.softexpert.batalhanaval_api.controller;
 
 import com.softexpert.batalhanaval_api.config.SecurityConfig;
+import com.softexpert.batalhanaval_api.domain.UserRole;
 import com.softexpert.batalhanaval_api.dto.response.AuthResponse;
 import com.softexpert.batalhanaval_api.exception.InvalidCredentialsException;
 import com.softexpert.batalhanaval_api.exception.UsernameAlreadyTakenException;
@@ -35,7 +36,7 @@ class AuthControllerTest {
 
     @Test
     void register_shouldReturn201() throws Exception {
-        AuthResponse response = new AuthResponse(UUID.randomUUID(), "jogador1", "j1@email.com", "token123");
+        AuthResponse response = new AuthResponse(UUID.randomUUID(), "jogador1", "j1@email.com", UserRole.PLAYER, "token123");
         when(authService.register(any())).thenReturn(response);
 
         mockMvc.perform(post("/api/auth/register")
@@ -68,7 +69,7 @@ class AuthControllerTest {
 
     @Test
     void login_shouldReturn200() throws Exception {
-        AuthResponse response = new AuthResponse(UUID.randomUUID(), "jogador1", "j1@email.com", "token123");
+        AuthResponse response = new AuthResponse(UUID.randomUUID(), "jogador1", "j1@email.com", UserRole.PLAYER, "token123");
         when(authService.login(any())).thenReturn(response);
 
         mockMvc.perform(post("/api/auth/login")

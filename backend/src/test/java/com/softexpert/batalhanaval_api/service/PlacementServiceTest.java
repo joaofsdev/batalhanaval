@@ -3,6 +3,7 @@ package com.softexpert.batalhanaval_api.service;
 import com.softexpert.batalhanaval_api.domain.*;
 import com.softexpert.batalhanaval_api.dto.request.ShipPlacement;
 import com.softexpert.batalhanaval_api.exception.InvalidShipPlacementException;
+import com.softexpert.batalhanaval_api.repository.ShipRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -10,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Mockito.mock;
 
 class PlacementServiceTest {
 
@@ -18,7 +20,7 @@ class PlacementServiceTest {
 
     @BeforeEach
     void setUp() {
-        placementService = new PlacementService();
+        placementService = new PlacementService(mock(ShipRepository.class));
         board = new Board();
         board.setReady(false);
         board.setShips(new ArrayList<>());

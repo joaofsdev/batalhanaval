@@ -58,7 +58,7 @@ class GameServiceTest {
         });
         when(boardRepository.save(any(Board.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        GameResponse response = gameService.createOrJoinGame(player1.getId());
+        GameResponse response = gameService.createOrJoinGame(player1.getId(), GameMode.CLASSIC);
 
         assertThat(response.status()).isEqualTo(GameStatus.WAITING);
         assertThat(response.player1().username()).isEqualTo("player1");
@@ -81,7 +81,7 @@ class GameServiceTest {
         when(boardRepository.save(any(Board.class))).thenAnswer(inv -> inv.getArgument(0));
         when(shotRepository.findAllByGameIdAndAttackerId(any(), any())).thenReturn(List.of());
 
-        GameResponse response = gameService.createOrJoinGame(player2.getId());
+        GameResponse response = gameService.createOrJoinGame(player2.getId(), GameMode.CLASSIC);
 
         assertThat(response.status()).isEqualTo(GameStatus.PLACING);
         assertThat(response.player2().username()).isEqualTo("player2");
@@ -94,7 +94,7 @@ class GameServiceTest {
 
         when(gameRepository.findActiveGameByUserId(eq(player1.getId()), any())).thenReturn(Optional.of(activeGame));
 
-        assertThatThrownBy(() -> gameService.createOrJoinGame(player1.getId()))
+        assertThatThrownBy(() -> gameService.createOrJoinGame(player1.getId(), GameMode.CLASSIC))
             .isInstanceOf(PlayerAlreadyInGameException.class);
     }
 
