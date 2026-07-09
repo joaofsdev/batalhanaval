@@ -260,7 +260,7 @@ public class StormService {
     private String buildStormMessage(StormEvent event, Boolean shipMoved) {
         return switch (event.getEventType()) {
             case FOG -> "Nevoeiro! Resultados dos tiros ficam ocultos por 4 turnos.";
-            case TIDE -> "Maré Alta! Linha " + event.getAffectedAxis().replace("ROW_", "") + " está inacessível por 2 turnos.";
+            case TIDE -> "Maré Alta! Linha " + (char) ('A' + Integer.parseInt(event.getAffectedAxis().replace("ROW_", ""))) + " está inacessível por 2 turnos.";
             case CURRENT -> Boolean.TRUE.equals(shipMoved)
                 ? "Corrente Marítima! Navios se deslocaram 1 célula."
                 : "Corrente Marítima passou, mas nenhum navio pôde se mover.";
