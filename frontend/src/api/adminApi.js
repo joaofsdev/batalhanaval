@@ -18,6 +18,9 @@ export const reactivateUser = (id) =>
 export const getActiveGames = (page = 0, size = 20) =>
   axiosClient.get(`/api/admin/games/active?page=${page}&size=${size}`);
 
+export const revealBoards = (gameId) =>
+  axiosClient.get(`/api/admin/games/${gameId}/boards`);
+
 export const forceEndGame = (id) =>
   axiosClient.patch(`/api/admin/games/${id}/force-end`);
 

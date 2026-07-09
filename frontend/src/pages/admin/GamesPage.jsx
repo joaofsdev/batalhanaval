@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import * as adminApi from '../../api/adminApi';
 import Toast from '../../components/shared/Toast';
+import MyBoard from '../../components/Board/MyBoard';
 
 const STATUS_LABELS = {
   WAITING: 'Aguardando',
@@ -34,9 +35,13 @@ const GamesPage = () => {
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(null);
 
-  // Modal state
+  // Force-end modal state
   const [selectedGame, setSelectedGame] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
+
+  // Reveal boards modal state
+  const [revealData, setRevealData] = useState(null);
+  const [revealLoading, setRevealLoading] = useState(false);
 
   const loadGames = useCallback(async () => {
     setLoading(true);
@@ -44,7 +49,7 @@ const GamesPage = () => {
       const res = await adminApi.getActiveGames(page, 20);
       setGames(res.data.content);
       setTotalPages(res.data.totalPages);
-    } catch (err) {
+    } catch {
       setToast({ message: 'Erro ao carregar partidas', type: 'error' });
     } finally {
       setLoading(false);
@@ -69,6 +74,19 @@ const GamesPage = () => {
       setToast({ message: msg, type: 'error' });
     } finally {
       setActionLoading(false);
+    }
+  };
+
+  const handleRevealBoards = async (game) => {
+    setRevealLoading(true);
+    try {
+      const res = await adminApi.revealBoards(game.id);
+      setRevealData(res.data);
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Erro ao revelar boards';
+      setToast({ message: msg, type: 'error' });
+    } finally {
+      setRevealLoading(false);
     }
   };
 
@@ -126,7 +144,15 @@ const GamesPage = () => {
                     <td className="px-3 py-2 text-on-surface-variant text-xs">
                       {formatDate(game.createdAt)}
                     </td>
-                    <td className="px-3 py-2">
+                    <td className="px-3 py-2 flex gap-1">
+                      <button
+                        onClick={() => handleRevealBoards(game)}
+                        disabled={revealLoading}
+                        title="Revelar boards"
+                        className="px-2 py-1 text-xs border border-primary text-primary rounded hover:bg-primary/10 transition-colors disabled:opacity-50"
+                      >
+                        <span className="material-symbols-outlined text-sm align-middle">visibility</span>
+                      </button>
                       <button
                         onClick={() => setSelectedGame(game)}
                         className="px-2 py-1 text-xs border border-error text-error rounded hover:bg-error/10 transition-colors"
@@ -165,7 +191,7 @@ const GamesPage = () => {
         </div>
       )}
 
-      {/* Modal de confirmação */}
+      {/* Modal de confirmação - Forçar encerramento */}
       {selectedGame && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
           <div className="bg-surface-container-high p-6 border border-outline-variant flex flex-col gap-4 min-w-[320px] max-w-md rounded">
@@ -198,6 +224,76 @@ const GamesPage = () => {
                 className="flex-1 py-2 bg-error text-on-primary text-sm rounded hover:bg-error/90 transition-colors disabled:opacity-50"
               >
                 {actionLoading ? 'Processando...' : 'Encerrar partida'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal - Revelar Boards */}
+      {revealData && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 overflow-y-auto p-4">
+          <div className="bg-surface-container-high p-6 border border-outline-variant flex flex-col gap-4 rounded max-w-4xl w-full">
+            <div className="flex items-center justify-between">
+              <p className="font-label-caps text-label-caps text-on-surface uppercase">
+                <span className="material-symbols-outlined text-sm align-middle mr-1">visibility</span>
+                Boards revelados — {truncateId(revealData.gameId)}
+              </p>
+              <button
+                onClick={() => setRevealData(null)}
+                className="text-on-surface-variant hover:text-on-surface transition-colors"
+              >
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+
+            <div className="text-xs text-on-surface-variant flex gap-4">
+              <span>Status: <span className={`px-2 py-0.5 rounded ${STATUS_BADGES[revealData.status] || ''}`}>{STATUS_LABELS[revealData.status] || revealData.status}</span></span>
+              <span>Modo: {revealData.gameMode}</span>
+            </div>
+
+            <div className="flex flex-col md:flex-row gap-6 justify-center items-start mt-2">
+              {/* Player 1 Board */}
+              <div className="flex flex-col items-center gap-2">
+                <span className="font-mono-data text-mono-data text-xs text-primary">
+                  Board de {revealData.player1?.username || '—'}
+                </span>
+                {revealData.player1?.board ? (
+                  <MyBoard
+                    cells={revealData.player1.board.cells}
+                    ships={revealData.player1.board.ships}
+                  />
+                ) : (
+                  <div className="border border-outline-variant rounded p-8 text-center text-on-surface-variant text-xs">
+                    Board não posicionado
+                  </div>
+                )}
+              </div>
+
+              {/* Player 2 Board */}
+              <div className="flex flex-col items-center gap-2">
+                <span className="font-mono-data text-mono-data text-xs text-primary">
+                  Board de {revealData.player2?.username || '—'}
+                </span>
+                {revealData.player2?.board ? (
+                  <MyBoard
+                    cells={revealData.player2.board.cells}
+                    ships={revealData.player2.board.ships}
+                  />
+                ) : (
+                  <div className="border border-outline-variant rounded p-8 text-center text-on-surface-variant text-xs">
+                    {revealData.player2 ? 'Board não posicionado' : 'Aguardando jogador 2'}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="flex justify-end mt-2">
+              <button
+                onClick={() => setRevealData(null)}
+                className="px-4 py-2 border border-outline-variant text-on-surface-variant text-sm rounded hover:bg-surface-container transition-colors"
+              >
+                Fechar
               </button>
             </div>
           </div>

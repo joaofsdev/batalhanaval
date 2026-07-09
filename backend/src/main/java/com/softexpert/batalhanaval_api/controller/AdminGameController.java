@@ -1,6 +1,7 @@
 package com.softexpert.batalhanaval_api.controller;
 
 import com.softexpert.batalhanaval_api.domain.User;
+import com.softexpert.batalhanaval_api.dto.response.AdminGameBoardsResponse;
 import com.softexpert.batalhanaval_api.dto.response.AdminGameResponse;
 import com.softexpert.batalhanaval_api.dto.response.PageResponse;
 import com.softexpert.batalhanaval_api.repository.UserRepository;
@@ -26,6 +27,12 @@ public class AdminGameController {
         @RequestParam(defaultValue = "20") int size
     ) {
         return adminGameService.listActiveGames(page, size);
+    }
+
+    @GetMapping("/{id}/boards")
+    public AdminGameBoardsResponse revealBoards(@PathVariable UUID id, @AuthenticationPrincipal UserDetails userDetails) {
+        User admin = userRepository.findByUsername(userDetails.getUsername()).orElseThrow();
+        return adminGameService.revealBoards(id, admin);
     }
 
     @PatchMapping("/{id}/force-end")

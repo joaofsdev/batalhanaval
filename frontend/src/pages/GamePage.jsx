@@ -17,6 +17,7 @@ import StormTracker from "../components/Storm/StormTracker";
 import useStormWebSocket from "../hooks/useStormWebSocket";
 import { GAME_STATUS } from "../constants/ships";
 import * as gameApi from "../api/gameApi";
+import * as adminApi from "../api/adminApi";
 
 const GamePage = () => {
   const { id: gameId } = useParams();
@@ -28,6 +29,11 @@ const GamePage = () => {
   const [rematchInvite, setRematchInvite] = useState(null);
   const [opponentDisconnected, setOpponentDisconnected] = useState(null);
   const subscribedRef = useRef(false);
+
+  // Admin reveal board state (isolated from game state)
+  const [adminBoardsRevealed, setAdminBoardsRevealed] = useState(false);
+  const [adminRevealData, setAdminRevealData] = useState(null);
+  const [adminRevealLoading, setAdminRevealLoading] = useState(false);
 
   const {
     game,
@@ -61,6 +67,8 @@ const GamePage = () => {
     setCancelDisabled(false);
     setRematchInvite(null);
     setOpponentDisconnected(null);
+    setAdminBoardsRevealed(false);
+    setAdminRevealData(null);
     subscribedRef.current = false;
   }, [gameId]);
 
@@ -177,6 +185,30 @@ const GamePage = () => {
     }
   };
 
+  const handleAdminReveal = async () => {
+    // If already revealed, just toggle off
+    if (adminBoardsRevealed) {
+      setAdminBoardsRevealed(false);
+      return;
+    }
+    // If data already loaded, just toggle on
+    if (adminRevealData) {
+      setAdminBoardsRevealed(true);
+      return;
+    }
+    // First time: fetch and activate
+    setAdminRevealLoading(true);
+    try {
+      const res = await adminApi.revealBoards(gameId);
+      setAdminRevealData(res.data);
+      setAdminBoardsRevealed(true);
+    } catch {
+      setToast({ message: "Erro ao revelar boards", type: "error" });
+    } finally {
+      setAdminRevealLoading(false);
+    }
+  };
+
   const handleSurrender = async () => {
     if (!window.confirm("Tem certeza que deseja desistir? Isso contará como derrota.")) return;
     try {
@@ -251,6 +283,12 @@ const GamePage = () => {
                 }
                 fogActive={fogActive}
                 blockedRow={blockedRow}
+                revealedShips={adminBoardsRevealed && adminRevealData ? (() => {
+                  const opponentData = adminRevealData.player1?.playerId === user.id
+                    ? adminRevealData.player2
+                    : adminRevealData.player1;
+                  return opponentData?.board?.ships || null;
+                })() : null}
               />
             </div>
             {isStormMode && (
@@ -314,15 +352,33 @@ const GamePage = () => {
             MISSÃO #{gameId?.slice(0, 8).toUpperCase()}
           </span>
         </div>
-        <button
-          onClick={toggleMute}
-          className="flex items-center gap-1 text-on-surface-variant hover:text-primary transition-colors"
-          title={muted ? 'Ativar sons' : 'Desativar sons'}
-        >
-          <span className="material-symbols-outlined text-sm">
-            {muted ? 'volume_off' : 'volume_up'}
-          </span>
-        </button>
+        <div className="flex items-center gap-2">
+          {user?.role === 'ADMIN' && game && (game.status === GAME_STATUS.IN_PROGRESS || game.status === GAME_STATUS.PLACING) && (
+            <button
+              onClick={handleAdminReveal}
+              disabled={adminRevealLoading}
+              className={`flex items-center gap-1 transition-colors disabled:opacity-50 ${
+                adminBoardsRevealed
+                  ? 'text-primary'
+                  : 'text-on-surface-variant hover:text-primary'
+              }`}
+              title={adminBoardsRevealed ? 'Ocultar boards' : 'Admin: Revelar boards'}
+            >
+              <span className="material-symbols-outlined text-sm">
+                {adminBoardsRevealed ? 'visibility' : 'admin_panel_settings'}
+              </span>
+            </button>
+          )}
+          <button
+            onClick={toggleMute}
+            className="flex items-center gap-1 text-on-surface-variant hover:text-primary transition-colors"
+            title={muted ? 'Ativar sons' : 'Desativar sons'}
+          >
+            <span className="material-symbols-outlined text-sm">
+              {muted ? 'volume_off' : 'volume_up'}
+            </span>
+          </button>
+        </div>
       </header>
 
       {/* Opponent disconnection banner */}

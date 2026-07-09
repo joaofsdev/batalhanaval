@@ -19,7 +19,7 @@ const getShipCellKeys = (originRow, originCol, orientation, size) => {
   return keys;
 };
 
-const OpponentBoard = ({ shotsReceived, isMyTurn, onFire, fogActive = false, blockedRow = null }) => {
+const OpponentBoard = ({ shotsReceived, isMyTurn, onFire, fogActive = false, blockedRow = null, revealedShips = null }) => {
   const shotMap = new Map(
     (shotsReceived || []).map((s) => [`${s.row},${s.col}`, s.result])
   );
@@ -145,6 +145,22 @@ const OpponentBoard = ({ shotsReceived, isMyTurn, onFire, fogActive = false, blo
                     orientation={ship.orientation}
                     size={ship.size}
                     isSunk
+                  />
+                ))}
+              </div>
+            )}
+
+            {/* Admin revealed ships overlay */}
+            {revealedShips && revealedShips.length > 0 && (
+              <div className="absolute z-20 pointer-events-none opacity-60" style={{ top: 1, left: 1 }}>
+                {revealedShips.map((ship) => (
+                  <ShipSprite
+                    key={`reveal-${ship.shipType}-${ship.originRow}-${ship.originCol}`}
+                    shipType={ship.shipType}
+                    originRow={ship.originRow}
+                    originCol={ship.originCol}
+                    orientation={ship.orientation}
+                    size={SHIP_SIZES[ship.shipType] || 1}
                   />
                 ))}
               </div>
