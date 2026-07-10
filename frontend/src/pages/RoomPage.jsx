@@ -21,20 +21,23 @@ const RoomPage = () => {
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
 
-  const handleRoomUpdate = useCallback((data) => {
-    if (data.status === "CANCELLED") {
-      setError("A sala foi cancelada pelo criador.");
-      setView("choosing");
-      setRoom(null);
-      return;
-    }
-    setRoom(data);
+  const handleRoomUpdate = useCallback(
+    (data) => {
+      if (data.status === "CANCELLED") {
+        setError("A sala foi cancelada pelo criador.");
+        setView("choosing");
+        setRoom(null);
+        return;
+      }
+      setRoom(data);
 
-    // If both ready, navigate to game
-    if (data.status === "STARTING") {
-      setTimeout(() => navigate(`/game/${data.gameId}`), 1000);
-    }
-  }, [navigate]);
+      // If both ready, navigate to game
+      if (data.status === "STARTING") {
+        setTimeout(() => navigate(`/game/${data.gameId}`), 1000);
+      }
+    },
+    [navigate],
+  );
 
   const { connected, subscribe } = useWebSocket({ token, onReconnect: null });
 
@@ -131,19 +134,21 @@ const RoomPage = () => {
       {/* Content */}
       <main className="flex-1 flex items-center justify-center p-margin-safe">
         <div className="w-full max-w-md bg-surface-container border border-outline-variant p-panel-padding flex flex-col gap-6">
-          
           {/* Choosing view: Create or Join */}
           {view === "choosing" && (
             <>
               <header className="border-b border-outline-variant pb-3 flex items-center gap-2">
-                <span className="material-symbols-outlined text-primary text-sm">meeting_room</span>
+                <span className="material-symbols-outlined text-primary text-sm">
+                  meeting_room
+                </span>
                 <h2 className="font-headline-md text-headline-md text-primary tracking-widest">
                   SALA PRIVADA
                 </h2>
               </header>
 
               <p className="font-body-md text-body-md text-on-surface-variant">
-                Crie uma sala para jogar com um amigo ou entre usando um código de acesso.
+                Crie uma sala para jogar com um amigo ou entre usando um código
+                de acesso.
               </p>
 
               <div className="flex flex-col gap-3">
@@ -157,7 +162,9 @@ const RoomPage = () => {
 
                 <div className="flex items-center gap-3">
                   <div className="flex-1 h-px bg-outline-variant" />
-                  <span className="font-label-caps text-label-caps text-on-surface-variant">OU</span>
+                  <span className="font-label-caps text-label-caps text-on-surface-variant">
+                    OU
+                  </span>
                   <div className="flex-1 h-px bg-outline-variant" />
                 </div>
 
@@ -165,7 +172,9 @@ const RoomPage = () => {
                   <input
                     type="text"
                     value={inputToken}
-                    onChange={(e) => setInputToken(e.target.value.toUpperCase())}
+                    onChange={(e) =>
+                      setInputToken(e.target.value.toUpperCase())
+                    }
                     placeholder="CÓDIGO DA SALA"
                     maxLength={6}
                     className="flex-1 px-4 py-3 bg-surface-container-high border border-outline-variant text-on-surface font-mono-data text-mono-data placeholder:text-on-surface-variant/50 focus:border-primary focus:outline-none tracking-widest text-center uppercase"
@@ -187,9 +196,13 @@ const RoomPage = () => {
             <>
               <header className="border-b border-outline-variant pb-3 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-primary text-sm">groups</span>
+                  <span className="material-symbols-outlined text-primary text-sm">
+                    groups
+                  </span>
                   <h2 className="font-headline-md text-headline-md text-primary tracking-widest">
-                    {room.status === "WAITING_OPPONENT" ? "AGUARDANDO" : "SALA PRONTA"}
+                    {room.status === "WAITING_OPPONENT"
+                      ? "AGUARDANDO"
+                      : "SALA PRONTA"}
                   </h2>
                 </div>
                 <span className="font-mono-data text-mono-data text-on-surface-variant">
@@ -222,7 +235,7 @@ const RoomPage = () => {
                   </span>
                 )}
                 <span className="font-mono-data text-mono-data text-on-surface-variant text-xs">
-                  Compartilhe o código ou link com seu oponente
+                  Compartilhe o código com seu oponente
                 </span>
               </div>
 
@@ -241,7 +254,9 @@ const RoomPage = () => {
                       HOST
                     </span>
                   </div>
-                  <span className={`font-label-caps text-label-caps ${room.hostReady ? "text-primary" : "text-on-surface-variant"}`}>
+                  <span
+                    className={`font-label-caps text-label-caps ${room.hostReady ? "text-primary" : "text-on-surface-variant"}`}
+                  >
                     {room.hostReady ? "✓ PRONTO" : "AGUARDANDO"}
                   </span>
                 </div>
@@ -261,7 +276,9 @@ const RoomPage = () => {
                     ) : (
                       <>
                         <div className="w-8 h-8 rounded-full border border-outline-variant bg-surface-container-high flex items-center justify-center">
-                          <span className="material-symbols-outlined text-on-surface-variant text-sm">person_add</span>
+                          <span className="material-symbols-outlined text-on-surface-variant text-sm">
+                            person_add
+                          </span>
                         </div>
                         <span className="font-mono-data text-mono-data text-on-surface-variant animate-pulse">
                           AGUARDANDO OPONENTE...
@@ -270,7 +287,9 @@ const RoomPage = () => {
                     )}
                   </div>
                   {room.guestUsername && (
-                    <span className={`font-label-caps text-label-caps ${room.guestReady ? "text-primary" : "text-on-surface-variant"}`}>
+                    <span
+                      className={`font-label-caps text-label-caps ${room.guestReady ? "text-primary" : "text-on-surface-variant"}`}
+                    >
                       {room.guestReady ? "✓ PRONTO" : "AGUARDANDO"}
                     </span>
                   )}
@@ -280,7 +299,9 @@ const RoomPage = () => {
               {/* Starting animation */}
               {room.status === "STARTING" && (
                 <div className="flex flex-col items-center gap-2 py-4">
-                  <span className="material-symbols-outlined text-primary text-3xl animate-pulse">rocket_launch</span>
+                  <span className="material-symbols-outlined text-primary text-3xl animate-pulse">
+                    rocket_launch
+                  </span>
                   <span className="font-label-caps text-label-caps text-primary animate-pulse">
                     INICIANDO PARTIDA...
                   </span>
@@ -301,7 +322,9 @@ const RoomPage = () => {
                   )}
                   {isReady && room.status !== "STARTING" && (
                     <div className="flex items-center justify-center gap-2 py-3 border border-primary/30 bg-primary-container/10">
-                      <span className="material-symbols-outlined text-primary text-sm">check_circle</span>
+                      <span className="material-symbols-outlined text-primary text-sm">
+                        check_circle
+                      </span>
                       <span className="font-label-caps text-label-caps text-primary">
                         VOCÊ ESTÁ PRONTO — AGUARDANDO OPONENTE
                       </span>
