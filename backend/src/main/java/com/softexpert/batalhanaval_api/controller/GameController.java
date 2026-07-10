@@ -111,14 +111,12 @@ public class GameController {
         UUID opponentId = gameService.getOpponentId(id, userId);
 
         if (response.status() == RematchResponse.RematchStatus.MATCHED) {
-            // Both requested — notify both players about the new game
             if (opponentId != null) {
                 notificationService.notifyRematchMatched(id, response.gameId());
             }
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         }
 
-        // First request — notify opponent that this player wants rematch
         if (opponentId != null) {
             notificationService.notifyRematchInvite(opponentId, new RematchInvite(id, user.getUsername()));
         }

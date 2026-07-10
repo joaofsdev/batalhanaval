@@ -177,7 +177,6 @@ public class RoomService {
         }
         String token = sb.toString();
 
-        // Ensure uniqueness
         if (gameRepository.findByRoomToken(token).isPresent()) {
             return generateToken();
         }

@@ -31,7 +31,6 @@ public class DisconnectionService {
     private final Map<UUID, ScheduledFuture<?>> pendingTimeouts = new ConcurrentHashMap<>();
 
     public void handleDisconnect(UUID userId) {
-        // Clean pending rematch requests for this user
         gameService.getPendingRematches().entrySet().removeIf(entry -> entry.getValue().equals(userId));
 
         gameRepository.findActiveGameByUserId(userId, List.of(GameStatus.IN_PROGRESS))
@@ -66,7 +65,6 @@ public class DisconnectionService {
         try {
             pendingTimeouts.remove(userId);
 
-            // Verify game is still in progress before applying loss
             Game game = gameRepository.findById(gameId).orElse(null);
             if (game == null || game.getStatus() != GameStatus.IN_PROGRESS) {
                 return;
@@ -75,7 +73,6 @@ public class DisconnectionService {
             log.info("Grace period expired for player {} in game {}. Applying automatic loss.",
                 userId, gameId);
 
-            // gameService.surrender() is @Transactional and handles everything
             Game updatedGame = gameService.surrender(gameId, userId);
             notificationService.broadcastGameState(updatedGame);
         } catch (Exception ex) {

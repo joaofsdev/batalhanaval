@@ -123,10 +123,6 @@ public class NotificationService {
         );
     }
 
-    /**
-     * Notify each player individually about their ability rotation.
-     * Each player receives only their own new ability info via private queue.
-     */
     public void notifyAbilityRotated(List<AbilityRotationResult> rotationResults) {
         for (AbilityRotationResult result : rotationResults) {
             AbilityRotationNotification notification = AbilityRotationNotification.from(result);

@@ -14,9 +14,6 @@ public record GameStateNotification(
     boolean bonusShot,
     boolean fogActive
 ) {
-    /**
-     * Constructor for classic mode (backward compatible).
-     */
     public GameStateNotification(GameStatus status, UUID currentTurnPlayerId, UUID winnerId) {
         this(status, currentTurnPlayerId, winnerId, 0, false, 0, false, false);
     }

@@ -47,7 +47,6 @@ public class RankingService {
             myPosition = new RankingEntry(allEntries.size() + 1, currentUserId, currentUsername, 0, 0, 0.0, 1000);
         }
 
-        // Paginate
         long totalElements = allEntries.size();
         int totalPages = (int) Math.ceil((double) totalElements / size);
         int fromIndex = Math.min(page * size, allEntries.size());

@@ -31,10 +31,6 @@ public class AbilityService {
     private final VictoryService victoryService;
     private final NotificationService notificationService;
 
-    /**
-     * Initialize abilities for both players when a STORM mode game starts.
-     * Assigns 1 random ability per player and schedules first rotation at turn 4.
-     */
     @Transactional
     public void initializeAbilities(Game game) {
         if (game.getGameMode() != GameMode.STORM) return;
@@ -47,20 +43,12 @@ public class AbilityService {
         createPlayerAbility(game, game.getPlayer1(), p1Ability);
         createPlayerAbility(game, game.getPlayer2(), p2Ability);
 
-        // Schedule first ability rotation after 3 turns (turn 4)
         game.setNextAbilityRotationTurn(game.getCurrentTurnNumber() + 3);
 
         log.info("Abilities initialized: game={}, p1={}, p2={}, nextRotation={}",
             game.getId(), p1Ability, p2Ability, game.getNextAbilityRotationTurn());
     }
 
-    /**
-     * Rotate abilities for all players in a STORM mode game.
-     * Called when currentTurnNumber reaches nextAbilityRotationTurn.
-     * Discards unused abilities, assigns new random ones, and schedules next rotation.
-     *
-     * @return list of rotation results per player (for notification in Phase 2)
-     */
     @Transactional
     public List<AbilityRotationResult> rotateAbilities(Game game) {
         List<PlayerAbility> abilities = playerAbilityRepository.findByGameId(game.getId());
@@ -72,7 +60,6 @@ public class AbilityService {
             AbilityType oldType = ability.getAbilityType();
             boolean wasDiscarded = !ability.isUsed();
 
-            // Assign new random ability (may repeat)
             AbilityType newType = types[ThreadLocalRandom.current().nextInt(types.length)];
 
             ability.setAbilityType(newType);
@@ -90,7 +77,6 @@ public class AbilityService {
             ));
         }
 
-        // Schedule next rotation
         game.setNextAbilityRotationTurn(game.getCurrentTurnNumber() + 3);
 
         log.info("Abilities rotated: game={}, turn={}, nextRotation={}, results={}",
@@ -99,14 +85,10 @@ public class AbilityService {
         return results;
     }
 
-    /**
-     * Use an ability. Validates all preconditions and executes the effect.
-     */
     @Transactional
     public AbilityResultResponse useAbility(UUID gameId, UUID userId, AbilityType requestedType, Integer row, Integer col, String axis, Integer index) {
         Game game = gameRepository.findById(gameId).orElseThrow(GameNotFoundException::new);
 
-        // Validations
         if (game.getGameMode() != GameMode.STORM) {
             throw new NotStormModeException();
         }
@@ -130,7 +112,6 @@ public class AbilityService {
             throw new InvalidAbilityTypeException();
         }
 
-        // Execute ability
         AbilityResultResponse result = switch (requestedType) {
             case RADAR -> executeRadar(game, userId, row, col);
             case DOUBLE_TORPEDO -> executeDoubleTorpedo(game, userId, row, col);
@@ -138,12 +119,10 @@ public class AbilityService {
             case LINE_BOMBARDMENT -> executeLineBombardment(game, userId, axis, index);
         };
 
-        // Mark as used
         ability.setUsed(true);
         ability.setUsedOnTurn(game.getCurrentTurnNumber());
         playerAbilityRepository.save(ability);
 
-        // Advance turn (ability consumes the player's turn) — unless game ended
         if (game.getStatus() == GameStatus.IN_PROGRESS) {
             advanceTurnAfterAbility(game, userId);
             gameRepository.save(game);
@@ -153,8 +132,6 @@ public class AbilityService {
 
         return result;
     }
-
-    // --- Ability Executions ---
 
     private AbilityResultResponse executeRadar(Game game, UUID userId, Integer centerRow, Integer centerCol) {
         UUID defenderId = getDefenderId(game, userId);
@@ -177,18 +154,15 @@ public class AbilityService {
     }
 
     private AbilityResultResponse executeDoubleTorpedo(Game game, UUID userId, Integer row, Integer col) {
-        // First shot at given coords, second shot at adjacent cell (row+1 or col+1)
         UUID defenderId = getDefenderId(game, userId);
         Board targetBoard = boardRepository.findByGameIdAndOwnerId(game.getId(), defenderId).orElseThrow();
 
         ShotResultResponse shot1 = processSingleShot(game, userId, targetBoard, row, col);
 
-        // If first shot caused victory, skip second shot
         if (game.getStatus() == GameStatus.FINISHED) {
             return AbilityResultResponse.doubleTorpedo(List.of(shot1));
         }
 
-        // Second shot: try row+1, if out of bounds try row-1
         int secondRow = row + 1 <= 9 ? row + 1 : row - 1;
         ShotResultResponse shot2 = processSingleShot(game, userId, targetBoard, secondRow, col);
 
@@ -197,11 +171,6 @@ public class AbilityService {
     }
 
     private AbilityResultResponse executeShield(Game game, UUID userId) {
-        // Shield is stored as a flag on PlayerAbility — when processing incoming shots,
-        // check if defender has an active shield (used=true but shield effect pending).
-        // We'll add a 'shieldActive' field approach: use the board owner's ability record.
-        // For simplicity, shield effect is tracked by checking if the ability was SHIELD and used=true
-        // The ShotService will check for shield before applying damage.
         return AbilityResultResponse.shield();
     }
 
@@ -216,12 +185,11 @@ public class AbilityService {
             int c = "COL".equalsIgnoreCase(axis) ? index : i;
 
             Cell cell = cellRepository.findByBoardIdAndRowAndCol(targetBoard.getId(), r, c).orElse(null);
-            if (cell == null || cell.isHit()) continue; // Skip already hit cells
+            if (cell == null || cell.isHit()) continue;
 
             ShotResultResponse shotResult = processSingleShot(game, userId, targetBoard, r, c);
             results.add(shotResult);
 
-            // If victory was achieved, stop processing remaining cells
             if (game.getStatus() == GameStatus.FINISHED) {
                 break;
             }
@@ -230,20 +198,10 @@ public class AbilityService {
         return AbilityResultResponse.lineBombardment(results);
     }
 
-    // --- Helper Methods ---
-
-    /**
-     * Process a single shot without turn switching.
-     * Checks victory condition after sinking a ship.
-     * Used by DOUBLE_TORPEDO and LINE_BOMBARDMENT.
-     *
-     * @return the shot result (check gameFinished flag via game status after call)
-     */
     private ShotResultResponse processSingleShot(Game game, UUID userId, Board targetBoard, int row, int col) {
         Cell cell = cellRepository.findByBoardIdAndRowAndCol(targetBoard.getId(), row, col).orElse(null);
 
         if (cell == null || cell.isHit()) {
-            // Already hit or invalid — return miss for this position
             return new ShotResultResponse(game.getId(), row, col, ShotResult.MISS, null, null, null, null);
         }
 
@@ -272,7 +230,6 @@ public class AbilityService {
             result = ShotResult.MISS;
         }
 
-        // Record shot
         Shot shot = new Shot();
         shot.setGame(game);
         shot.setAttacker(game.getCurrentTurn());
@@ -286,7 +243,6 @@ public class AbilityService {
         shot.setSunkShipOrientation(sunkShipOrientation);
         shotRepository.save(shot);
 
-        // Check victory condition after sinking a ship
         if (result == ShotResult.SUNK) {
             victoryService.checkVictoryCondition(game, userId, targetBoard);
         }
@@ -309,10 +265,6 @@ public class AbilityService {
             : game.getPlayer1().getId();
     }
 
-    /**
-     * Check if a player has an active shield (SHIELD ability used but not yet consumed).
-     * Called by ShotService when processing incoming shots.
-     */
     public boolean hasActiveShield(UUID gameId, UUID defenderId) {
         return playerAbilityRepository.findByGameIdAndUserId(gameId, defenderId)
             .filter(a -> a.getAbilityType() == AbilityType.SHIELD)
@@ -320,23 +272,15 @@ public class AbilityService {
             .isPresent();
     }
 
-    /**
-     * Consume the shield after blocking a shot. Marks it as no longer active.
-     * We track "shield consumed" by setting usedOnTurn to a negative value (convention).
-     */
     @Transactional
     public void consumeShield(UUID gameId, UUID defenderId) {
         playerAbilityRepository.findByGameIdAndUserId(gameId, defenderId)
             .ifPresent(ability -> {
-                // Mark shield as consumed by setting usedOnTurn to -1 (consumed flag)
                 ability.setUsedOnTurn(-1);
                 playerAbilityRepository.save(ability);
             });
     }
 
-    /**
-     * Check if shield is still active (used but not consumed).
-     */
     public boolean isShieldActiveAndNotConsumed(UUID gameId, UUID defenderId) {
         return playerAbilityRepository.findByGameIdAndUserId(gameId, defenderId)
             .filter(a -> a.getAbilityType() == AbilityType.SHIELD)
@@ -345,35 +289,25 @@ public class AbilityService {
             .isPresent();
     }
 
-    /**
-     * Advance turn after ability use. Mirrors ShotService.advanceTurn logic.
-     * Ability usage consumes the player's turn.
-     */
     private void advanceTurnAfterAbility(Game game, UUID userId) {
-        // If bonus shot is active, consume it instead of switching turn
         if (game.isBonusShot()) {
             game.setBonusShot(false);
             return;
         }
 
-        // Alternate turn
         User nextTurn = game.getPlayer1().getId().equals(userId)
             ? game.getPlayer2()
             : game.getPlayer1();
         game.setCurrentTurn(nextTurn);
 
-        // Increment turn number
         game.setCurrentTurnNumber(game.getCurrentTurnNumber() + 1);
 
-        // Clear expired storm effects (fog, tide last 2 turns)
         stormService.clearExpiredEffects(game);
 
-        // Storm mode: check if we need to generate next storm event
         if (game.getGameMode() == GameMode.STORM && game.getCurrentTurnNumber() == game.getNextStormTurn()) {
             stormService.generateNextStormEvent(game.getId());
         }
 
-        // Storm mode: check if we need to rotate abilities
         if (game.getGameMode() == GameMode.STORM && game.getCurrentTurnNumber() == game.getNextAbilityRotationTurn()) {
             List<AbilityRotationResult> rotationResults = rotateAbilities(game);
             notificationService.notifyAbilityRotated(rotationResults);

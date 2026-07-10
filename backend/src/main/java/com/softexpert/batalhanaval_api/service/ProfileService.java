@@ -33,7 +33,6 @@ public class ProfileService {
         User user = userRepository.findById(userId)
             .orElseThrow(UserNotFoundException::new);
 
-        // Stats
         List<Object[]> rankingRows = gameRepository.findFullRanking();
         long totalGames = 0;
         long wins = 0;
@@ -50,7 +49,6 @@ public class ProfileService {
             }
         }
 
-        // If not found in ranking (no finished games), count anyway
         if (totalGames == 0) {
             totalGames = gameRepository.countFinishedGamesByUserId(userId);
         }
@@ -58,13 +56,11 @@ public class ProfileService {
         long losses = totalGames - wins;
         double winRate = totalGames > 0 ? Math.round((double) wins / totalGames * 1000.0) / 10.0 : 0.0;
 
-        // Combat stats
         long totalShots = shotRepository.countByAttackerId(userId);
         long shotsHit = shotRepository.countByAttackerIdAndResultIn(userId, List.of(ShotResult.HIT, ShotResult.SUNK));
         long shipsSunk = shotRepository.countByAttackerIdAndResult(userId, ShotResult.SUNK);
         double accuracy = totalShots > 0 ? Math.round((double) shotsHit / totalShots * 1000.0) / 10.0 : 0.0;
 
-        // Recent games (last 5)
         List<Game> recentGames = gameRepository.findFinishedGamesByUserId(userId, PageRequest.of(0, 5)).getContent();
         List<GameHistoryEntry> recentEntries = recentGames.stream().map(game -> {
             String opponentUsername;

@@ -17,12 +17,6 @@ public class VictoryService {
     private final GameRepository gameRepository;
     private final EloService eloService;
 
-    /**
-     * Check if all ships on the target board are sunk.
-     * If so, mark the game as FINISHED and set the winner.
-     *
-     * @return true if the game is now finished (all defender ships sunk)
-     */
     @Transactional
     public boolean checkVictoryCondition(Game game, UUID attackerId, Board targetBoard) {
         boolean allSunk = shipRepository.findAllByBoardId(targetBoard.getId()).stream().allMatch(Ship::isSunk);

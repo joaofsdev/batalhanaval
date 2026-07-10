@@ -22,10 +22,6 @@ public class StormService {
     private final ShipRepository shipRepository;
     private final CellRepository cellRepository;
 
-    /**
-     * Generates the next storm event when the current turn matches nextStormTurn.
-     * Called at end-of-turn processing.
-     */
     @Transactional
     public StormEvent generateNextStormEvent(UUID gameId) {
         Game game = gameRepository.findById(gameId).orElseThrow();
@@ -47,7 +43,6 @@ public class StormService {
 
         stormEventRepository.save(event);
 
-        // Schedule next storm at a random interval (3-6 turns from now)
         int nextInterval = 3 + ThreadLocalRandom.current().nextInt(4);
         game.setNextStormTurn(game.getCurrentTurnNumber() + nextInterval);
         gameRepository.save(game);
@@ -58,10 +53,6 @@ public class StormService {
         return event;
     }
 
-    /**
-     * Resolves a pending storm event at the beginning of a storm turn.
-     * Applies effects to the game state.
-     */
     @Transactional
     public StormEventNotification resolveStormEvent(UUID gameId) {
         Game game = gameRepository.findById(gameId).orElseThrow();
@@ -90,44 +81,28 @@ public class StormService {
         return new StormEventNotification(event.getEventType(), event.getAffectedAxis(), message, shipMoved);
     }
 
-    /**
-     * Checks if the current turn is a storm turn (has unresolved event).
-     */
     public boolean isStormTurn(UUID gameId, int turnNumber) {
         return stormEventRepository.findByGameIdAndTurnNumber(gameId, turnNumber).isPresent();
     }
 
-    /**
-     * Checks if a shot is blocked by TIDE event on a specific row.
-     * TIDE lasts 2 turns from when it was resolved.
-     */
     public boolean isShotBlockedByTide(UUID gameId, int row) {
         Game game = gameRepository.findById(gameId).orElseThrow();
         int currentTurn = game.getCurrentTurnNumber();
 
-        // Check unresolved tide (storm turn itself)
         Optional<StormEvent> unresolved = stormEventRepository.findByGameIdAndResolvedFalse(gameId)
             .filter(e -> e.getEventType() == StormEventType.TIDE)
             .filter(e -> e.getAffectedAxis() != null && e.getAffectedAxis().equals("ROW_" + row));
         if (unresolved.isPresent()) return true;
 
-        // Check resolved tide still within 2-turn duration
         return stormEventRepository.findLastResolvedByType(gameId, StormEventType.TIDE)
             .filter(e -> e.getAffectedAxis() != null && e.getAffectedAxis().equals("ROW_" + row))
             .filter(e -> currentTurn <= e.getTurnNumber() + 1)
             .isPresent();
     }
 
-    // --- Private resolution methods ---
-
-    /**
-     * Clears storm effects (fog, tide) that have expired after 2 turns.
-     * Called during advanceTurn. An effect created on turn N expires at turn N+2.
-     */
     public void clearExpiredEffects(Game game) {
         int currentTurn = game.getCurrentTurnNumber();
 
-        // Clear fog if it expired (lasted 4 turns from the event turn)
         if (game.isFogActive()) {
             stormEventRepository.findLastResolvedByType(game.getId(), StormEventType.FOG)
                 .ifPresent(event -> {
@@ -138,19 +113,14 @@ public class StormService {
         }
     }
 
-    // --- Private effect resolution methods ---
-
     private void resolveFog(Game game) {
         game.setFogActive(true);
     }
 
     private void resolveTide(Game game, StormEvent event) {
-        // Tide just marks the affected row — blocking is enforced at shot time
-        // No state change needed beyond the event itself existing
     }
 
     private boolean resolveCurrent(Game game) {
-        // Move 1 random non-sunk, non-damaged ship per player by 1 cell in a valid direction
         boolean anyMoved = false;
         List<Board> boards = boardRepository.findByGameId(game.getId());
         for (Board board : boards) {
@@ -174,10 +144,8 @@ public class StormService {
     }
 
     private boolean tryMoveShip(Board board, Ship ship, List<Ship> allShips) {
-        // Calculate current cells of this ship
         List<int[]> currentCoords = getShipCoordinates(ship);
 
-        // Try moving in 4 directions: up, down, left, right
         int[][] directions = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
         List<int[]> shuffledDirs = new ArrayList<>(Arrays.asList(directions));
         Collections.shuffle(shuffledDirs);
@@ -192,7 +160,6 @@ public class StormService {
                 return true;
             }
         }
-        // If no valid move, ship stays in place
         return false;
     }
 
@@ -220,7 +187,6 @@ public class StormService {
             if (coord[0] < 0 || coord[0] > 9 || coord[1] < 0 || coord[1] > 9) return false;
             if (otherShipCells.contains(coord[0] + "," + coord[1])) return false;
 
-            // Prevent moving ship onto a cell that was already shot (hit or miss)
             Optional<Cell> cell = cellRepository.findByBoardIdAndRowAndCol(board.getId(), coord[0], coord[1]);
             if (cell.isPresent() && cell.get().isHit()) return false;
         }
@@ -228,7 +194,6 @@ public class StormService {
     }
 
     private void applyShipMove(Board board, Ship ship, List<int[]> oldCoords, List<int[]> newCoords, int[] direction) {
-        // Clear old cells (safe: only undamaged ships are moved, so no hit cells exist)
         for (int[] coord : oldCoords) {
             cellRepository.findByBoardIdAndRowAndCol(board.getId(), coord[0], coord[1])
                 .ifPresent(cell -> {
@@ -237,12 +202,10 @@ public class StormService {
                 });
         }
 
-        // Update ship origin
         ship.setOriginRow(ship.getOriginRow() + direction[0]);
         ship.setOriginCol(ship.getOriginCol() + direction[1]);
         shipRepository.save(ship);
 
-        // Set new cells
         for (int[] coord : newCoords) {
             cellRepository.findByBoardIdAndRowAndCol(board.getId(), coord[0], coord[1])
                 .ifPresent(cell -> {

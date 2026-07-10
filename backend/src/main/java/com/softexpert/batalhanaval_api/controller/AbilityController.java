@@ -69,10 +69,8 @@ public class AbilityController {
             request.axis(), request.index()
         );
 
-        // Notify the player privately with the result
         notificationService.notifyAbilityResult(userId, gameId, result);
 
-        // Broadcast game state (handles victory notification if ability finished the game)
         Game game = gameRepository.findById(gameId).orElseThrow(GameNotFoundException::new);
         notificationService.broadcastGameState(game);
 
@@ -84,12 +82,6 @@ public class AbilityController {
         return user.getId();
     }
 
-    /**
-     * Self-healing: if the game is STORM + IN_PROGRESS but abilities were never initialized
-     * (e.g., old game created before ability system), initialize them now.
-     * Handles race condition: if two players hit this concurrently, the unique constraint
-     * (game_id, user_id) prevents duplicates — we catch the violation and re-query.
-     */
     private PlayerAbility lazyInitializeIfEligible(UUID gameId, UUID userId) {
         Game game = gameRepository.findById(gameId).orElseThrow(GameNotFoundException::new);
 
@@ -99,7 +91,6 @@ public class AbilityController {
             try {
                 abilityService.initializeAbilities(game);
             } catch (DataIntegrityViolationException e) {
-                // Race condition: another request already initialized — safe to ignore
                 log.info("[SELF-HEALING] Concurrent initialization detected (duplicate key). gameId={}, userId={}. Using existing record.", gameId, userId);
             }
 

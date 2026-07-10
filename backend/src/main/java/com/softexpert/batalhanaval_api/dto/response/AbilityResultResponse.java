@@ -4,14 +4,6 @@ import com.softexpert.batalhanaval_api.domain.AbilityType;
 
 import java.util.List;
 
-/**
- * Response genérico para resultado de uso de habilidade.
- * Campos são preenchidos conforme o tipo:
- * - RADAR: radarGrid (3x3 boolean), centerRow, centerCol
- * - DOUBLE_TORPEDO: shotResults (2 ShotResultResponse)
- * - SHIELD: message (confirmação)
- * - LINE_BOMBARDMENT: shotResults (array de resultados por célula)
- */
 public record AbilityResultResponse(
     AbilityType abilityType,
     boolean[][] radarGrid,

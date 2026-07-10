@@ -23,7 +23,6 @@ public class WebSocketEventListener {
 
     private final DisconnectionService disconnectionService;
 
-    /** Tracks the number of active WebSocket sessions per user. */
     private final Map<UUID, AtomicInteger> activeSessionCounts = new ConcurrentHashMap<>();
 
     @EventListener
@@ -50,7 +49,6 @@ public class WebSocketEventListener {
             log.debug("WebSocket session disconnected for user {}. Active sessions: {}",
                 userId, remaining);
 
-            // Only trigger disconnect logic when no active sessions remain
             if (remaining <= 0) {
                 activeSessionCounts.remove(userId);
                 disconnectionService.handleDisconnect(userId);

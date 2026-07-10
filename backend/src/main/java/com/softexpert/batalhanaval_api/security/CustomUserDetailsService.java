@@ -28,10 +28,10 @@ public class CustomUserDetailsService implements UserDetailsService {
         return new User(
             user.getUsername(),
             user.getPasswordHash(),
-            enabled,   // enabled
-            true,      // accountNonExpired
-            true,      // credentialsNonExpired
-            true,      // accountNonLocked
+            enabled,
+            true,
+            true,
+            true,
             List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()))
         );
     }

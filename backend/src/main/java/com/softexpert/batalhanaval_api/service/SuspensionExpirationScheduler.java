@@ -20,7 +20,7 @@ public class SuspensionExpirationScheduler {
     private final UserRepository userRepository;
     private final AdminAuditService adminAuditService;
 
-    @Scheduled(fixedDelay = 300000) // 5 minutes
+    @Scheduled(fixedDelay = 300000)
     @Transactional
     public void expireSuspensions() {
         List<User> expiredUsers = userRepository.findExpiredSuspensions(Instant.now());

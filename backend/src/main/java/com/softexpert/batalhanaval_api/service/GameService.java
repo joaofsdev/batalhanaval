@@ -28,7 +28,6 @@ public class GameService {
     private final AbilityService abilityService;
     private final EloService eloService;
 
-    // Key: originalGameId, Value: userId que pediu rematch primeiro
     private final Map<UUID, UUID> pendingRematches = new ConcurrentHashMap<>();
 
     @Transactional
@@ -75,7 +74,6 @@ public class GameService {
             throw new BoardAlreadyReadyException();
         }
 
-        // Force initialize lazy collections before passing to placement service
         board.getShips().size();
         board.getCells().size();
 
@@ -95,7 +93,6 @@ public class GameService {
             }
         }
 
-        // Save game to persist status transition
         gameRepository.save(game);
 
         return new PlaceShipsResponse("Fleet placed successfully", true, game.getStatus());
@@ -144,44 +141,36 @@ public class GameService {
             throw new GameNotInProgressException();
         }
 
-        // Check user is not already in an active game
         gameRepository.findActiveGameByUserId(userId, List.of(GameStatus.WAITING, GameStatus.PLACING, GameStatus.IN_PROGRESS))
             .ifPresent(g -> { throw new PlayerAlreadyInGameException(); });
 
         User user = userRepository.findById(userId).orElseThrow();
         GameMode mode = originalGame.getGameMode();
 
-        // Use atomic compute() to eliminate race condition between concurrent rematch requests
         final UUID[] matchedWith = {null};
 
         UUID remaining = pendingRematches.compute(originalGameId, (key, existingRequesterId) -> {
             if (existingRequesterId == null) {
-                // No pending request — register this player and wait
                 return userId;
             }
 
             if (existingRequesterId.equals(userId)) {
-                // Same player clicking again — keep waiting
                 return userId;
             }
 
-            // Opponent already requested — verify they are still available
             boolean firstRequesterBusy = gameRepository.findActiveGameByUserId(
                 existingRequesterId, List.of(GameStatus.WAITING, GameStatus.PLACING, GameStatus.IN_PROGRESS)
             ).isPresent();
 
             if (firstRequesterBusy) {
-                // First requester moved on — replace with this player
                 return userId;
             }
 
-            // Match found! Signal via matchedWith and remove entry (return null)
             matchedWith[0] = existingRequesterId;
             return null;
         });
 
         if (matchedWith[0] != null) {
-            // Both players matched — create new game
             User firstRequester = userRepository.findById(matchedWith[0]).orElseThrow();
 
             Game newGame = new Game();
@@ -246,14 +235,12 @@ public class GameService {
             throw new NotGameParticipantException();
         }
 
-        // Cenário 1: partida ainda WAITING — deletar normalmente
         if (game.getStatus() == GameStatus.WAITING) {
             gameRepository.delete(game);
             gameRepository.flush();
             return;
         }
 
-        // Cenário 2: jogador 2 acabou de entrar (PLACING) e player1 ainda não posicionou
         if (game.getStatus() == GameStatus.PLACING) {
             Board player1Board = boardRepository.findByGameAndOwner(game, game.getPlayer1()).orElse(null);
 
@@ -344,7 +331,6 @@ public class GameService {
             .map(s -> new ShotSummary(s.getRow(), s.getCol(), s.getResult(), s.getSunkShipType(), s.getSunkShipOriginRow(), s.getSunkShipOriginCol(), s.getSunkShipOrientation()))
             .toList();
 
-        // Reveal opponent ships only when game is finished
         List<ShipResponse> opponentShips = null;
         if (game.getStatus() == GameStatus.FINISHED) {
             UUID opponentId = game.getPlayer1().getId().equals(userId)

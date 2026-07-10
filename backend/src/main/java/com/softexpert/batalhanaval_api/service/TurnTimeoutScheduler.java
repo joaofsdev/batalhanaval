@@ -42,7 +42,6 @@ public class TurnTimeoutScheduler {
             game.setConsecutiveSkips(game.getConsecutiveSkips() + 1);
 
             if (game.getConsecutiveSkips() >= maxConsecutiveSkips) {
-                // AFK defeat: current player loses
                 User winner = game.getPlayer1().getId().equals(currentPlayer.getId())
                     ? game.getPlayer2()
                     : game.getPlayer1();
@@ -58,7 +57,6 @@ public class TurnTimeoutScheduler {
                 log.info("AFK defeat: game={}, loser={} ({}  consecutive skips)",
                     game.getId(), currentPlayer.getUsername(), maxConsecutiveSkips);
             } else {
-                // Skip turn
                 User nextPlayer = game.getPlayer1().getId().equals(currentPlayer.getId())
                     ? game.getPlayer2()
                     : game.getPlayer1();

@@ -41,7 +41,6 @@ public class GameWebSocketHandler {
         UUID attackerId = stompPrincipal.userId();
 
         try {
-            // If storm mode and current turn is a storm turn, resolve storm first
             Game gameBefore = gameRepository.findById(gameId).orElseThrow();
             if (gameBefore.getGameMode() == GameMode.STORM
                 && gameBefore.getStatus() == GameStatus.IN_PROGRESS
