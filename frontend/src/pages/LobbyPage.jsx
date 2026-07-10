@@ -70,7 +70,6 @@ const LobbyPage = () => {
 
   return (
     <div className="h-screen flex flex-col bg-background overflow-hidden">
-      {/* Header */}
       <header className="flex justify-between items-center w-full px-panel-padding h-16 z-40 bg-surface-container-low border-b border-outline-variant">
         <nav className="hidden md:flex gap-6">
           <span className="text-primary border-b-2 border-primary pb-1 font-label-caps text-label-caps">
@@ -92,9 +91,7 @@ const LobbyPage = () => {
       </header>
 
       <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar */}
         <aside className="hidden md:flex flex-col h-full w-64 border-r border-outline-variant bg-surface-container-low pt-4 z-40">
-          {/* Perfil */}
           <div className="px-4 mb-8 flex flex-col items-center">
             <div className="w-16 h-16 rounded-full border-2 border-primary mb-2 bg-secondary-container flex items-center justify-center font-display-tactical text-display-tactical text-primary">
               {user?.username?.[0]?.toUpperCase()}
@@ -104,7 +101,6 @@ const LobbyPage = () => {
             </h2>
           </div>
 
-          {/* Nav items */}
           <nav className="flex-1 flex flex-col gap-2">
             <div className="flex items-center gap-3 px-4 py-3 bg-secondary-container text-on-secondary-container border-l-4 border-primary font-label-caps text-label-caps">
               <span className="material-symbols-outlined">radar</span>
@@ -128,7 +124,6 @@ const LobbyPage = () => {
             )}
           </nav>
 
-          {/* Logout */}
           <button
             onClick={handleLogout}
             className="p-4 flex items-center justify-center gap-2 text-on-surface-variant hover:text-error transition-colors"
@@ -140,9 +135,7 @@ const LobbyPage = () => {
           </button>
         </aside>
 
-        {/* Conteúdo principal */}
         <main className="flex-1 flex flex-col md:flex-row p-margin-safe gap-margin-safe overflow-auto">
-          {/* Coluna esquerda — Ranking + Histórico */}
           <div className="w-full md:w-1/2 flex flex-col gap-margin-safe">
           <section className="bg-surface-container border border-outline-variant p-panel-padding flex flex-col gap-4">
             <header className="border-b border-outline-variant pb-2 flex items-center justify-between">
@@ -186,9 +179,7 @@ const LobbyPage = () => {
               ))}
             </div>
 
-            {/* Dados do ranking */}
             {rankingLoading ? (
-              // Skeleton rows
               Array.from({ length: 5 }, (_, i) => (
                 <div key={i} className="grid grid-cols-6 gap-2 px-2 py-2 border-b border-outline-variant/30">
                   <div className="h-4 w-6 bg-surface-container-high animate-pulse" />
@@ -242,7 +233,6 @@ const LobbyPage = () => {
               </div>
             )))}
 
-            {/* Linha do usuário logado */}
             {!rankingLoading && !rankingError && myPosition && (
               <div className="grid grid-cols-6 gap-2 px-2 py-2 bg-secondary-container/30 border border-primary/30">
                 <span className="font-mono-data text-mono-data text-primary-container">
@@ -266,7 +256,6 @@ const LobbyPage = () => {
               </div>
             )}
 
-            {/* Paginação */}
             {rankingTotalPages > 1 && (
               <div className="flex items-center justify-center gap-4 pt-2">
                 <button
@@ -293,7 +282,6 @@ const LobbyPage = () => {
           <GameHistory />
           </div>
 
-          {/* Painel direito — Selecionar Missão */}
           <section className="w-full md:w-1/2 bg-surface-container border border-outline-variant p-panel-padding flex flex-col gap-4">
             <header className="border-b border-outline-variant pb-2 flex items-center gap-2">
               <span className="material-symbols-outlined text-primary text-sm">
@@ -304,7 +292,6 @@ const LobbyPage = () => {
               </h2>
             </header>
 
-            {/* Card Clássico */}
             <div
               onClick={() => setSelectedMode("CLASSIC")}
               className={`flex-1 border p-panel-padding flex flex-col gap-4 cursor-pointer transition-colors hover:bg-primary-container/5 ${
@@ -348,7 +335,6 @@ const LobbyPage = () => {
               )}
             </div>
 
-            {/* Card Especial — TEMPESTADE */}
             <div
               onClick={() => setSelectedMode("STORM")}
               className={`flex-1 border p-panel-padding flex flex-col gap-4 cursor-pointer transition-colors hover:bg-primary-container/5 ${
@@ -401,7 +387,6 @@ const LobbyPage = () => {
         </main>
       </div>
 
-      {/* Mobile: botões fixos no rodapé */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-surface-container-low border-t border-outline-variant p-4 flex gap-3 z-40">
         <button
           onClick={handlePlay}

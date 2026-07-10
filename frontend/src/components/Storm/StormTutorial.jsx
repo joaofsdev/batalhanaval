@@ -178,7 +178,6 @@ const StormTutorial = ({ open, onClose }) => {
   return (
     <Modal open={open} onClose={handleSkip}>
       <div className="flex flex-col">
-        {/* Header */}
         <div className="flex items-center gap-3 px-6 pt-6 pb-4 border-b border-outline-variant">
           <span className="material-symbols-outlined text-primary text-2xl">{slide.icon}</span>
           <h2 className="font-headline-md text-headline-md text-primary tracking-widest">
@@ -186,14 +185,11 @@ const StormTutorial = ({ open, onClose }) => {
           </h2>
         </div>
 
-        {/* Content */}
         <div className="px-6 py-5 min-h-[260px] flex flex-col justify-center">
           {slide.content}
         </div>
 
-        {/* Footer */}
         <div className="flex items-center justify-between px-6 py-4 border-t border-outline-variant bg-surface-container-high/50">
-          {/* Dots */}
           <div className="flex items-center gap-1.5">
             {SLIDES.map((_, i) => (
               <div
@@ -205,7 +201,6 @@ const StormTutorial = ({ open, onClose }) => {
             ))}
           </div>
 
-          {/* Navigation */}
           <div className="flex items-center gap-2">
             {!isLast && (
               <button

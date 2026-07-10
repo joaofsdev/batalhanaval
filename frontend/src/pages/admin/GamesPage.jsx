@@ -35,11 +35,9 @@ const GamesPage = () => {
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(null);
 
-  // Force-end modal state
   const [selectedGame, setSelectedGame] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
 
-  // Reveal boards modal state
   const [revealData, setRevealData] = useState(null);
   const [revealLoading, setRevealLoading] = useState(false);
 
@@ -94,7 +92,6 @@ const GamesPage = () => {
     <div>
       <h2 className="text-xl font-bold mb-4">Partidas Ativas</h2>
 
-      {/* Table */}
       {!loading && games.length === 0 ? (
         <div className="border border-outline-variant rounded p-8 text-center text-on-surface-variant">
           <span className="material-symbols-outlined text-3xl mb-2 block">sports_esports</span>
@@ -168,7 +165,6 @@ const GamesPage = () => {
         </div>
       )}
 
-      {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-2 mt-4">
           <button
@@ -191,7 +187,6 @@ const GamesPage = () => {
         </div>
       )}
 
-      {/* Modal de confirmação - Forçar encerramento */}
       {selectedGame && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
           <div className="bg-surface-container-high p-6 border border-outline-variant flex flex-col gap-4 min-w-[320px] max-w-md rounded">
@@ -230,7 +225,6 @@ const GamesPage = () => {
         </div>
       )}
 
-      {/* Modal - Revelar Boards */}
       {revealData && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 overflow-y-auto p-4">
           <div className="bg-surface-container-high p-6 border border-outline-variant flex flex-col gap-4 rounded max-w-4xl w-full">
@@ -253,7 +247,6 @@ const GamesPage = () => {
             </div>
 
             <div className="flex flex-col md:flex-row gap-6 justify-center items-start mt-2">
-              {/* Player 1 Board */}
               <div className="flex flex-col items-center gap-2">
                 <span className="font-mono-data text-mono-data text-xs text-primary">
                   Board de {revealData.player1?.username || '—'}
@@ -270,7 +263,6 @@ const GamesPage = () => {
                 )}
               </div>
 
-              {/* Player 2 Board */}
               <div className="flex flex-col items-center gap-2">
                 <span className="font-mono-data text-mono-data text-xs text-primary">
                   Board de {revealData.player2?.username || '—'}
@@ -300,7 +292,6 @@ const GamesPage = () => {
         </div>
       )}
 
-      {/* Toast */}
       {toast && (
         <Toast
           message={toast.message}

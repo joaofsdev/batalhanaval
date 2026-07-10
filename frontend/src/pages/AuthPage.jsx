@@ -59,9 +59,7 @@ const AuthPage = () => {
 
   return (
     <div className="min-h-screen flex flex-row">
-      {/* Coluna esquerda — Painel Radar */}
       <div className="hidden md:flex md:w-3/5 h-screen relative radar-grid items-center justify-center bg-surface-container-lowest overflow-hidden">
-        {/* Imagem do navio como fundo */}
         <div
           className="absolute inset-0 z-0"
           style={{
@@ -72,7 +70,6 @@ const AuthPage = () => {
           }}
         />
 
-        {/* Overlay azul-esverdeado sobre a imagem */}
         <div
           className="absolute inset-0 z-[1]"
           style={{
@@ -81,35 +78,27 @@ const AuthPage = () => {
           }}
         />
 
-        {/* Linha de varredura giratória */}
         <div className="absolute inset-0 z-10 w-full h-full pointer-events-none opacity-20 bg-[conic-gradient(from_90deg_at_50%_50%,transparent_0%,rgba(34,211,238,1)_100%)] animate-[spin_4s_linear_infinite] rounded-full scale-150" />
 
-        {/* Coordenadas no canto */}
         <div className="absolute top-4 left-4 z-40 font-mono-data text-mono-data text-primary-container/70">
           LAT: 45.923 N<br/>LON: 14.882 W
         </div>
 
-        {/* Pulsos de sonar concêntricos */}
         <div className="absolute w-96 h-96 border border-primary-container/40 rounded-full flex items-center justify-center z-20">
           <div className="absolute w-full h-full border border-primary-container rounded-full sonar-pulse" />
           <div className="absolute w-2/3 h-2/3 border border-primary-container rounded-full sonar-pulse" style={{ animationDelay: '1s' }} />
           <div className="absolute w-1/3 h-1/3 border border-primary-container rounded-full sonar-pulse" style={{ animationDelay: '2s' }} />
-          {/* Ponto central */}
           <div className="w-4 h-4 bg-primary-container rounded-full animate-pulse shadow-[0_0_15px_rgba(34,211,238,1)]" />
         </div>
 
-        {/* Borda da área de radar */}
         <div className="absolute inset-0 border border-primary-container/20 m-8 z-30 pointer-events-none" />
       </div>
 
-      {/* Coluna direita — Formulário */}
       <div className="w-full md:w-2/5 min-h-screen bg-surface-container-low flex flex-col justify-center px-8 md:px-16 lg:px-24 border-l border-outline-variant relative z-40">
-        {/* Corner accents */}
         <div className="corner-accent tl" /><div className="corner-accent tr" />
         <div className="corner-accent bl" /><div className="corner-accent br" />
 
         <div className="max-w-md w-full mx-auto">
-          {/* Logo */}
           <div className="mb-12 text-center">
             <h1 className="font-display-tactical text-display-tactical text-primary mb-2 glow-text uppercase tracking-widest">
               BATALHA NAVAL
@@ -119,7 +108,6 @@ const AuthPage = () => {
             </p>
           </div>
 
-          {/* Toggle LOGIN / REGISTRO */}
           <div className="flex mb-8 border-b border-outline-variant">
             <button
               type="button"
@@ -133,7 +121,6 @@ const AuthPage = () => {
             >REGISTRO</button>
           </div>
 
-          {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label className="block font-label-caps text-label-caps text-primary-fixed-dim mb-2">
@@ -206,7 +193,6 @@ const AuthPage = () => {
             </button>
           </form>
 
-          {/* Link alternador */}
           <div className="mt-8 text-center">
             <span className="font-mono-data text-mono-data text-on-surface-variant">
               {mode === 'login' ? 'Não tem conta? ' : 'Já tem conta? '}

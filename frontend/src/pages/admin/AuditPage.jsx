@@ -65,7 +65,6 @@ const AuditPage = () => {
     <div>
       <h2 className="text-xl font-bold mb-4">Auditoria</h2>
 
-      {/* Table */}
       {!loading && logs.length === 0 ? (
         <div className="border border-outline-variant rounded p-8 text-center text-on-surface-variant">
           <span className="material-symbols-outlined text-3xl mb-2 block">history</span>
@@ -124,7 +123,6 @@ const AuditPage = () => {
         </div>
       )}
 
-      {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-2 mt-4">
           <button
@@ -147,7 +145,6 @@ const AuditPage = () => {
         </div>
       )}
 
-      {/* Toast */}
       {toast && (
         <Toast
           message={toast.message}

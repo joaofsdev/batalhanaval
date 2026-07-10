@@ -60,7 +60,6 @@ const GameOverOverlay = ({ isWinner, isCancelled, stats, gameId, rematchInvite, 
   const icon = isCancelled ? 'block' : isWinner ? 'emoji_events' : 'anchor';
   const title = isCancelled ? '[ PARTIDA CANCELADA ]' : isWinner ? '[ MISSÃO CUMPRIDA ]' : '[ MISSÃO FRACASSADA ]';
 
-  // Elo formatting
   const eloText = eloDelta != null
     ? (eloDelta >= 0 ? `+${eloDelta}` : `${eloDelta}`)
     : null;
@@ -71,23 +70,19 @@ const GameOverOverlay = ({ isWinner, isCancelled, stats, gameId, rematchInvite, 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
       <div className={`relative p-8 border-2 bg-surface-container flex flex-col items-center gap-6 max-w-2xl w-full mx-4 ${borderClass}`}>
-        {/* Corner accents */}
         <div className="corner-accent tl" style={{ borderColor }} />
         <div className="corner-accent tr" style={{ borderColor }} />
         <div className="corner-accent bl" style={{ borderColor }} />
         <div className="corner-accent br" style={{ borderColor }} />
 
-        {/* Ícone */}
         <span className={`material-symbols-outlined text-6xl ${iconClass}`}>
           {icon}
         </span>
 
-        {/* Título */}
         <h2 className={`font-display-tactical text-display-tactical uppercase tracking-widest text-center whitespace-nowrap ${iconClass}`} style={{ fontSize: 'clamp(1rem, 3vw, 1.5rem)' }}>
           {title}
         </h2>
 
-        {/* Elo Delta */}
         {eloText && !isCancelled && (
           <div className="flex items-center gap-2 px-4 py-2 bg-surface-container-high border border-outline-variant">
             <span className="material-symbols-outlined text-lg text-on-surface-variant">trending_up</span>
@@ -98,7 +93,6 @@ const GameOverOverlay = ({ isWinner, isCancelled, stats, gameId, rematchInvite, 
           </div>
         )}
 
-        {/* Stats */}
         {!isCancelled && (
         <div className="grid grid-cols-3 gap-4 w-full">
           {[
@@ -116,14 +110,12 @@ const GameOverOverlay = ({ isWinner, isCancelled, stats, gameId, rematchInvite, 
         </div>
         )}
 
-        {/* Cancelled explanation */}
         {isCancelled && (
           <p className="font-mono-data text-mono-data text-on-surface-variant text-center">
             A partida foi encerrada por inatividade durante o posicionamento.
           </p>
         )}
 
-        {/* Rematch invite received */}
         {!isCancelled && rematchInvite && (
           <div className="w-full p-4 border border-tertiary-container bg-tertiary-container/10 flex items-center justify-between">
             <span className="font-mono-data text-mono-data text-tertiary">
@@ -138,7 +130,6 @@ const GameOverOverlay = ({ isWinner, isCancelled, stats, gameId, rematchInvite, 
           </div>
         )}
 
-        {/* Botões */}
         <div className="flex gap-3 w-full">
           {!isCancelled && (
           <button

@@ -18,9 +18,7 @@ const useStormWebSocket = ({ gameId, subscribe, connected, setToast }) => {
     if (!connected || !gameId || subscribedRef.current) return;
     subscribedRef.current = true;
 
-    // Storm events
     subscribe(`/topic/game/${gameId}/storm`, (payload) => {
-      // Backend sends StormEventNotification directly: { eventType, affectedAxis, message, shipMoved }
       const event = payload.eventType ? {
         type: payload.eventType,
         affectedAxis: payload.affectedAxis,
@@ -56,18 +54,15 @@ const useStormWebSocket = ({ gameId, subscribe, connected, setToast }) => {
             break;
         }
       } else {
-        // No active event — clear effects
         setFogActive(false);
         setBlockedRow(null);
       }
     });
 
-    // Ability result (user-specific queue)
     subscribe('/user/queue/game/ability-result', (payload) => {
       setAbilityResult(payload);
     });
 
-    // Ability rotation (user-specific queue)
     subscribe('/user/queue/game/ability-rotated', (payload) => {
       setAbilityRotation(payload);
 

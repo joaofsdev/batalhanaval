@@ -39,7 +39,6 @@ const MyBoard = ({ cells, ships, currentShake }) => {
       <div className={`bg-surface-container border border-outline-variant p-3 transition-transform ${
         currentShake ? 'animate-current-shake' : ''
       }`}>
-        {/* Cabeçalho de colunas */}
         <div className="flex mb-1 ml-6">
           {Array.from({ length: 10 }, (_, i) => (
             <div key={i} className="w-8 h-6 flex items-center justify-center font-mono-data text-[10px] text-primary-fixed-dim">
@@ -49,7 +48,6 @@ const MyBoard = ({ cells, ships, currentShake }) => {
         </div>
 
         <div className="flex">
-          {/* Cabeçalho de linhas */}
           <div className="flex flex-col mr-1">
             {ROWS.map(r => (
               <div key={r} className="w-5 h-8 flex items-center justify-center font-mono-data text-[10px] text-primary-fixed-dim">
@@ -58,7 +56,6 @@ const MyBoard = ({ cells, ships, currentShake }) => {
             ))}
           </div>
 
-          {/* Grid */}
           <div className="relative">
             <div className="grid grid-cols-10 gap-grid-gap bg-outline-variant/50 border border-outline-variant">
               {Array.from({ length: 100 }, (_, i) => {
@@ -68,7 +65,6 @@ const MyBoard = ({ cells, ships, currentShake }) => {
               })}
             </div>
 
-            {/* Sprite overlay */}
             <div className="absolute z-10 pointer-events-none" style={{ top: 1, left: 1 }}>
               {(ships || []).map((ship) => (
                 <ShipSprite

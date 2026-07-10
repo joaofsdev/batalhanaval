@@ -46,7 +46,6 @@ const Toast = ({ message, type = 'info', onClose }) => {
       </span>
       <p className="flex-1 text-[12px] leading-tight uppercase">{message}</p>
 
-      {/* Barra de progresso auto-close */}
       <div className="absolute bottom-0 left-0 h-0.5 bg-outline-variant w-full">
         <div
           className={`h-full transition-all duration-[4000ms] ease-linear ${BAR_COLORS[type] || BAR_COLORS.info}`}

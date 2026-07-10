@@ -27,7 +27,6 @@ const Modal = ({ open, onClose, children }) => {
         className="relative w-full max-w-lg mx-4 bg-surface-container border border-outline-variant shadow-[0_8px_40px_rgba(0,0,0,0.6)] animate-in fade-in"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Close button */}
         <button
           onClick={onClose}
           className="absolute top-3 right-3 text-on-surface-variant hover:text-on-surface transition-colors z-10"

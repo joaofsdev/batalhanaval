@@ -34,8 +34,7 @@ const UsersPage = () => {
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(null);
 
-  // Modal state
-  const [modal, setModal] = useState(null); // { type: 'ban'|'suspend'|'reactivate', user }
+  const [modal, setModal] = useState(null);
   const [suspendDate, setSuspendDate] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
 
@@ -120,7 +119,6 @@ const UsersPage = () => {
         </select>
       </div>
 
-      {/* Table */}
       <div className="overflow-x-auto border border-outline-variant rounded">
         <table className="w-full text-sm">
           <thead className="bg-surface-container-high text-on-surface-variant text-left">
@@ -201,7 +199,6 @@ const UsersPage = () => {
         </table>
       </div>
 
-      {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-2 mt-4">
           <button
@@ -224,7 +221,6 @@ const UsersPage = () => {
         </div>
       )}
 
-      {/* Modal */}
       {modal && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
           <div className="bg-surface-container-high p-6 border border-outline-variant flex flex-col gap-4 min-w-[320px] max-w-md rounded">
@@ -279,7 +275,6 @@ const UsersPage = () => {
         </div>
       )}
 
-      {/* Toast */}
       {toast && (
         <Toast
           message={toast.message}

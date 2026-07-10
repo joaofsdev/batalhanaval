@@ -6,14 +6,12 @@ const ROWS = ['A','B','C','D','E','F','G','H','I','J'];
 const SHIP_SIZES = { CARRIER: 5, BATTLESHIP: 4, CRUISER: 3, SUBMARINE: 3, DESTROYER: 2 };
 
 const PostGameBoards = ({ myBoard, opponentBoard, onBack }) => {
-  // Build cell map for my board
   const myCellMap = useMemo(() => {
     const map = new Map();
     (myBoard?.cells || []).forEach((c) => map.set(`${c.row},${c.col}`, c));
     return map;
   }, [myBoard]);
 
-  // Build shot map for opponent board
   const opponentShotMap = useMemo(() => {
     const map = new Map();
     (opponentBoard?.shotsReceived || []).forEach((s) => map.set(`${s.row},${s.col}`, s.result));
@@ -42,7 +40,6 @@ const PostGameBoards = ({ myBoard, opponentBoard, onBack }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col items-center bg-background/95 backdrop-blur-sm overflow-y-auto">
-      {/* Header */}
       <div className="w-full max-w-5xl px-4 pt-6 pb-4 flex items-center justify-between">
         <button
           onClick={onBack}
@@ -58,9 +55,7 @@ const PostGameBoards = ({ myBoard, opponentBoard, onBack }) => {
         <div className="w-24" />
       </div>
 
-      {/* Boards */}
       <div className="flex flex-col md:flex-row gap-8 items-start justify-center px-4 pb-8">
-        {/* My board */}
         <div className="flex flex-col items-center gap-3">
           <h3 className="font-label-caps text-label-caps text-on-surface-variant tracking-wider">
             MEU TABULEIRO
@@ -90,7 +85,6 @@ const PostGameBoards = ({ myBoard, opponentBoard, onBack }) => {
                     return <BoardCell key={i} state={getMyCellState(row, col)} />;
                   })}
                 </div>
-                {/* Ship sprites */}
                 <div className="absolute z-10 pointer-events-none" style={{ top: 1, left: 1 }}>
                   {(myBoard?.ships || []).map((ship) => (
                     <ShipSprite
@@ -109,7 +103,6 @@ const PostGameBoards = ({ myBoard, opponentBoard, onBack }) => {
           </div>
         </div>
 
-        {/* Opponent board */}
         <div className="flex flex-col items-center gap-3">
           <h3 className="font-label-caps text-label-caps text-on-surface-variant tracking-wider">
             TABULEIRO DO OPONENTE
@@ -139,7 +132,6 @@ const PostGameBoards = ({ myBoard, opponentBoard, onBack }) => {
                     return <BoardCell key={i} state={getOpponentCellState(row, col)} />;
                   })}
                 </div>
-                {/* Opponent ship sprites - revealed after game */}
                 {opponentShips.length > 0 && (
                   <div className="absolute z-10 pointer-events-none" style={{ top: 1, left: 1 }}>
                     {opponentShips.map((ship) => (
@@ -161,7 +153,6 @@ const PostGameBoards = ({ myBoard, opponentBoard, onBack }) => {
         </div>
       </div>
 
-      {/* Legend */}
       <div className="flex gap-6 pb-8">
         <div className="flex items-center gap-2">
           <div className="w-4 h-4 bg-surface-container border border-outline-variant/30" />

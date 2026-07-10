@@ -1,11 +1,9 @@
 const WaitingScreen = ({ gameId, myUsername, onCancel, canCancel = true }) => (
   <div className="flex flex-col items-center justify-center h-full gap-8 bg-background p-8">
-    {/* Título */}
     <h2 className="font-headline-lg text-headline-lg text-primary glow-text uppercase tracking-widest animate-pulse">
       AGUARDANDO OPONENTE...
     </h2>
 
-    {/* Pulso de sonar */}
     <div className="relative w-48 h-48 flex items-center justify-center">
       <div className="absolute w-full h-full border border-primary-container/40 rounded-full">
         <div className="absolute w-full h-full border border-primary-container rounded-full sonar-pulse" />
@@ -15,7 +13,6 @@ const WaitingScreen = ({ gameId, myUsername, onCancel, canCancel = true }) => (
       <div className="w-4 h-4 bg-primary-container rounded-full shadow-[0_0_15px_rgba(34,211,238,1)] animate-pulse" />
     </div>
 
-    {/* ID da missão */}
     {gameId && (
       <div className="flex flex-col items-center gap-2">
         <span className="font-label-caps text-label-caps text-on-surface-variant">
@@ -35,9 +32,7 @@ const WaitingScreen = ({ gameId, myUsername, onCancel, canCancel = true }) => (
       </div>
     )}
 
-    {/* Slots de jogadores */}
     <div className="w-full max-w-sm flex flex-col gap-3">
-      {/* Jogador logado */}
       <div className="flex items-center gap-4 p-4 border border-outline-variant bg-surface-container">
         <div className="w-10 h-10 rounded-full border border-primary bg-secondary-container flex items-center justify-center font-label-caps text-label-caps text-primary">
           {myUsername?.[0]?.toUpperCase() || '?'}
@@ -51,7 +46,6 @@ const WaitingScreen = ({ gameId, myUsername, onCancel, canCancel = true }) => (
         <span className="material-symbols-outlined text-primary">check_circle</span>
       </div>
 
-      {/* Slot oponente */}
       <div className="flex items-center gap-4 p-4 border border-outline-variant/40 bg-surface-container opacity-60">
         <div className="w-10 h-10 rounded-full border border-outline-variant flex items-center justify-center">
           <span className="font-display-tactical text-on-surface-variant">?</span>
@@ -64,7 +58,6 @@ const WaitingScreen = ({ gameId, myUsername, onCancel, canCancel = true }) => (
       </div>
     </div>
 
-    {/* Botão cancelar */}
     <button
       onClick={onCancel}
       disabled={!canCancel}

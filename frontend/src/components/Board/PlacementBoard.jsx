@@ -23,7 +23,6 @@ const PlacementBoard = ({ gameId, onConfirmed }) => {
         setFleet(data.map((s) => ({ type: s.type, size: s.size, label: s.name })));
       })
       .catch(() => {
-        // Fallback to avoid being stuck if endpoint fails
         setFleet([
           { type: 'CARRIER', size: 5, label: 'Porta-aviões' },
           { type: 'BATTLESHIP', size: 4, label: 'Encouraçado' },
@@ -123,7 +122,6 @@ const PlacementBoard = ({ gameId, onConfirmed }) => {
 
   return (
     <div className="flex flex-col md:flex-row gap-6 items-start justify-center">
-      {/* Painel de controle */}
       <section className="w-full md:w-80 flex flex-col bg-surface-container border border-outline-variant p-panel-padding gap-4">
         <header className="border-b border-outline-variant pb-2">
           <h2 className="font-headline-md text-headline-md text-primary tracking-widest whitespace-nowrap" style={{ fontSize: 'clamp(0.85rem, 2vw, 1.125rem)' }}>
@@ -143,7 +141,6 @@ const PlacementBoard = ({ gameId, onConfirmed }) => {
           />
         </div>
 
-        {/* Footer: status + botão */}
         <div className="mt-auto pt-4 border-t border-outline-variant flex flex-col gap-2">
           <div className="flex justify-between font-mono-data text-mono-data text-primary">
             <span>STATUS:</span>
@@ -167,9 +164,7 @@ const PlacementBoard = ({ gameId, onConfirmed }) => {
         </div>
       </section>
 
-      {/* Área do tabuleiro */}
       <section className="flex-1 flex flex-col items-center justify-center relative">
-        {/* Fundo decorativo */}
         <div className="absolute inset-0 pointer-events-none z-0 opacity-20">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full border border-primary/20" />
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full border border-primary/30" />
@@ -178,7 +173,6 @@ const PlacementBoard = ({ gameId, onConfirmed }) => {
         </div>
 
         <div className="relative z-10 bg-surface-container border-2 border-outline-variant p-4 radar-glow-intense">
-          {/* Cabeçalho de colunas */}
           <div className="flex mb-1 ml-6">
             {Array.from({ length: 10 }, (_, i) => (
               <div key={i} className="w-8 h-6 flex items-center justify-center font-mono-data text-[10px] text-primary-fixed-dim">
@@ -188,7 +182,6 @@ const PlacementBoard = ({ gameId, onConfirmed }) => {
           </div>
 
           <div className="flex">
-            {/* Cabeçalho de linhas */}
             <div className="flex flex-col mr-1">
               {ROWS.map(r => (
                 <div key={r} className="w-5 h-8 flex items-center justify-center font-mono-data text-[10px] text-primary-fixed-dim">
@@ -197,7 +190,6 @@ const PlacementBoard = ({ gameId, onConfirmed }) => {
               ))}
             </div>
 
-            {/* Grid 10x10 */}
             <div className="relative">
               <div className="grid grid-cols-10 gap-grid-gap bg-outline-variant/50 border border-outline-variant">
                 {Array.from({ length: 100 }, (_, i) => {
@@ -216,9 +208,7 @@ const PlacementBoard = ({ gameId, onConfirmed }) => {
                 })}
               </div>
 
-              {/* Sprite overlay — offset by 1px to account for grid border */}
               <div className="absolute z-10 pointer-events-none" style={{ top: 1, left: 1 }}>
-                {/* Sprites dos navios confirmados */}
                 {placedShips.map((ship) => {
                   const shipDef = fleet.find((s) => s.type === ship.type);
                   if (!shipDef) return null;
@@ -234,7 +224,6 @@ const PlacementBoard = ({ gameId, onConfirmed }) => {
                   );
                 })}
 
-                {/* Sprite preview do navio sendo posicionado */}
                 {selectedShip && hoverOrigin && hoverValid && (
                   <ShipSprite
                     shipType={selectedShip.type}

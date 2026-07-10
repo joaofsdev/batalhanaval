@@ -10,11 +10,10 @@ const RoomPage = () => {
   const [searchParams] = useSearchParams();
   const token = localStorage.getItem("bn_token");
 
-  // Mode from query param (default CLASSIC)
   const mode = searchParams.get("mode") || "CLASSIC";
   const joinToken = searchParams.get("token");
 
-  const [view, setView] = useState("choosing"); // choosing | creating | joining | room
+  const [view, setView] = useState("choosing");
   const [room, setRoom] = useState(null);
   const [inputToken, setInputToken] = useState(joinToken || "");
   const [loading, setLoading] = useState(false);
@@ -31,7 +30,6 @@ const RoomPage = () => {
       }
       setRoom(data);
 
-      // If both ready, navigate to game
       if (data.status === "STARTING") {
         setTimeout(() => navigate(`/game/${data.gameId}`), 1000);
       }
@@ -41,7 +39,6 @@ const RoomPage = () => {
 
   const { connected, subscribe } = useWebSocket({ token, onReconnect: null });
 
-  // Subscribe to room updates when we have a room
   useEffect(() => {
     if (room?.gameId && connected) {
       subscribe(`/topic/room/${room.gameId}`, handleRoomUpdate);
@@ -116,7 +113,6 @@ const RoomPage = () => {
 
   return (
     <div className="h-screen flex flex-col bg-background">
-      {/* Header */}
       <header className="flex justify-between items-center w-full px-panel-padding h-16 z-40 bg-surface-container-low border-b border-outline-variant">
         <button
           onClick={() => navigate("/lobby")}
@@ -131,10 +127,8 @@ const RoomPage = () => {
         <div className="w-20" />
       </header>
 
-      {/* Content */}
       <main className="flex-1 flex items-center justify-center p-margin-safe">
         <div className="w-full max-w-md bg-surface-container border border-outline-variant p-panel-padding flex flex-col gap-6">
-          {/* Choosing view: Create or Join */}
           {view === "choosing" && (
             <>
               <header className="border-b border-outline-variant pb-3 flex items-center gap-2">
@@ -191,7 +185,6 @@ const RoomPage = () => {
             </>
           )}
 
-          {/* Room view: waiting or confirming */}
           {view === "room" && room && (
             <>
               <header className="border-b border-outline-variant pb-3 flex items-center justify-between">
@@ -210,7 +203,6 @@ const RoomPage = () => {
                 </span>
               </header>
 
-              {/* Token display */}
               <div className="flex flex-col items-center gap-2 py-4">
                 <span className="font-label-caps text-label-caps text-on-surface-variant">
                   CÓDIGO DA SALA
@@ -238,10 +230,7 @@ const RoomPage = () => {
                   Compartilhe o código com seu oponente
                 </span>
               </div>
-
-              {/* Players status */}
               <div className="flex flex-col gap-3 border border-outline-variant p-4">
-                {/* Host */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full border border-primary bg-secondary-container flex items-center justify-center font-label-caps text-label-caps text-primary">
@@ -261,7 +250,6 @@ const RoomPage = () => {
                   </span>
                 </div>
 
-                {/* Guest */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     {room.guestUsername ? (
@@ -296,7 +284,6 @@ const RoomPage = () => {
                 </div>
               </div>
 
-              {/* Starting animation */}
               {room.status === "STARTING" && (
                 <div className="flex flex-col items-center gap-2 py-4">
                   <span className="material-symbols-outlined text-primary text-3xl animate-pulse">
@@ -308,7 +295,6 @@ const RoomPage = () => {
                 </div>
               )}
 
-              {/* Action buttons */}
               {room.status !== "STARTING" && (
                 <div className="flex flex-col gap-3">
                   {room.guestUsername && !isReady && (
@@ -343,7 +329,6 @@ const RoomPage = () => {
             </>
           )}
 
-          {/* Error display */}
           {error && (
             <p className="font-mono-data text-mono-data text-error border-l-2 border-error pl-3 text-sm">
               {error}

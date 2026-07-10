@@ -55,7 +55,6 @@ const StormTracker = ({ turnsUntilStorm, isStormTurn, fogActive, blockedRow }) =
 
   return (
     <div className="flex flex-col gap-2">
-      {/* Storm pending banner — storm turn active but no effect resolved yet */}
       {isStormPending && (
         <div className="flex items-center gap-2 px-3 py-2 border border-warning/40 bg-warning/10 animate-pulse">
           <span className="material-symbols-outlined text-warning text-sm">thunderstorm</span>
@@ -66,12 +65,10 @@ const StormTracker = ({ turnsUntilStorm, isStormTurn, fogActive, blockedRow }) =
         </div>
       )}
 
-      {/* Active effect banner — persists while effect is active */}
       {hasActiveEffect && (
         <ActiveEventBanner fogActive={fogActive} blockedRow={blockedRow} />
       )}
 
-      {/* Countdown — hidden during storm turn or when an effect is active */}
       {!isStormTurn && !hasActiveEffect && turnsUntilStorm != null && turnsUntilStorm > 0 && (
         <div className="flex items-center gap-2 bg-surface-container px-3 py-2 border border-outline-variant">
           <span className="material-symbols-outlined text-warning text-sm">thunderstorm</span>

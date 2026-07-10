@@ -18,7 +18,6 @@ const AdminLayout = () => {
 
   return (
     <div className="flex h-screen bg-surface text-on-surface">
-      {/* Sidebar */}
       <aside className="w-56 bg-surface-container flex flex-col border-r border-outline-variant">
         <div className="p-4 border-b border-outline-variant">
           <h1 className="text-sm font-mono-data uppercase tracking-wider text-primary">
@@ -66,7 +65,6 @@ const AdminLayout = () => {
         </div>
       </aside>
 
-      {/* Main content */}
       <main className="flex-1 overflow-y-auto p-6">
         <Outlet />
       </main>

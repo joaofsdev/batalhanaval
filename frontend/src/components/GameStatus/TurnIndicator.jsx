@@ -9,7 +9,6 @@ const TurnIndicator = ({ isMyTurn, opponentName, muted, onTimeout }) => {
   const urgencyPlayedRef = useRef(false);
 
   useEffect(() => {
-    // Reset timer whenever this component re-mounts (via key change from parent)
     setSecondsLeft(TURN_TIMEOUT_SECONDS);
     urgencyPlayedRef.current = false;
 
@@ -26,7 +25,6 @@ const TurnIndicator = ({ isMyTurn, opponentName, muted, onTimeout }) => {
     return () => clearInterval(intervalRef.current);
   }, []);
 
-  // Fire onTimeout when timer reaches 0 on my turn
   useEffect(() => {
     if (secondsLeft === 0 && isMyTurn) {
       onTimeout?.();
@@ -42,7 +40,6 @@ const TurnIndicator = ({ isMyTurn, opponentName, muted, onTimeout }) => {
       audioCtxRef.current = ctx;
       if (ctx.state === 'suspended') ctx.resume();
 
-      // Double beep — alert tone
       const playBeep = (startTime) => {
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
@@ -59,18 +56,15 @@ const TurnIndicator = ({ isMyTurn, opponentName, muted, onTimeout }) => {
       playBeep(ctx.currentTime);
       playBeep(ctx.currentTime + 0.18);
     } catch {
-      // AudioContext not available — ignore silently
     }
   }, [muted]);
 
-  // Play urgency sound when crossing 10s threshold on my turn
   useEffect(() => {
     if (secondsLeft === 10 && isMyTurn) {
       playUrgencyBeep();
     }
   }, [secondsLeft, isMyTurn, playUrgencyBeep]);
 
-  // Determine urgency level
   const isUrgent = isMyTurn && secondsLeft <= 20;
   const isCritical = isMyTurn && secondsLeft <= 10;
   const isDanger = isMyTurn && secondsLeft <= 5;
@@ -78,7 +72,6 @@ const TurnIndicator = ({ isMyTurn, opponentName, muted, onTimeout }) => {
   const timerColor = isCritical ? 'text-error' : isUrgent ? 'text-tertiary' : 'text-primary';
   const timerText = `${String(Math.floor(secondsLeft / 60)).padStart(2, '0')}:${String(secondsLeft % 60).padStart(2, '0')}`;
 
-  // Dynamic border and background based on urgency
   const getBorderClass = () => {
     if (!isMyTurn) return 'border-outline-variant';
     if (isCritical) return 'border-error';

@@ -6,9 +6,6 @@ const ROWS = ['A','B','C','D','E','F','G','H','I','J'];
 
 const SHIP_SIZES = { CARRIER: 5, BATTLESHIP: 4, CRUISER: 3, SUBMARINE: 3, DESTROYER: 2 };
 
-/**
- * Given ship origin, orientation and size, return all cell keys belonging to it.
- */
 const getShipCellKeys = (originRow, originCol, orientation, size) => {
   const keys = [];
   for (let i = 0; i < size; i++) {
@@ -24,14 +21,12 @@ const OpponentBoard = ({ shotsReceived, isMyTurn, onFire, fogActive = false, blo
     (shotsReceived || []).map((s) => [`${s.row},${s.col}`, s.result])
   );
 
-  // Derive sunk ships directly from backend data (origin + orientation)
   const sunkShips = useMemo(() => {
     const shots = shotsReceived || [];
     const seen = new Set();
     const ships = [];
 
     shots.filter((s) => s.result === 'SUNK' && s.sunkShipType && s.sunkShipOriginRow != null && s.sunkShipOrientation).forEach((s) => {
-      // Deduplicate by ship type + origin (same ship won't have two different origins)
       const shipKey = `${s.sunkShipType}-${s.sunkShipOriginRow}-${s.sunkShipOriginCol}`;
       if (seen.has(shipKey)) return;
       seen.add(shipKey);
@@ -48,7 +43,6 @@ const OpponentBoard = ({ shotsReceived, isMyTurn, onFire, fogActive = false, blo
     return ships;
   }, [shotsReceived]);
 
-  // Build set of cells that belong to sunk ships (for cell coloring)
   const sunkCells = useMemo(() => {
     const sunk = new Set();
     sunkShips.forEach((ship) => {
@@ -82,7 +76,6 @@ const OpponentBoard = ({ shotsReceived, isMyTurn, onFire, fogActive = false, blo
   return (
     <div className="flex flex-col items-center gap-2">
       <div className={`relative bg-surface-container-lowest p-3 border-2 ${isMyTurn ? 'border-primary radar-glow-intense' : 'border-outline-variant'}`}>
-        {/* Cabeçalho de colunas */}
         <div className="flex mb-1 ml-6">
           {Array.from({ length: 10 }, (_, i) => (
             <div key={i} className="w-8 h-6 flex items-center justify-center font-mono-data text-[10px] text-primary-fixed-dim">
@@ -92,7 +85,6 @@ const OpponentBoard = ({ shotsReceived, isMyTurn, onFire, fogActive = false, blo
         </div>
 
         <div className="flex">
-          {/* Cabeçalho de linhas */}
           <div className="flex flex-col mr-1">
             {ROWS.map(r => (
               <div key={r} className="w-5 h-8 flex items-center justify-center font-mono-data text-[10px] text-primary-fixed-dim">
@@ -101,7 +93,6 @@ const OpponentBoard = ({ shotsReceived, isMyTurn, onFire, fogActive = false, blo
             ))}
           </div>
 
-          {/* Grid */}
           <div className="relative">
             <div className="grid grid-cols-10 gap-grid-gap bg-outline-variant/50 border border-outline-variant">
               {Array.from({ length: 100 }, (_, i) => {
@@ -133,7 +124,6 @@ const OpponentBoard = ({ shotsReceived, isMyTurn, onFire, fogActive = false, blo
               })}
             </div>
 
-            {/* Sunk ship sprites overlay */}
             {sunkShips.length > 0 && !fogActive && (
               <div className="absolute z-10 pointer-events-none" style={{ top: 1, left: 1 }}>
                 {sunkShips.map((ship) => (
@@ -150,7 +140,6 @@ const OpponentBoard = ({ shotsReceived, isMyTurn, onFire, fogActive = false, blo
               </div>
             )}
 
-            {/* Admin revealed ships overlay */}
             {revealedShips && revealedShips.length > 0 && (
               <div className="absolute z-20 pointer-events-none opacity-60" style={{ top: 1, left: 1 }}>
                 {revealedShips.map((ship) => (
@@ -168,7 +157,6 @@ const OpponentBoard = ({ shotsReceived, isMyTurn, onFire, fogActive = false, blo
           </div>
         </div>
 
-        {/* Fog overlay */}
         {fogActive && (
           <div className="absolute inset-0 bg-slate-900/30 backdrop-blur-[1px] pointer-events-none rounded-sm" />
         )}

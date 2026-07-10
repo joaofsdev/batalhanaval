@@ -42,7 +42,6 @@ const ShipSelector = ({ fleet, selectedType, placedShips, onSelect, onRemove }) 
             </div>
           </div>
 
-          {/* Blocos visuais do navio */}
           <div className="flex gap-1">
             {Array.from({ length: ship.size }).map((_, i) => (
               <div key={i} className={`w-4 h-4 ${

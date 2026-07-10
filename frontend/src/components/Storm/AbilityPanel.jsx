@@ -17,11 +17,6 @@ const ABILITY_ACTION_LABELS = {
 
 const NEEDS_TARGET = ['RADAR', 'DOUBLE_TORPEDO', 'LINE_BOMBARDMENT'];
 
-/**
- * Converts user input (e.g. "E5") to { row, col } for RADAR.
- * Convention: letter = row (A-J → 0-9), number = col (1-10 → 0-9).
- * Matches OpponentBoard: rows are letters (vertical), cols are numbers (horizontal).
- */
 const parseRadarTarget = (input) => {
   const match = input.match(/^([A-J])(\d{1,2})$/i);
   if (!match) return null;
@@ -31,11 +26,6 @@ const parseRadarTarget = (input) => {
   return { row, col };
 };
 
-/**
- * Converts user input for LINE_BOMBARDMENT.
- * - Letter (A-J) → { axis: "ROW", index: 0-9 } (letters are rows in the board)
- * - Number (1-10) → { axis: "COL", index: 0-9 } (numbers are columns in the board)
- */
 const parseLineBombardmentTarget = (input) => {
   const letterMatch = input.match(/^([A-J])$/i);
   if (letterMatch) {
@@ -51,9 +41,6 @@ const parseLineBombardmentTarget = (input) => {
   return null;
 };
 
-/**
- * Builds the payload matching UseAbilityRequest backend contract.
- */
 const buildPayload = (abilityType, targetInput) => {
   if (abilityType === 'RADAR' || abilityType === 'DOUBLE_TORPEDO') {
     const coords = parseRadarTarget(targetInput);
@@ -65,14 +52,12 @@ const buildPayload = (abilityType, targetInput) => {
     if (!target) return null;
     return { abilityType, axis: target.axis, index: target.index };
   }
-  // SHIELD — no target needed
   return { abilityType };
 };
 
 const AbilityResultDisplay = ({ result }) => {
   if (!result) return null;
 
-  // Radar: show 3x3 grid
   if (result.abilityType === 'RADAR' && result.radarGrid) {
     const centerRow = result.centerRow;
     const centerCol = result.centerCol;
@@ -100,7 +85,6 @@ const AbilityResultDisplay = ({ result }) => {
     );
   }
 
-  // Double torpedo / Line bombardment: show shot results
   if (result.shotResults && result.shotResults.length > 0) {
     return (
       <div className="bg-primary/10 border border-primary/30 p-3 flex flex-col gap-1">
@@ -126,7 +110,6 @@ const AbilityResultDisplay = ({ result }) => {
     );
   }
 
-  // Shield / generic message
   return (
     <div className="bg-primary/10 border border-primary/30 p-2 text-xs text-primary font-mono-data">
       {result.message || 'Habilidade usada com sucesso!'}
@@ -257,7 +240,6 @@ const AbilityPanel = ({ gameId, isMyTurn, isStormTurn, abilityResult, abilityRot
 
   return (
     <div className="bg-surface-container p-4 border border-outline-variant flex flex-col gap-3">
-      {/* Ability info */}
       <div className="flex items-center gap-3">
         <span className="material-symbols-outlined text-primary text-2xl">
           {ABILITY_ICONS[ability.abilityType] || 'auto_awesome'}
@@ -270,12 +252,10 @@ const AbilityPanel = ({ gameId, isMyTurn, isStormTurn, abilityResult, abilityRot
         </div>
       </div>
 
-      {/* Result display */}
       {(localResult || abilityResult) && (
         <AbilityResultDisplay result={localResult || abilityResult} />
       )}
 
-      {/* Use button */}
       <button
         onClick={handleClick}
         disabled={!canUse}
@@ -295,14 +275,12 @@ const AbilityPanel = ({ gameId, isMyTurn, isStormTurn, abilityResult, abilityRot
         )}
         {!used && (ABILITY_ACTION_LABELS[ability.abilityType] || 'USAR HABILIDADE')}
       </button>
-      {/* Disabled reason hint */}
       {!used && !canUse && (
         <p className="text-xs text-on-surface-variant/70 text-center">
           {isStormTurn ? 'Aguarde — tempestade será resolvida com seu disparo' : 'Aguarde seu turno'}
         </p>
       )}
 
-      {/* Target selection modal */}
       {showTargetModal && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
           <div className="bg-surface-container-high p-6 border border-outline-variant flex flex-col gap-4 min-w-[280px]">

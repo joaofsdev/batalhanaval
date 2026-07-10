@@ -36,8 +36,6 @@ const reducer = (state, action) => {
     }
     case 'ADD_OPPONENT_SHOT': {
       const { row, col, result } = action.payload;
-      // Shield-blocked shots (MISS on a ship cell) should not mark the cell as hit
-      // The server does not set cell.hit=true for shielded shots — fetchGame will confirm
       const shouldMarkHit = result !== 'MISS' || !state.game.myBoard.cells.find(
         (c) => c.row === row && c.col === col && c.hasShip
       );

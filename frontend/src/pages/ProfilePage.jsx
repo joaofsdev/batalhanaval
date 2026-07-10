@@ -53,7 +53,6 @@ const ProfilePage = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
       <header className="flex justify-between items-center px-panel-padding h-12 bg-surface-container-low border-b border-outline-variant z-40">
         <button
           onClick={() => navigate('/lobby')}
@@ -67,10 +66,8 @@ const ProfilePage = () => {
         </span>
       </header>
 
-      {/* Content */}
       <div className="flex-1 flex items-start justify-center p-margin-safe overflow-auto">
         <div className="w-full max-w-2xl flex flex-col gap-6 py-8">
-          {/* Profile card */}
           <section className="bg-surface-container border border-outline-variant p-panel-padding flex flex-col items-center gap-4 relative">
             <div className="corner-accent tl" /><div className="corner-accent tr" />
             <div className="corner-accent bl" /><div className="corner-accent br" />
@@ -85,7 +82,6 @@ const ProfilePage = () => {
               MEMBRO DESDE {formatDate(profile.memberSince)}
             </p>
 
-            {/* Stats grid */}
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4 w-full mt-4">
               {[
                 { label: 'RANK', value: `#${profile.rank}` },
@@ -107,7 +103,6 @@ const ProfilePage = () => {
             </div>
           </section>
 
-          {/* Combat stats */}
           <section className="bg-surface-container border border-outline-variant p-panel-padding flex flex-col gap-4">
             <header className="border-b border-outline-variant pb-2 flex items-center gap-2">
               <span className="material-symbols-outlined text-primary text-sm">target</span>
@@ -131,7 +126,6 @@ const ProfilePage = () => {
             </div>
           </section>
 
-          {/* Recent games */}
           <section className="bg-surface-container border border-outline-variant p-panel-padding flex flex-col gap-4">
             <header className="border-b border-outline-variant pb-2 flex items-center gap-2">
               <span className="material-symbols-outlined text-primary text-sm">history</span>

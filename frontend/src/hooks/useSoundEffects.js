@@ -27,7 +27,6 @@ const useSoundEffects = () => {
     osc.connect(gain);
     gain.connect(ctx.destination);
 
-    // Sonar ping - sharp metallic hit
     osc.type = 'sine';
     osc.frequency.setValueAtTime(880, ctx.currentTime);
     osc.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.15);
@@ -48,7 +47,6 @@ const useSoundEffects = () => {
     osc.connect(gain);
     gain.connect(ctx.destination);
 
-    // Water splash - low frequency bubble
     osc.type = 'sine';
     osc.frequency.setValueAtTime(200, ctx.currentTime);
     osc.frequency.exponentialRampToValueAtTime(80, ctx.currentTime + 0.3);
@@ -64,7 +62,6 @@ const useSoundEffects = () => {
     if (muted) return;
     const ctx = getAudioContext();
 
-    // Explosion - layered noise burst + low rumble
     const bufferSize = ctx.sampleRate * 0.5;
     const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
     const data = buffer.getChannelData(0);
@@ -91,7 +88,6 @@ const useSoundEffects = () => {
     noise.start(ctx.currentTime);
     noise.stop(ctx.currentTime + 0.5);
 
-    // Sub-bass rumble
     const osc = ctx.createOscillator();
     const oscGain = ctx.createGain();
     osc.type = 'sine';

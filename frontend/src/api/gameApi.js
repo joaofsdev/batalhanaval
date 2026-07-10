@@ -33,7 +33,6 @@ export const getAbility = (id) =>
 export const useAbility = (id, payload) =>
   axiosClient.post(`/api/games/${id}/ability`, payload);
 
-// Room (private match) API
 export const createRoom = (gameMode) =>
   axiosClient.post('/api/rooms', { gameMode });
 

@@ -31,7 +31,6 @@ const GamePage = () => {
   const [opponentDisconnected, setOpponentDisconnected] = useState(null);
   const subscribedRef = useRef(false);
 
-  // Admin reveal board state (isolated from game state)
   const [adminBoardsRevealed, setAdminBoardsRevealed] = useState(false);
   const [adminRevealData, setAdminRevealData] = useState(null);
   const [adminRevealLoading, setAdminRevealLoading] = useState(false);
@@ -62,10 +61,8 @@ const GamePage = () => {
     setToast,
   });
 
-  // Storm tutorial state
   const [showTutorial, setShowTutorial] = useState(false);
 
-  // Auto-show tutorial on first Storm game
   useEffect(() => {
     if (
       isStormMode &&
@@ -76,7 +73,6 @@ const GamePage = () => {
     }
   }, [isStormMode, game?.status]);
 
-  // Reset local state when navigating to a different game (e.g., rematch)
   useEffect(() => {
     setBoardConfirmed(false);
     setCancelDisabled(false);
@@ -194,24 +190,20 @@ const GamePage = () => {
     try {
       await gameApi.cancelGame(gameId);
     } catch (e) {
-      // Mesmo com erro, navegar para lobby
     } finally {
       navigate("/lobby");
     }
   };
 
   const handleAdminReveal = async () => {
-    // If already revealed, just toggle off
     if (adminBoardsRevealed) {
       setAdminBoardsRevealed(false);
       return;
     }
-    // If data already loaded, just toggle on
     if (adminRevealData) {
       setAdminBoardsRevealed(true);
       return;
     }
-    // First time: fetch and activate
     setAdminRevealLoading(true);
     try {
       const res = await adminApi.revealBoards(gameId);
@@ -363,7 +355,6 @@ const GamePage = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
       <header className="flex justify-between items-center px-panel-padding h-12 bg-surface-container-low border-b border-outline-variant z-40">
         <div className="flex items-center gap-3">
           <span className="font-mono-data text-mono-data text-on-surface-variant">
@@ -408,7 +399,6 @@ const GamePage = () => {
         </div>
       </header>
 
-      {/* Opponent disconnection banner */}
       {opponentDisconnected && (
         <OpponentDisconnectedBanner
           gracePeriodSeconds={opponentDisconnected}
@@ -416,7 +406,6 @@ const GamePage = () => {
         />
       )}
 
-      {/* Content */}
       <div className="flex-1 flex items-center justify-center p-margin-safe">
         {renderContent()}
       </div>
