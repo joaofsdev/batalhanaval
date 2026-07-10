@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
+import java.time.Instant;
 
 @Service
 @RequiredArgsConstructor
@@ -66,6 +67,7 @@ public class RoomService {
         User user = userRepository.findById(userId).orElseThrow();
         game.setPlayer2(user);
         game.setStatus(GameStatus.PLACING);
+        game.setPlacementDeadline(Instant.now().plusSeconds(180));
         createBoardForPlayer(game, user);
         gameRepository.save(game);
 

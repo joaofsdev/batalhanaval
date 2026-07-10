@@ -64,7 +64,7 @@ class GameControllerTest {
     void createGame_authenticated_shouldReturn201() throws Exception {
         mockUserResolution();
         GameResponse response = new GameResponse(gameId, GameStatus.WAITING, GameMode.CLASSIC,
-            new PlayerSummary(userId, "player1"), null, null, null, null, new OpponentBoardResponse(List.of(), null), null, Instant.now());
+            new PlayerSummary(userId, "player1"), null, null, null, null, new OpponentBoardResponse(List.of(), null), null, Instant.now(), null);
         when(gameService.createOrJoinGame(eq(userId), any(GameMode.class))).thenReturn(response);
 
         mockMvc.perform(post("/api/games").with(csrf())
@@ -93,7 +93,7 @@ class GameControllerTest {
         mockUserResolution();
         GameResponse response = new GameResponse(gameId, GameStatus.IN_PROGRESS, GameMode.CLASSIC,
             new PlayerSummary(userId, "player1"), new PlayerSummary(UUID.randomUUID(), "player2"),
-            userId, null, null, new OpponentBoardResponse(List.of(), null), null, Instant.now());
+            userId, null, null, new OpponentBoardResponse(List.of(), null), null, Instant.now(), null);
         when(gameService.getGameState(gameId, userId)).thenReturn(response);
 
         mockMvc.perform(get("/api/games/" + gameId))

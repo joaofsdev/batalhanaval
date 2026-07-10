@@ -3,10 +3,11 @@ import BoardCell from './BoardCell';
 import { ShipSprite } from './ShipSprite';
 import ShipSelector from '../Placement/ShipSelector';
 import OrientationToggle from '../Placement/OrientationToggle';
+import PlacementTimer from '../Placement/PlacementTimer';
 import { ORIENTATIONS } from '../../constants/ships';
 import * as gameApi from '../../api/gameApi';
 
-const PlacementBoard = ({ gameId, onConfirmed }) => {
+const PlacementBoard = ({ gameId, onConfirmed, deadline }) => {
   const [fleet, setFleet] = useState([]);
   const [placedShips, setPlacedShips] = useState([]);
   const [selectedType, setSelectedType] = useState(null);
@@ -128,6 +129,8 @@ const PlacementBoard = ({ gameId, onConfirmed }) => {
             [ POSICIONAR FROTA ]
           </h2>
         </header>
+
+        <PlacementTimer deadline={deadline} />
 
         <OrientationToggle orientation={orientation} onChange={setOrientation} />
 

@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.time.Instant;
 
 @Service
 @RequiredArgsConstructor
@@ -30,6 +31,8 @@ public class GameService {
 
     private final Map<UUID, UUID> pendingRematches = new ConcurrentHashMap<>();
 
+    private static final long PLACEMENT_TIMEOUT_SECONDS = 180;
+
     @Transactional
     public GameResponse createOrJoinGame(UUID userId, GameMode gameMode) {
         gameRepository.findActiveGameByUserId(userId, List.of(GameStatus.WAITING, GameStatus.PLACING, GameStatus.IN_PROGRESS))
@@ -43,6 +46,7 @@ public class GameService {
             Game game = waitingGame.get();
             game.setPlayer2(user);
             game.setStatus(GameStatus.PLACING);
+            game.setPlacementDeadline(Instant.now().plusSeconds(PLACEMENT_TIMEOUT_SECONDS));
             createBoardForPlayer(game, user);
             gameRepository.save(game);
             return buildGameResponse(game, userId);
@@ -85,12 +89,15 @@ public class GameService {
 
         if (bothReady) {
             game.setStatus(GameStatus.IN_PROGRESS);
+            game.setPlacementDeadline(null);
             User player1 = userRepository.findById(game.getPlayer1().getId()).orElseThrow();
             game.setCurrentTurn(player1);
 
             if (game.getGameMode() == GameMode.STORM) {
                 abilityService.initializeAbilities(game);
             }
+        } else {
+            game.setPlacementDeadline(Instant.now().plusSeconds(PLACEMENT_TIMEOUT_SECONDS));
         }
 
         gameRepository.save(game);
@@ -177,6 +184,7 @@ public class GameService {
             newGame.setPlayer1(firstRequester);
             newGame.setPlayer2(user);
             newGame.setStatus(GameStatus.PLACING);
+            newGame.setPlacementDeadline(Instant.now().plusSeconds(PLACEMENT_TIMEOUT_SECONDS));
             newGame.setGameMode(mode);
             newGame.setRanked(originalGame.isRanked());
             newGame = gameRepository.save(newGame);
@@ -306,7 +314,7 @@ public class GameService {
 
         Integer eloDelta = calculateEloDelta(game, userId);
 
-        return new GameResponse(game.getId(), game.getStatus(), game.getGameMode(), p1, p2, currentTurnId, winnerId, myBoard, opponentBoard, eloDelta, game.getCreatedAt());
+        return new GameResponse(game.getId(), game.getStatus(), game.getGameMode(), p1, p2, currentTurnId, winnerId, myBoard, opponentBoard, eloDelta, game.getCreatedAt(), game.getPlacementDeadline());
     }
 
     private BoardResponse buildMyBoard(Game game, UUID userId) {

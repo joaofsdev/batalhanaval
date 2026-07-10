@@ -17,5 +17,6 @@ public record GameResponse(
     BoardResponse myBoard,
     OpponentBoardResponse opponentBoard,
     Integer eloDelta,
-    Instant createdAt
+    Instant createdAt,
+    Instant placementDeadline
 ) {}

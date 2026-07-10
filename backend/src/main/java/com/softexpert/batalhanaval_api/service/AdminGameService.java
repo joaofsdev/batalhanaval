@@ -51,6 +51,7 @@ public class AdminGameService {
         }
 
         game.setStatus(GameStatus.CANCELLED);
+        game.setCancellationReason(CancellationReason.ADMIN);
         game.setWinner(null);
         game.setCurrentTurn(null);
         gameRepository.save(game);

@@ -89,6 +89,16 @@ public class Game {
     @Column(nullable = false)
     private int consecutiveSkips;
 
+    @Column
+    private Instant placementDeadline;
+
+    @Enumerated(EnumType.STRING)
+    @Column
+    private CancellationReason cancellationReason;
+
+    @Version
+    private Long version;
+
     @OneToMany(mappedBy = "game", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Board> boards = new ArrayList<>();
 

@@ -255,6 +255,7 @@ const GamePage = () => {
           <PlacementBoard
             gameId={gameId}
             onConfirmed={() => setBoardConfirmed(true)}
+            deadline={game.placementDeadline}
           />
         );
 

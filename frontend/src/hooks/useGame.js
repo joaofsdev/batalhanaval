@@ -19,6 +19,7 @@ const reducer = (state, action) => {
           status: action.payload.status,
           currentTurnPlayerId: action.payload.currentTurnPlayerId,
           winnerId: action.payload.winnerId ?? state.game.winnerId,
+          placementDeadline: action.payload.placementDeadline ?? state.game.placementDeadline,
         },
       };
     case 'ADD_SHOT_RESULT': {

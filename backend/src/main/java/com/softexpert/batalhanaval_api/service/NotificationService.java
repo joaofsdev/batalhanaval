@@ -54,7 +54,7 @@ public class NotificationService {
         GameStateNotification notification = new GameStateNotification(
             game.getStatus(), currentTurnId, winnerId,
             game.getCurrentTurnNumber(), isStormTurn, turnsUntilStorm,
-            game.isBonusShot(), game.isFogActive()
+            game.isBonusShot(), game.isFogActive(), game.getPlacementDeadline()
         );
 
         messagingTemplate.convertAndSend(
