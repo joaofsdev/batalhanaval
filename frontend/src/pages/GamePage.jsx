@@ -348,6 +348,21 @@ const GamePage = () => {
         );
       }
 
+      case GAME_STATUS.CANCELLED: {
+        return (
+          <GameOverOverlay
+            isWinner={false}
+            isCancelled={true}
+            stats={null}
+            gameId={gameId}
+            rematchInvite={null}
+            eloDelta={null}
+            myBoard={game.myBoard}
+            opponentBoard={game.opponentBoard}
+          />
+        );
+      }
+
       default:
         return null;
     }

@@ -5,6 +5,7 @@ export const GAME_STATUS = {
   PLACING: 'PLACING',
   IN_PROGRESS: 'IN_PROGRESS',
   FINISHED: 'FINISHED',
+  CANCELLED: 'CANCELLED',
 };
 
 export const SHOT_RESULT = { MISS: 'MISS', HIT: 'HIT', SUNK: 'SUNK' };

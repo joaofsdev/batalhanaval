@@ -4,5 +4,6 @@ public enum GameStatus {
     WAITING,
     PLACING,
     IN_PROGRESS,
-    FINISHED
+    FINISHED,
+    CANCELLED
 }

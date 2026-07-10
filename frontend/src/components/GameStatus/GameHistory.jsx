@@ -51,18 +51,24 @@ const GameHistory = () => {
       ) : (
         <>
           <div className="flex flex-col gap-2">
-            {history.map((entry) => (
+            {history.map((entry) => {
+              const isCancelled = entry.status === 'CANCELLED';
+              return (
               <div
                 key={entry.id}
                 className={`flex items-center justify-between p-3 border transition-colors ${
-                  entry.won
-                    ? 'border-primary/30 bg-primary-container/5'
-                    : 'border-error/30 bg-error/5'
+                  isCancelled
+                    ? 'border-outline-variant/30 bg-surface-container-high/50'
+                    : entry.won
+                      ? 'border-primary/30 bg-primary-container/5'
+                      : 'border-error/30 bg-error/5'
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <span className={`material-symbols-outlined text-sm ${entry.won ? 'text-primary' : 'text-error'}`}>
-                    {entry.won ? 'emoji_events' : 'close'}
+                  <span className={`material-symbols-outlined text-sm ${
+                    isCancelled ? 'text-on-surface-variant' : entry.won ? 'text-primary' : 'text-error'
+                  }`}>
+                    {isCancelled ? 'block' : entry.won ? 'emoji_events' : 'close'}
                   </span>
                   <div>
                     <p className="font-mono-data text-mono-data text-on-surface">
@@ -78,15 +84,18 @@ const GameHistory = () => {
                     {formatDuration(entry.durationSeconds)}
                   </span>
                   <span className={`font-label-caps text-label-caps px-2 py-0.5 border ${
-                    entry.won
-                      ? 'text-primary border-primary'
-                      : 'text-error border-error'
+                    isCancelled
+                      ? 'text-on-surface-variant border-outline-variant'
+                      : entry.won
+                        ? 'text-primary border-primary'
+                        : 'text-error border-error'
                   }`}>
-                    {entry.won ? 'VITÓRIA' : 'DERROTA'}
+                    {isCancelled ? 'CANCELADA' : entry.won ? 'VITÓRIA' : 'DERROTA'}
                   </span>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
 
           {totalPages > 1 && (

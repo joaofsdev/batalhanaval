@@ -46,11 +46,11 @@ public class AdminGameService {
         Game game = gameRepository.findById(gameId)
             .orElseThrow(GameNotFoundException::new);
 
-        if (game.getStatus() == GameStatus.FINISHED) {
+        if (game.getStatus() == GameStatus.FINISHED || game.getStatus() == GameStatus.CANCELLED) {
             throw new GameNotFoundException();
         }
 
-        game.setStatus(GameStatus.FINISHED);
+        game.setStatus(GameStatus.CANCELLED);
         game.setWinner(null);
         game.setCurrentTurn(null);
         gameRepository.save(game);

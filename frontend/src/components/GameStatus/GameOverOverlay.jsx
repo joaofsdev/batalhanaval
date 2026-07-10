@@ -112,7 +112,7 @@ const GameOverOverlay = ({ isWinner, isCancelled, stats, gameId, rematchInvite, 
 
         {isCancelled && (
           <p className="font-mono-data text-mono-data text-on-surface-variant text-center">
-            A partida foi encerrada por inatividade durante o posicionamento.
+            A partida foi cancelada pelo administrador.
           </p>
         )}
 
