@@ -103,8 +103,7 @@ const RoomPage = () => {
   };
 
   const handleCopyToken = () => {
-    const shareUrl = `${window.location.origin}/room?token=${room.token}`;
-    navigator.clipboard.writeText(shareUrl);
+    navigator.clipboard.writeText(room.token);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -219,7 +218,7 @@ const RoomPage = () => {
                 </div>
                 {copied && (
                   <span className="font-mono-data text-mono-data text-primary text-xs">
-                    LINK COPIADO!
+                    CÓDIGO COPIADO!
                   </span>
                 )}
                 <span className="font-mono-data text-mono-data text-on-surface-variant text-xs">
