@@ -7,6 +7,7 @@ import com.softexpert.batalhanaval_api.dto.response.AbilityRotationResult;
 import com.softexpert.batalhanaval_api.dto.response.GameStateNotification;
 import com.softexpert.batalhanaval_api.dto.response.OpponentConnectionEvent;
 import com.softexpert.batalhanaval_api.dto.response.OpponentShotNotification;
+import com.softexpert.batalhanaval_api.dto.response.PlayerSummary;
 import com.softexpert.batalhanaval_api.dto.response.RematchInvite;
 import com.softexpert.batalhanaval_api.dto.response.ShotResultResponse;
 import com.softexpert.batalhanaval_api.dto.response.StormEventNotification;
@@ -105,6 +106,13 @@ public class NotificationService {
             userId.toString(),
             "/queue/game/ability-result",
             result
+        );
+    }
+
+    public void notifyPlayerJoined(UUID gameId, PlayerSummary player) {
+        messagingTemplate.convertAndSend(
+            "/topic/game/" + gameId + "/player-joined",
+            player
         );
     }
 

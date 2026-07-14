@@ -9,6 +9,7 @@ import com.softexpert.batalhanaval_api.dto.response.FleetConfigResponse;
 import com.softexpert.batalhanaval_api.dto.response.GameHistoryEntry;
 import com.softexpert.batalhanaval_api.dto.response.GameResponse;
 import com.softexpert.batalhanaval_api.dto.response.PageResponse;
+import com.softexpert.batalhanaval_api.dto.response.PlayerSummary;
 import com.softexpert.batalhanaval_api.dto.response.PlaceShipsResponse;
 import com.softexpert.batalhanaval_api.dto.response.RematchInvite;
 import com.softexpert.batalhanaval_api.dto.response.RematchResponse;
@@ -68,7 +69,14 @@ public class GameController {
         @AuthenticationPrincipal UserDetails userDetails
     ) {
         UUID userId = resolveUserId(userDetails);
-        return gameService.createOrJoinGame(userId, request.gameMode());
+        GameResponse response = gameService.createOrJoinGame(userId, request.gameMode());
+        if (response.player2() != null) {
+            PlayerSummary joiner = response.player2().id().equals(userId)
+                ? response.player2()
+                : response.player1();
+            notificationService.notifyPlayerJoined(response.id(), joiner);
+        }
+        return response;
     }
 
     @GetMapping("/{id}")
