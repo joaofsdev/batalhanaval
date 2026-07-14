@@ -1,198 +1,232 @@
-# Batalha Naval — API Backend
+# Backend — Batalha Naval
 
-Backend do jogo **Batalha Naval multiplayer online** em tempo real, construído com Java 21 e Spring Boot. Dois jogadores se enfrentam em partidas com tabuleiro 10x10, comunicação via WebSocket e servidor autoritativo que garante o Fog of War.
+API REST e WebSocket que implementa toda a lógica do jogo de Batalha Naval multiplayer. Responsável por autenticação, matchmaking, validação de posicionamento, processamento de tiros, controle de turno, modo Tempestade, ranking, salas privadas e administração.
 
----
+## Stack
 
-## Stack e Justificativas
+| Tecnologia | Versão | Propósito |
+|-----------|--------|-----------|
+| Java | 21 | Linguagem |
+| Spring Boot | 4.0.7 | Framework |
+| Spring Security | (gerenciada) | Autenticação e autorização JWT |
+| Spring WebSocket | (gerenciada) | STOMP + SockJS para tempo real |
+| Spring Data JPA | (gerenciada) | Persistência e repositórios |
+| Spring Validation | (gerenciada) | Validação de entrada (Jakarta Bean Validation) |
+| Flyway | (gerenciada) | Migrações de banco (produção) |
+| jjwt | 0.12.6 | Geração e validação de tokens JWT |
+| Bucket4j | 8.10.1 | Rate limiting |
+| SpringDoc OpenAPI | 3.0.2 | Documentação automática (Swagger UI) |
+| H2 | (gerenciada) | Banco de dados embarcado (dev) |
+| PostgreSQL | (gerenciada) | Banco de dados (produção) |
+| Lombok | (gerenciada) | Redução de boilerplate |
 
-| Tecnologia | Justificativa |
-|-----------|---------------|
-| **Java 21** | LTS mais recente, suporte a virtual threads, pattern matching e records |
-| **Spring Boot 4** | Ecossistema maduro para REST + WebSocket + Security + JPA num único projeto |
-| **Spring WebSocket (STOMP/SockJS)** | Pub/sub nativo com user destinations para comunicação privada; SockJS como fallback |
-| **Spring Security + JWT** | Autenticação stateless, adequada para API REST + handshake WebSocket |
-| **Spring Data JPA** | Abstração produtiva para persistência |
-| **MySQL (produção)** | Banco relacional robusto, gratuito no tier Railway/Render |
-| **H2 (desenvolvimento)** | Banco em memória, zero config, ideal para dev e testes |
-| **Flyway** | Versionamento de schema; migrações reproduzíveis |
-| **Lombok** | Reduz boilerplate em entidades e DTOs |
-| **SpringDoc OpenAPI** | Documentação automática da API REST |
-| **Railway/Render (back)** | Deploy simples com variáveis de ambiente, suporte a Java e MySQL managed |
-| **Vercel (front)** | Deploy otimizado para SPAs com CDN global |
-
----
-
-## Arquitetura
+## Estrutura de Pacotes
 
 ```
-┌────────────────────┐         ┌──────────────────────────────────────┐         ┌─────────┐
-│                    │  REST   │            SPRING BOOT               │         │         │
-│   Cliente Web      │◄───────►│                                      │         │  MySQL  │
-│   (Vercel)         │         │  ┌────────────┐  ┌───────────────┐  │   JPA   │  (prod) │
-│                    │  STOMP  │  │ Controllers│  │  Services     │◄─┼────────►│         │
-│                    │◄═══════►│  └────────────┘  │ (invariantes) │  │         │  H2     │
-│                    │  SockJS │  ┌────────────┐  └───────────────┘  │         │  (dev)  │
-│                    │         │  │ WS Handlers│  ┌───────────────┐  │         │         │
-│                    │         │  └────────────┘  │ Repositories  │  │         │         │
-└────────────────────┘         │  ┌────────────┐  └───────────────┘  │         └─────────┘
-                               │  │  Security  │                      │
-                               │  │ JWT Filter │                      │
-                               │  └────────────┘                      │
-                               └──────────────────────────────────────┘
+com.softexpert.batalhanaval_api
+├── config/            → Configurações (Security, WebSocket, CORS, RateLimitFilter)
+├── controller/        → REST controllers
+│   ├── AuthController
+│   ├── GameController
+│   ├── RoomController
+│   ├── AbilityController
+│   ├── StormController
+│   ├── ProfileController
+│   ├── RankingController
+│   ├── AdminUserController
+│   ├── AdminGameController
+│   └── AdminAuditController
+├── websocket/         → Handler STOMP (@MessageMapping)
+│   └── GameWebSocketHandler
+├── domain/            → Entidades JPA e enums
+│   ├── User, UserRole, UserStatus
+│   ├── Game, GameStatus, GameMode
+│   ├── Board, Cell, Ship, ShipType, Orientation
+│   ├── Shot, ShotResult
+│   ├── PlayerAbility, AbilityType
+│   ├── StormEvent, StormEventType
+│   ├── AdminAuditLog
+│   └── CancellationReason
+├── dto/
+│   ├── request/       → DTOs de entrada (CreateGameRequest, PlaceShipsRequest, FireRequest, etc.)
+│   └── response/      → DTOs de saída (GameResponse, ShotResultResponse, etc.)
+├── exception/         → Exceções de domínio + GlobalExceptionHandler
+├── repository/        → Interfaces JPA (Spring Data)
+├── security/          → JwtService, JwtAuthenticationFilter, WebSocketAuthInterceptor
+└── service/           → Lógica de negócio
+    ├── AuthService, GameService, ShotService
+    ├── PlacementService, RoomService
+    ├── AbilityService, StormService
+    ├── NotificationService (emissão WebSocket)
+    ├── VictoryService, EloService, RankingService
+    ├── ProfileService, DisconnectionService
+    ├── TurnTimeoutScheduler, PlacementTimeoutScheduler
+    ├── SuspensionExpirationScheduler
+    └── AdminUserService, AdminGameService, AdminAuditService
 ```
 
-### Camadas
+## Como Executar
 
-| Camada | Responsabilidade |
-|--------|-----------------|
-| `controller/` | Endpoints REST — auth, criação de partida, posicionamento |
-| `websocket/` | Handlers STOMP — processamento de tiros em tempo real |
-| `service/` | Lógica de negócio e invariantes de domínio |
-| `domain/` | Entidades JPA, Enums |
-| `repository/` | Interfaces Spring Data JPA |
-| `security/` | JWT filter, interceptors WebSocket, UserDetailsService |
-| `dto/` | Objetos de transferência (request/response) |
-| `config/` | Security chain, WebSocket broker, CORS |
-| `exception/` | Handler global de erros, exceções de domínio |
-
----
-
-## Fog of War — Como é Garantido
-
-O servidor é **autoritativo**: o cliente nunca recebe o tabuleiro do oponente.
-
-1. **DTOs separados por perspectiva** — O response retorna `myBoard` (completo, com navios) e `opponentBoard` (apenas tiros já feitos e resultados). Nunca inclui `ships` ou `hasShip` do oponente.
-
-2. **User Destinations no WebSocket** — Cada jogador recebe mensagens no seu canal privado (`/user/queue/...`). Atacante recebe resultado detalhado; defensor recebe apenas notificação de ataque.
-
-3. **Broadcast contém apenas estado público** — O canal `/topic/game/{id}/state` transmite somente turno atual, status e vencedor.
-
-4. **Entidades nunca serializam direto** — Todas as respostas passam por DTOs que excluem campos sensíveis.
-
-5. **Validação de participante** — Toda requisição valida que o usuário é participante da partida antes de retornar qualquer dado.
-
----
-
-## Como Rodar Localmente
-
-### Pré-requisitos
-
-- Java 21 (JDK)
-- Maven 3.9+ (ou use o wrapper `./mvnw`)
-
-### Passos
+### Desenvolvimento (perfil dev, H2)
 
 ```bash
-# 1. Clone o repositório
-git clone https://github.com/seu-usuario/batalhanaval-api.git
-cd batalhanaval-api
-
-# 2. Rode com perfil dev (H2 em memória)
-./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
-
-# O servidor inicia em http://localhost:8080
+./mvnw spring-boot:run
 ```
 
-### Testando a API
+- Porta: **8080**
+- Banco: H2 em arquivo local (`./batalhanavaldbdev`)
+- Console H2: `http://localhost:8080/h2-console`
+- Swagger UI: `http://localhost:8080/swagger-ui.html`
+- Flyway desativado (DDL gerenciado por Hibernate `create-drop`)
 
-**REST com curl:**
+### Docker
 
 ```bash
-# Registrar
-curl -X POST http://localhost:8080/api/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{"username":"jogador1","email":"j1@email.com","password":"senha1234"}'
-
-# Login
-curl -X POST http://localhost:8080/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"username":"jogador1","password":"senha1234"}'
-
-# Criar/entrar em partida
-curl -X POST http://localhost:8080/api/games \
-  -H "Authorization: Bearer <token>"
+docker build -t batalhanaval-api .
+docker run -p 8080:8080 \
+  -e SPRING_PROFILES_ACTIVE=prod \
+  -e DB_URL=jdbc:postgresql://host:5432/batalhanaval \
+  -e DB_USERNAME=usuario \
+  -e DB_PASSWORD=senha \
+  -e JWT_SECRET=chave-hmac-sha256-min-32-caracteres \
+  -e CORS_ALLOWED_ORIGINS=https://seudominio.com \
+  batalhanaval-api
 ```
 
-**WebSocket com wscat:**
+Imagem baseada em `eclipse-temurin:21-jre` com multi-stage build (Maven 3.9 no estágio de compilação).
 
-```bash
-wscat -c "ws://localhost:8080/ws?token=<jwt>"
-```
+## Perfis de Configuração
 
-**Swagger UI:** `http://localhost:8080/swagger-ui.html`
+| Perfil | Banco | DDL | Flyway | Porta | Uso |
+|--------|-------|-----|--------|-------|-----|
+| `dev` (padrão) | H2 (arquivo) | `create-drop` | Desativado | 8080 | Desenvolvimento local |
+| `prod` | PostgreSQL | `update` | Desativado | `${PORT:8080}` | Produção |
 
-**Console H2:** `http://localhost:8080/h2-console` (URL: `jdbc:h2:mem:batalhanaval`, user: `sa`, sem senha)
+## Variáveis de Ambiente (Produção)
 
----
+| Variável | Obrigatória | Descrição |
+|----------|-------------|-----------|
+| `SPRING_PROFILES_ACTIVE` | Sim | Perfil Spring ativo (`prod`) |
+| `DB_URL` | Sim | JDBC URL do PostgreSQL |
+| `DB_USERNAME` | Sim | Usuário do banco |
+| `DB_PASSWORD` | Sim | Senha do banco |
+| `JWT_SECRET` | Sim | Chave HMAC-SHA256 (mínimo 32 caracteres) |
+| `CORS_ALLOWED_ORIGINS` | Sim | Origens permitidas, separadas por vírgula |
+| `PORT` | Não | Porta do servidor (default: 8080) |
 
-## Variáveis de Ambiente
+## Endpoints REST
 
-| Variável | Obrigatória | Descrição | Exemplo |
-|----------|-------------|-----------|---------|
-| `SPRING_PROFILES_ACTIVE` | Sim | Perfil Spring ativo | `prod` |
-| `DB_URL` | Sim (prod) | JDBC URL do MySQL | `jdbc:mysql://host:3306/batalhanaval?useSSL=true` |
-| `DB_USERNAME` | Sim (prod) | Usuário do banco | `batalhanaval_user` |
-| `DB_PASSWORD` | Sim (prod) | Senha do banco | `(secret)` |
-| `JWT_SECRET` | Sim (prod) | Chave HMAC-SHA256 (min 32 chars) | `(secret)` |
-| `CORS_ALLOWED_ORIGINS` | Sim (prod) | Origens permitidas | `https://batalhanaval.vercel.app` |
-| `PORT` | Não | Porta do servidor (default 8080) | `8080` |
+### Autenticação (públicos)
 
----
+| Método | Path | Descrição |
+|--------|------|-----------|
+| POST | `/api/auth/register` | Registro de novo jogador |
+| POST | `/api/auth/login` | Login (retorna JWT) |
+
+### Partida (autenticados)
+
+| Método | Path | Descrição |
+|--------|------|-----------|
+| POST | `/api/games` | Criar ou entrar em partida (matchmaking) |
+| GET | `/api/games/{id}` | Obter estado da partida |
+| GET | `/api/games/active` | Obter partida ativa do jogador |
+| GET | `/api/games/fleet-config` | Configuração da frota (tipos de navio) |
+| GET | `/api/games/history` | Histórico de partidas (paginado) |
+| POST | `/api/games/{id}/ships` | Posicionar frota |
+| POST | `/api/games/{id}/surrender` | Desistir da partida |
+| POST | `/api/games/{id}/rematch` | Solicitar revanche |
+| DELETE | `/api/games/{id}` | Cancelar partida |
+
+### Salas Privadas (autenticados)
+
+| Método | Path | Descrição |
+|--------|------|-----------|
+| POST | `/api/rooms` | Criar sala privada |
+| POST | `/api/rooms/join` | Entrar em sala via token |
+| POST | `/api/rooms/{id}/ready` | Confirmar prontidão |
+| GET | `/api/rooms/{id}` | Estado da sala |
+| DELETE | `/api/rooms/{id}` | Cancelar sala |
+
+### Modo Tempestade (autenticados)
+
+| Método | Path | Descrição |
+|--------|------|-----------|
+| GET | `/api/games/{id}/ability` | Consultar habilidade disponível |
+| POST | `/api/games/{id}/ability` | Usar habilidade especial |
+| GET | `/api/games/{id}/storm/next` | Info do próximo evento de tempestade |
+
+### Perfil e Ranking (autenticados)
+
+| Método | Path | Descrição |
+|--------|------|-----------|
+| GET | `/api/users/me/profile` | Perfil do jogador autenticado |
+| GET | `/api/users/{id}/profile` | Perfil de outro jogador |
+| GET | `/api/ranking` | Ranking geral (paginado, filtrável por período) |
+
+### Administração (autenticados, role ADMIN)
+
+| Método | Path | Descrição |
+|--------|------|-----------|
+| GET/PUT/DELETE | `/api/admin/users/**` | Gestão de usuários |
+| GET/DELETE | `/api/admin/games/**` | Gestão de partidas |
+| GET | `/api/admin/audit` | Logs de auditoria |
+
+## WebSocket (STOMP)
+
+Conexão via SockJS em `/ws` com autenticação por query parameter (`?token={jwt}`).
+
+### Client → Server
+
+| Destino | Descrição |
+|---------|-----------|
+| `/app/game/{gameId}/fire` | Disparar tiro (row, col) |
+
+### Server → Client (mensagens privadas)
+
+| Queue | Descrição |
+|-------|-----------|
+| `/user/queue/game/shot-result` | Resultado do tiro para o atacante |
+| `/user/queue/game/opponent-shot` | Tiro recebido pelo defensor |
+| `/user/queue/game/ability-result` | Resultado de habilidade especial |
+| `/user/queue/game/ability-rotated` | Notificação de rotação de habilidade |
+| `/user/queue/game/rematch-invite` | Convite de revanche |
+| `/user/queue/errors` | Erros de domínio |
+
+### Server → Client (broadcast por partida)
+
+| Tópico | Descrição |
+|--------|-----------|
+| `/topic/game/{gameId}/state` | Estado atualizado da partida (turno, status, fog) |
+| `/topic/game/{gameId}/storm` | Evento climático disparado |
+| `/topic/game/{gameId}/player-joined` | Oponente entrou na partida |
+| `/topic/game/{gameId}/rematch` | Revanche aceita (nova partida criada) |
+| `/topic/game/{gameId}/opponent-disconnected` | Desconexão/reconexão do oponente |
+| `/topic/room/{gameId}` | Atualizações de estado da sala privada |
+
+## Segurança
+
+- JWT stateless (HMAC-SHA256, expiração 24h)
+- Rate limiting em `/api/auth/**` (5 req/min em produção, 10 req/min em dev)
+- Fog of War: posições de navios do oponente nunca são expostas em nenhum endpoint ou mensagem WebSocket
+- CSRF desabilitado (API stateless, sem cookies de sessão)
+- CORS configurável por perfil via propriedade `cors.allowed-origins`
+- Autenticação WebSocket via interceptor STOMP (valida JWT no CONNECT)
+- Detecção de AFK: 3 skips consecutivos resultam em cancelamento automático
 
 ## Testes
-
-### Executar todos os testes
 
 ```bash
 ./mvnw test
 ```
 
-### Executar teste específico
+- Framework: JUnit 5
+- Banco de teste: H2
+- Dependências de teste inclusas: Spring Security Test, WebSocket Test, JPA Test, Flyway Test
 
-```bash
-./mvnw test -Dtest=PlacementServiceTest
+## Documentação da API
+
+Swagger UI disponível em ambiente de desenvolvimento:
+
 ```
-
-### Cobertura
-
-| Camada | Tipo | Ferramentas |
-|--------|------|-------------|
-| Domínio/Service | Unitário | JUnit 5, Mockito, AssertJ |
-| Service + Repository | Integração | @SpringBootTest, H2 |
-| Controllers REST | Controller | @WebMvcTest, MockMvc |
-| Segurança | Cross-cutting | MockMvc com tokens válidos/inválidos |
-
-**Regras de domínio cobertas:**
-- Posicionamento válido/inválido de navios
-- Cálculo de resultado de tiro (MISS, HIT, SUNK)
-- Detecção de condição de vitória
-- Controle de turno
-- Célula já atacada
-
----
-
-## Deploy
-
-### Railway (recomendado)
-
-1. Crie um projeto no [Railway](https://railway.app)
-2. Adicione um serviço **MySQL**
-3. Adicione um serviço conectado ao repositório GitHub
-4. Configure as variáveis de ambiente (seção acima)
-5. Railway detecta o `pom.xml` e builda automaticamente
-6. Flyway roda as migrations no primeiro deploy
-
-### Render (alternativa)
-
-1. Crie um **Web Service** no [Render](https://render.com)
-2. Conecte ao repositório GitHub
-3. Build command: `./mvnw clean package -DskipTests`
-4. Start command: `java -jar target/batalhanaval-api-0.0.1-SNAPSHOT.jar`
-5. Adicione um banco MySQL (ou use Railway/PlanetScale)
-6. Configure as variáveis de ambiente
-
-### Frontend (Vercel)
-
-1. Deploy do frontend no Vercel
-2. Configure `CORS_ALLOWED_ORIGINS` no backend com a URL do Vercel
+http://localhost:8080/swagger-ui.html
+```
