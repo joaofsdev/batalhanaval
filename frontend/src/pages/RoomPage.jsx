@@ -12,7 +12,6 @@ const RoomPage = () => {
 
   const mode = searchParams.get("mode") || "CLASSIC";
   const joinToken = searchParams.get("token");
-
   const [view, setView] = useState("choosing");
   const [room, setRoom] = useState(null);
   const [inputToken, setInputToken] = useState(joinToken || "");
