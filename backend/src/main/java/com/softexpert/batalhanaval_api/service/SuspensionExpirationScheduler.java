@@ -32,11 +32,11 @@ public class SuspensionExpirationScheduler {
 
             adminAuditService.log(null, "SUSPENSION_EXPIRED", "USER", user.getId(), null);
 
-            log.info("Suspension expired: user={} ({})", user.getId(), user.getUsername());
+            log.info("Suspensão expirada: usuário={} ({})", user.getId(), user.getUsername());
         }
 
         if (!expiredUsers.isEmpty()) {
-            log.info("Processed {} expired suspensions", expiredUsers.size());
+            log.info("Processadas {} suspensões expiradas", expiredUsers.size());
         }
     }
 }

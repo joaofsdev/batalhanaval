@@ -5,6 +5,6 @@ import org.springframework.http.HttpStatus;
 public class NotStormModeException extends DomainException {
 
     public NotStormModeException() {
-        super("This action is only available in Storm mode", "NOT_STORM_MODE", HttpStatus.BAD_REQUEST);
+        super("Esta ação está disponível apenas no modo Tempestade", "NOT_STORM_MODE", HttpStatus.BAD_REQUEST);
     }
 }

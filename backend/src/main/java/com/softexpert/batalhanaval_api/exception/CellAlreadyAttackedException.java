@@ -5,6 +5,6 @@ import org.springframework.http.HttpStatus;
 public class CellAlreadyAttackedException extends DomainException {
 
     public CellAlreadyAttackedException() {
-        super("This cell has already been attacked", "CELL_ALREADY_ATTACKED", HttpStatus.CONFLICT);
+        super("Esta posição já foi atacada", "CELL_ALREADY_ATTACKED", HttpStatus.CONFLICT);
     }
 }

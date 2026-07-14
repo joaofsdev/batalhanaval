@@ -47,7 +47,7 @@ public class StormService {
         game.setNextStormTurn(game.getCurrentTurnNumber() + nextInterval);
         gameRepository.save(game);
 
-        log.info("Storm event generated: game={}, turn={}, type={}, axis={}, nextStormIn={}",
+        log.info("Evento de tempestade gerado: partida={}, turno={}, tipo={}, eixo={}, próximaTempestadeEm={}",
             gameId, game.getCurrentTurnNumber(), eventType, affectedAxis, nextInterval);
 
         return event;
@@ -76,7 +76,7 @@ public class StormService {
         gameRepository.save(game);
 
         String message = buildStormMessage(event, shipMoved);
-        log.info("Storm resolved: game={}, type={}, message={}", gameId, event.getEventType(), message);
+        log.info("Tempestade resolvida: partida={}, tipo={}, mensagem={}", gameId, event.getEventType(), message);
 
         return new StormEventNotification(event.getEventType(), event.getAffectedAxis(), message, shipMoved);
     }

@@ -5,6 +5,6 @@ import org.springframework.http.HttpStatus;
 public class AbilityAlreadyUsedException extends DomainException {
 
     public AbilityAlreadyUsedException() {
-        super("Ability has already been used", "ABILITY_ALREADY_USED", HttpStatus.CONFLICT);
+        super("A habilidade já foi utilizada", "ABILITY_ALREADY_USED", HttpStatus.CONFLICT);
     }
 }

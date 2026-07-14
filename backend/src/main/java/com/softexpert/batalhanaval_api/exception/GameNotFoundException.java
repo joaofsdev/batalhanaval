@@ -5,6 +5,6 @@ import org.springframework.http.HttpStatus;
 public class GameNotFoundException extends DomainException {
 
     public GameNotFoundException() {
-        super("Game not found", "GAME_NOT_FOUND", HttpStatus.NOT_FOUND);
+        super("Partida não encontrada", "GAME_NOT_FOUND", HttpStatus.NOT_FOUND);
     }
 }

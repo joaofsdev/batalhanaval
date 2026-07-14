@@ -67,7 +67,7 @@ public class GameWebSocketHandler {
                 ErrorResponse.of(ex.getErrorCode(), ex.getMessage())
             );
         } catch (DataIntegrityViolationException ex) {
-            log.warn("Duplicate shot ignored: game={}, attacker={}, row={}, col={}",
+            log.warn("Tiro duplicado ignorado: partida={}, atacante={}, linha={}, coluna={}",
                 gameId, attackerId, request.row(), request.col());
             messagingTemplate.convertAndSendToUser(
                 attackerId.toString(),

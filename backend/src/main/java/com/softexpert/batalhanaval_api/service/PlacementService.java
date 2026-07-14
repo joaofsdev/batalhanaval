@@ -59,11 +59,11 @@ public class PlacementService {
         Set<ShipType> types = EnumSet.noneOf(ShipType.class);
         for (ShipPlacement p : placements) {
             if (!types.add(p.shipType())) {
-                throw new InvalidShipPlacementException("Duplicate ship type: " + p.shipType(), "INVALID_FLEET_COMPOSITION");
+                throw new InvalidShipPlacementException("Tipo de navio duplicado: " + p.shipType(), "INVALID_FLEET_COMPOSITION");
             }
         }
         if (types.size() != 5 || !types.equals(EnumSet.allOf(ShipType.class))) {
-            throw new InvalidShipPlacementException("Fleet must contain exactly one of each ship type", "INVALID_FLEET_COMPOSITION");
+            throw new InvalidShipPlacementException("A frota deve conter exatamente um de cada tipo de navio", "INVALID_FLEET_COMPOSITION");
         }
     }
 
@@ -81,7 +81,7 @@ public class PlacementService {
     private void validateWithinBounds(List<int[]> coords) {
         for (int[] coord : coords) {
             if (coord[0] < 0 || coord[0] > 9 || coord[1] < 0 || coord[1] > 9) {
-                throw new InvalidShipPlacementException("Ship extends out of bounds", "SHIP_OUT_OF_BOUNDS");
+                throw new InvalidShipPlacementException("Navio ultrapassa os limites do tabuleiro", "SHIP_OUT_OF_BOUNDS");
             }
         }
     }
@@ -90,7 +90,7 @@ public class PlacementService {
         for (int[] coord : coords) {
             String key = coord[0] + "," + coord[1];
             if (occupied.contains(key)) {
-                throw new InvalidShipPlacementException("Ships overlap at (" + coord[0] + "," + coord[1] + ")", "SHIPS_OVERLAP");
+                throw new InvalidShipPlacementException("Navios se sobrepõem em (" + coord[0] + "," + coord[1] + ")", "SHIPS_OVERLAP");
             }
         }
     }

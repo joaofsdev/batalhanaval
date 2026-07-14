@@ -5,6 +5,6 @@ import org.springframework.http.HttpStatus;
 public class EmailAlreadyTakenException extends DomainException {
 
     public EmailAlreadyTakenException() {
-        super("Email is already taken", "EMAIL_TAKEN", HttpStatus.CONFLICT);
+        super("Este email já está em uso", "EMAIL_TAKEN", HttpStatus.CONFLICT);
     }
 }

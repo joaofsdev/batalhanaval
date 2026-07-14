@@ -5,6 +5,6 @@ import org.springframework.http.HttpStatus;
 public class UsernameAlreadyTakenException extends DomainException {
 
     public UsernameAlreadyTakenException() {
-        super("Username is already taken", "USERNAME_TAKEN", HttpStatus.CONFLICT);
+        super("Este nome de usuário já está em uso", "USERNAME_TAKEN", HttpStatus.CONFLICT);
     }
 }

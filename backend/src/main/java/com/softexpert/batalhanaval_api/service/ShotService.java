@@ -51,7 +51,7 @@ public class ShotService {
             .orElseThrow(GameNotFoundException::new);
 
         Cell cell = cellRepository.findByBoardIdAndRowAndCol(targetBoard.getId(), row, col)
-            .orElseThrow(() -> new InvalidShipPlacementException("Invalid coordinates", "INVALID_COORDINATES"));
+            .orElseThrow(() -> new InvalidShipPlacementException("Coordenadas inválidas", "INVALID_COORDINATES"));
 
         if (cell.isHit()) {
             throw new CellAlreadyAttackedException();

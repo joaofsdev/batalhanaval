@@ -32,7 +32,7 @@ public class WebSocketEventListener {
         if (principal instanceof StompPrincipal stompPrincipal) {
             UUID userId = stompPrincipal.userId();
             activeSessionCounts.computeIfAbsent(userId, k -> new AtomicInteger(0)).incrementAndGet();
-            log.debug("WebSocket session connected for user {}. Active sessions: {}",
+            log.debug("Sessão WebSocket conectada para usuário {}. Sessões ativas: {}",
                 userId, activeSessionCounts.get(userId).get());
             disconnectionService.handleReconnect(userId);
         }
@@ -46,7 +46,7 @@ public class WebSocketEventListener {
             UUID userId = stompPrincipal.userId();
             AtomicInteger count = activeSessionCounts.get(userId);
             int remaining = (count != null) ? count.decrementAndGet() : 0;
-            log.debug("WebSocket session disconnected for user {}. Active sessions: {}",
+            log.debug("Sessão WebSocket desconectada para usuário {}. Sessões ativas: {}",
                 userId, remaining);
 
             if (remaining <= 0) {

@@ -45,7 +45,7 @@ public class AbilityService {
 
         game.setNextAbilityRotationTurn(game.getCurrentTurnNumber() + 3);
 
-        log.info("Abilities initialized: game={}, p1={}, p2={}, nextRotation={}",
+        log.info("Habilidades inicializadas: partida={}, j1={}, j2={}, próximaRotação={}",
             game.getId(), p1Ability, p2Ability, game.getNextAbilityRotationTurn());
     }
 
@@ -79,7 +79,7 @@ public class AbilityService {
 
         game.setNextAbilityRotationTurn(game.getCurrentTurnNumber() + 3);
 
-        log.info("Abilities rotated: game={}, turn={}, nextRotation={}, results={}",
+        log.info("Habilidades rotacionadas: partida={}, turno={}, próximaRotação={}, resultados={}",
             game.getId(), game.getCurrentTurnNumber(), game.getNextAbilityRotationTurn(), results);
 
         return results;
@@ -128,7 +128,7 @@ public class AbilityService {
             gameRepository.save(game);
         }
 
-        log.info("Ability used: game={}, player={}, type={}", gameId, userId, requestedType);
+        log.info("Habilidade utilizada: partida={}, jogador={}, tipo={}", gameId, userId, requestedType);
 
         return result;
     }

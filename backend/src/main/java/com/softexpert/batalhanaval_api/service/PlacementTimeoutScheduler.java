@@ -42,9 +42,9 @@ public class PlacementTimeoutScheduler {
 
                 notificationService.broadcastGameState(game);
 
-                log.info("Placement timeout: game={} cancelled due to inactivity", game.getId());
+                log.info("Timeout de posicionamento: partida={} cancelada por inatividade", game.getId());
             } catch (ObjectOptimisticLockingFailureException ex) {
-                log.info("Placement timeout skipped for game={} (concurrent status change)", game.getId());
+                log.info("Timeout de posicionamento ignorado para partida={} (mudança de status concorrente)", game.getId());
             }
         }
     }

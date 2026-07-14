@@ -102,7 +102,7 @@ public class GameService {
 
         gameRepository.save(game);
 
-        return new PlaceShipsResponse("Fleet placed successfully", true, game.getStatus());
+        return new PlaceShipsResponse("Frota posicionada com sucesso", true, game.getStatus());
     }
 
     @Transactional(readOnly = true)

@@ -5,6 +5,6 @@ import org.springframework.http.HttpStatus;
 public class InvalidAbilityTypeException extends DomainException {
 
     public InvalidAbilityTypeException() {
-        super("The ability type does not match the player's assigned ability", "INVALID_ABILITY_TYPE", HttpStatus.BAD_REQUEST);
+        super("O tipo de habilidade não corresponde à habilidade atribuída ao jogador", "INVALID_ABILITY_TYPE", HttpStatus.BAD_REQUEST);
     }
 }

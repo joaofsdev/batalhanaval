@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import java.time.Instant;
 
 public record SuspendRequest(
-    @NotNull(message = "suspendedUntil is required")
-    @Future(message = "suspendedUntil must be in the future")
+    @NotNull(message = "suspendedUntil é obrigatório")
+    @Future(message = "suspendedUntil deve ser uma data futura")
     Instant suspendedUntil
 ) {}

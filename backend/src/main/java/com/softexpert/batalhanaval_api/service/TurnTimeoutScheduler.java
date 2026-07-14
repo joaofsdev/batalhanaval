@@ -54,7 +54,7 @@ public class TurnTimeoutScheduler {
 
                 notificationService.broadcastGameState(game);
 
-                log.info("AFK defeat: game={}, loser={} ({}  consecutive skips)",
+                log.info("Derrota por AFK: partida={}, perdedor={} ({} turnos pulados consecutivos)",
                     game.getId(), currentPlayer.getUsername(), maxConsecutiveSkips);
             } else {
                 User nextPlayer = game.getPlayer1().getId().equals(currentPlayer.getId())
@@ -66,7 +66,7 @@ public class TurnTimeoutScheduler {
 
                 notificationService.broadcastGameState(game);
 
-                log.info("Turn timeout: game={}, skipped player={}, consecutive skips={}",
+                log.info("Timeout de turno: partida={}, jogador pulado={}, turnos pulados consecutivos={}",
                     game.getId(), currentPlayer.getUsername(), game.getConsecutiveSkips());
             }
         }

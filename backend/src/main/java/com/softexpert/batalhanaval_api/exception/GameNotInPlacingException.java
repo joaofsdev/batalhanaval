@@ -5,6 +5,6 @@ import org.springframework.http.HttpStatus;
 public class GameNotInPlacingException extends DomainException {
 
     public GameNotInPlacingException() {
-        super("Game is not in placing phase", "GAME_NOT_IN_PLACING", HttpStatus.CONFLICT);
+        super("A partida não está na fase de posicionamento", "GAME_NOT_IN_PLACING", HttpStatus.CONFLICT);
     }
 }

@@ -5,6 +5,6 @@ import org.springframework.http.HttpStatus;
 public class GameNotInProgressException extends DomainException {
 
     public GameNotInProgressException() {
-        super("Game is not in progress", "GAME_NOT_IN_PROGRESS", HttpStatus.CONFLICT);
+        super("A partida não está em andamento", "GAME_NOT_IN_PROGRESS", HttpStatus.CONFLICT);
     }
 }

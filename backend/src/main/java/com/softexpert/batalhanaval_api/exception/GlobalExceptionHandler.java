@@ -42,9 +42,9 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(Exception ex) {
-        log.error("Unexpected error", ex);
+        log.error("Erro inesperado", ex);
         return ResponseEntity
             .internalServerError()
-            .body(ErrorResponse.of("INTERNAL_ERROR", "An unexpected error occurred"));
+            .body(ErrorResponse.of("INTERNAL_ERROR", "Ocorreu um erro inesperado"));
     }
 }

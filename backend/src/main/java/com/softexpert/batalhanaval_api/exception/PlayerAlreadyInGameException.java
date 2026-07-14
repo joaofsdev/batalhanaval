@@ -5,6 +5,6 @@ import org.springframework.http.HttpStatus;
 public class PlayerAlreadyInGameException extends DomainException {
 
     public PlayerAlreadyInGameException() {
-        super("Player is already in an active game", "PLAYER_ALREADY_IN_GAME", HttpStatus.CONFLICT);
+        super("Jogador já está em uma partida ativa", "PLAYER_ALREADY_IN_GAME", HttpStatus.CONFLICT);
     }
 }

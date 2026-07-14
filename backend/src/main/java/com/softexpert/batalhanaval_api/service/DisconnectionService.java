@@ -38,7 +38,7 @@ public class DisconnectionService {
 
         gameRepository.findActiveGameByUserId(userId, List.of(GameStatus.IN_PROGRESS))
             .ifPresent(game -> {
-                log.info("Player {} disconnected from IN_PROGRESS game {}. Starting {}s grace period.",
+                log.info("Jogador {} desconectou da partida EM_ANDAMENTO {}. Iniciando período de reconexão de {}s.",
                     userId, game.getId(), IN_PROGRESS_GRACE_PERIOD_SECONDS);
 
                 notificationService.notifyOpponentDisconnected(game.getId(), (int) IN_PROGRESS_GRACE_PERIOD_SECONDS);
@@ -54,7 +54,7 @@ public class DisconnectionService {
 
         gameRepository.findActiveGameByUserId(userId, List.of(GameStatus.PLACING))
             .ifPresent(game -> {
-                log.info("Player {} disconnected from PLACING game {}. Starting {}s grace period.",
+                log.info("Jogador {} desconectou da partida em POSICIONAMENTO {}. Iniciando período de reconexão de {}s.",
                     userId, game.getId(), PLACING_GRACE_PERIOD_SECONDS);
 
                 notificationService.notifyOpponentDisconnected(game.getId(), (int) PLACING_GRACE_PERIOD_SECONDS);
@@ -73,7 +73,7 @@ public class DisconnectionService {
         ScheduledFuture<?> future = pendingTimeouts.remove(userId);
         if (future != null && !future.isDone()) {
             future.cancel(false);
-            log.info("Player {} reconnected. Grace period cancelled.", userId);
+            log.info("Jogador {} reconectou. Período de reconexão cancelado.", userId);
 
             gameRepository.findActiveGameByUserId(userId, List.of(GameStatus.IN_PROGRESS))
                 .ifPresent(game -> notificationService.notifyOpponentReconnected(game.getId()));
@@ -92,13 +92,13 @@ public class DisconnectionService {
                 return;
             }
 
-            log.info("Grace period expired for player {} in game {}. Applying automatic loss.",
+            log.info("Período de reconexão expirado para jogador {} na partida {}. Aplicando derrota automática.",
                 userId, gameId);
 
             Game updatedGame = gameService.surrender(gameId, userId);
             notificationService.broadcastGameState(updatedGame);
         } catch (Exception ex) {
-            log.error("Error applying disconnection loss for player {} in game {}", userId, gameId, ex);
+            log.error("Erro ao aplicar derrota por desconexão para jogador {} na partida {}", userId, gameId, ex);
         }
     }
 
@@ -118,12 +118,12 @@ public class DisconnectionService {
 
             notificationService.broadcastGameState(game);
 
-            log.info("Placement disconnection timeout: game={} cancelled, disconnected player={}",
+            log.info("Timeout de desconexão no posicionamento: partida={} cancelada, jogador desconectado={}",
                 gameId, userId);
         } catch (ObjectOptimisticLockingFailureException ex) {
-            log.info("Placement cancellation skipped for game={} (concurrent status change)", gameId);
+            log.info("Cancelamento de posicionamento ignorado para partida={} (mudança de status concorrente)", gameId);
         } catch (Exception ex) {
-            log.error("Error cancelling placement game {} for disconnected player {}", gameId, userId, ex);
+            log.error("Erro ao cancelar partida em posicionamento {} para jogador desconectado {}", gameId, userId, ex);
         }
     }
 }

@@ -5,6 +5,6 @@ import org.springframework.http.HttpStatus;
 public class InvalidCredentialsException extends DomainException {
 
     public InvalidCredentialsException() {
-        super("Invalid username or password", "INVALID_CREDENTIALS", HttpStatus.UNAUTHORIZED);
+        super("Usuário ou senha inválidos", "INVALID_CREDENTIALS", HttpStatus.UNAUTHORIZED);
     }
 }

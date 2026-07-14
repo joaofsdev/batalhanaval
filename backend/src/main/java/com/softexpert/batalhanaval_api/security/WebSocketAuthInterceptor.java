@@ -31,7 +31,7 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
                 String username = jwtService.extractUsername(token);
                 accessor.setUser(new StompPrincipal(userId, username));
             } else {
-                throw new IllegalArgumentException("Invalid or missing JWT token");
+                throw new IllegalArgumentException("Token JWT inválido ou ausente");
             }
         }
         return message;

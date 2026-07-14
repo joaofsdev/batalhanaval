@@ -86,12 +86,12 @@ public class AbilityController {
         Game game = gameRepository.findById(gameId).orElseThrow(GameNotFoundException::new);
 
         if (game.getGameMode() == GameMode.STORM && game.getStatus() == GameStatus.IN_PROGRESS) {
-            log.warn("[SELF-HEALING] Abilities missing for STORM game in progress. gameId={}, userId={}. Initializing now.", gameId, userId);
+            log.warn("[AUTO-CORREÇÃO] Habilidades ausentes para partida TEMPESTADE em andamento. partida={}, jogador={}. Inicializando agora.", gameId, userId);
 
             try {
                 abilityService.initializeAbilities(game);
             } catch (DataIntegrityViolationException e) {
-                log.info("[SELF-HEALING] Concurrent initialization detected (duplicate key). gameId={}, userId={}. Using existing record.", gameId, userId);
+                log.info("[AUTO-CORREÇÃO] Inicialização concorrente detectada (chave duplicada). partida={}, jogador={}. Usando registro existente.", gameId, userId);
             }
 
             return playerAbilityRepository.findByGameIdAndUserId(gameId, userId)

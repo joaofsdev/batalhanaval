@@ -5,6 +5,6 @@ import org.springframework.http.HttpStatus;
 public class NotYourTurnException extends DomainException {
 
     public NotYourTurnException() {
-        super("It's not your turn to fire", "NOT_YOUR_TURN", HttpStatus.CONFLICT);
+        super("Não é o seu turno de atacar", "NOT_YOUR_TURN", HttpStatus.CONFLICT);
     }
 }
