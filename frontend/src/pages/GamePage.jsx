@@ -1,10 +1,11 @@
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import useGame from "../hooks/useGame";
 import useWebSocket from "../hooks/useWebSocket";
 import useSoundEffects from "../hooks/useSoundEffects";
 import WaitingScreen from "../components/GameStatus/WaitingScreen";
+import OpponentInfo from "../components/GameStatus/OpponentInfo";
 import TurnIndicator from "../components/GameStatus/TurnIndicator";
 import OpponentDisconnectedBanner from "../components/GameStatus/OpponentDisconnectedBanner";
 import PlacementBoard from "../components/Board/PlacementBoard";
@@ -29,7 +30,9 @@ const GamePage = () => {
   const [cancelDisabled, setCancelDisabled] = useState(false);
   const [rematchInvite, setRematchInvite] = useState(null);
   const [opponentDisconnected, setOpponentDisconnected] = useState(null);
+  const [opponentFoundDelayActive, setOpponentFoundDelayActive] = useState(false);
   const subscribedRef = useRef(false);
+  const delayShownRef = useRef(false);
 
   const [adminBoardsRevealed, setAdminBoardsRevealed] = useState(false);
   const [adminRevealData, setAdminRevealData] = useState(null);
@@ -78,14 +81,26 @@ const GamePage = () => {
     setCancelDisabled(false);
     setRematchInvite(null);
     setOpponentDisconnected(null);
+    setOpponentFoundDelayActive(false);
     setAdminBoardsRevealed(false);
     setAdminRevealData(null);
     subscribedRef.current = false;
+    delayShownRef.current = false;
   }, [gameId]);
 
   useEffect(() => {
     fetchGame();
   }, [fetchGame]);
+
+  useEffect(() => {
+    if (!game) return;
+    if (game.status === GAME_STATUS.PLACING && !delayShownRef.current) {
+      delayShownRef.current = true;
+      setOpponentFoundDelayActive(true);
+      setTimeout(() => setOpponentFoundDelayActive(false), 3000);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [game?.status]);
 
   useEffect(() => {
     if (!game) return;
@@ -226,6 +241,18 @@ const GamePage = () => {
   };
 
   const renderContent = () => {
+    if (opponentFoundDelayActive) {
+      return (
+        <WaitingScreen
+          gameId={gameId}
+          myUsername={user?.username}
+          onCancel={handleCancelSearch}
+          canCancel={false}
+          opponentFound
+        />
+      );
+    }
+
     switch (game.status) {
       case GAME_STATUS.WAITING:
         return (
@@ -237,7 +264,8 @@ const GamePage = () => {
           />
         );
 
-      case GAME_STATUS.PLACING:
+      case GAME_STATUS.PLACING: {
+        const placingOpponent = game.player1?.id === user.id ? game.player2 : game.player1;
         if (boardConfirmed || game.myBoard?.ready) {
           return (
             <div className="flex flex-col items-center gap-6 py-16">
@@ -252,12 +280,16 @@ const GamePage = () => {
           );
         }
         return (
-          <PlacementBoard
-            gameId={gameId}
-            onConfirmed={() => setBoardConfirmed(true)}
-            deadline={game.placementDeadline}
-          />
+          <div className="flex flex-col gap-4">
+            <OpponentInfo username={placingOpponent?.username} />
+            <PlacementBoard
+              gameId={gameId}
+              onConfirmed={() => setBoardConfirmed(true)}
+              deadline={game.placementDeadline}
+            />
+          </div>
         );
+      }
 
       case GAME_STATUS.IN_PROGRESS: {
         const isMyTurn = game.currentTurnPlayerId === user.id;
@@ -265,6 +297,7 @@ const GamePage = () => {
           game.player1?.id === user.id ? game.player2 : game.player1;
         return (
           <div className="flex flex-col gap-4">
+            <OpponentInfo username={opponent?.username} />
             <TurnIndicator
               key={game.currentTurnPlayerId}
               isMyTurn={isMyTurn}
