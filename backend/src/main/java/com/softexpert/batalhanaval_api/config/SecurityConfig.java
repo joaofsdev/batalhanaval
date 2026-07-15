@@ -2,6 +2,7 @@ package com.softexpert.batalhanaval_api.config;
 
 import com.softexpert.batalhanaval_api.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -22,21 +23,31 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final RateLimitFilter rateLimitFilter;
 
+    @Value("${spring.profiles.active:prod}")
+    private String activeProfile;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .cors(cors -> {})
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers("/api/games/fleet-config").permitAll()
-                .requestMatchers("/ws/**").permitAll()
-                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                .requestMatchers("/h2-console/**").permitAll()
-                .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                .anyRequest().authenticated()
-            )
+            .authorizeHttpRequests(auth -> {
+                auth
+                    .requestMatchers("/api/auth/**").permitAll()
+                    .requestMatchers("/api/games/fleet-config").permitAll()
+                    .requestMatchers("/ws/**").permitAll();
+
+                if ("dev".equals(activeProfile)) {
+                    auth
+                        .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/v3/api-docs.yaml").permitAll()
+                        .requestMatchers("/h2-console/**").permitAll();
+                }
+
+                auth
+                    .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                    .anyRequest().authenticated();
+            })
             .headers(headers -> headers.frameOptions(frame -> frame.disable()))
             .exceptionHandling(ex -> ex
                 .authenticationEntryPoint((request, response, authException) -> {
