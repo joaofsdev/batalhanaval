@@ -14,6 +14,12 @@ import com.softexpert.batalhanaval_api.repository.PlayerAbilityRepository;
 import com.softexpert.batalhanaval_api.repository.UserRepository;
 import com.softexpert.batalhanaval_api.service.AbilityService;
 import com.softexpert.batalhanaval_api.service.NotificationService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +34,8 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/games/{gameId}/ability")
 @RequiredArgsConstructor
+@Tag(name = "Habilidades")
+@SecurityRequirement(name = "bearerAuth")
 public class AbilityController {
 
     private final AbilityService abilityService;
@@ -37,9 +45,17 @@ public class AbilityController {
     private final GameRepository gameRepository;
 
     @GetMapping
+    @Operation(
+            summary = "Consultar habilidade disponível",
+            description = "Retorna a habilidade especial atribuída ao jogador nesta partida (modo Tempestade), indicando se já foi utilizada.")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Habilidade retornada com sucesso"),
+        @ApiResponse(responseCode = "401", description = "Token JWT ausente ou inválido"),
+        @ApiResponse(responseCode = "404", description = "Partida não encontrada ou não é modo Tempestade")
+    })
     public AbilityStatusResponse getAbility(
         @PathVariable UUID gameId,
-        @AuthenticationPrincipal UserDetails userDetails
+        @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails
     ) {
         UUID userId = resolveUserId(userDetails);
 
@@ -56,10 +72,20 @@ public class AbilityController {
     }
 
     @PostMapping
+    @Operation(
+            summary = "Usar habilidade especial",
+            description = "Ativa a habilidade especial do jogador (Radar, Torpedo Duplo, Escudo ou Bombardeio em Linha). Cada habilidade só pode ser usada uma vez por partida.")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Habilidade utilizada com sucesso"),
+        @ApiResponse(responseCode = "400", description = "Parâmetros inválidos para a habilidade"),
+        @ApiResponse(responseCode = "401", description = "Token JWT ausente ou inválido"),
+        @ApiResponse(responseCode = "404", description = "Partida não encontrada"),
+        @ApiResponse(responseCode = "409", description = "Habilidade já utilizada ou não é o turno do jogador")
+    })
     public AbilityResultResponse useAbility(
         @PathVariable UUID gameId,
         @Valid @RequestBody UseAbilityRequest request,
-        @AuthenticationPrincipal UserDetails userDetails
+        @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails
     ) {
         UUID userId = resolveUserId(userDetails);
 
