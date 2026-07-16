@@ -2,6 +2,8 @@ package com.softexpert.batalhanaval_api.service;
 
 import com.softexpert.batalhanaval_api.domain.*;
 import com.softexpert.batalhanaval_api.dto.response.StormEventNotification;
+import com.softexpert.batalhanaval_api.dto.response.StormInfoResponse;
+import com.softexpert.batalhanaval_api.exception.GameNotFoundException;
 import com.softexpert.batalhanaval_api.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +23,13 @@ public class StormService {
     private final BoardRepository boardRepository;
     private final ShipRepository shipRepository;
     private final CellRepository cellRepository;
+
+    @Transactional(readOnly = true)
+    public StormInfoResponse getNextStormInfo(UUID gameId) {
+        Game game = gameRepository.findById(gameId).orElseThrow(GameNotFoundException::new);
+        int turnsUntilStorm = Math.max(0, game.getNextStormTurn() - game.getCurrentTurnNumber());
+        return new StormInfoResponse(game.getNextStormTurn(), game.getCurrentTurnNumber(), turnsUntilStorm);
+    }
 
     @Transactional
     public StormEvent generateNextStormEvent(UUID gameId) {

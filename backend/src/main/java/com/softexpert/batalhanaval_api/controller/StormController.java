@@ -1,11 +1,7 @@
 package com.softexpert.batalhanaval_api.controller;
 
-import com.softexpert.batalhanaval_api.domain.Game;
-import com.softexpert.batalhanaval_api.domain.User;
 import com.softexpert.batalhanaval_api.dto.response.StormInfoResponse;
-import com.softexpert.batalhanaval_api.exception.GameNotFoundException;
-import com.softexpert.batalhanaval_api.repository.GameRepository;
-import com.softexpert.batalhanaval_api.repository.UserRepository;
+import com.softexpert.batalhanaval_api.service.StormService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -26,8 +22,7 @@ import java.util.UUID;
 @SecurityRequirement(name = "bearerAuth")
 public class StormController {
 
-    private final GameRepository gameRepository;
-    private final UserRepository userRepository;
+    private final StormService stormService;
 
     @GetMapping("/next")
     @Operation(
@@ -42,14 +37,6 @@ public class StormController {
         @PathVariable UUID gameId,
         @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails
     ) {
-        Game game = gameRepository.findById(gameId).orElseThrow(GameNotFoundException::new);
-
-        int turnsUntilStorm = Math.max(0, game.getNextStormTurn() - game.getCurrentTurnNumber());
-
-        return new StormInfoResponse(
-            game.getNextStormTurn(),
-            game.getCurrentTurnNumber(),
-            turnsUntilStorm
-        );
+        return stormService.getNextStormInfo(gameId);
     }
 }
