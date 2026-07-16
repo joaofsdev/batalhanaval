@@ -48,7 +48,7 @@ const GamePage = () => {
     handleStateUpdate,
   } = useGame(gameId);
 
-  const { subscribe, publish, connected } = useWebSocket({
+  const { subscribe, unsubscribeAll, publish, connected } = useWebSocket({
     token,
     onReconnect: fetchGame,
   });
@@ -77,6 +77,7 @@ const GamePage = () => {
   }, [isStormMode, game?.status]);
 
   useEffect(() => {
+    unsubscribeAll();
     setBoardConfirmed(false);
     setCancelDisabled(false);
     setRematchInvite(null);

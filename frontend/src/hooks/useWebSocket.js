@@ -30,7 +30,24 @@ const useWebSocket = ({ token, onReconnect }) => {
         setConnected(false);
         activeSubsRef.current = [];
       },
-      onStompError: () => setConnected(false),
+      onStompError: (frame) => {
+        setConnected(false);
+        const message = frame?.headers?.message || '';
+        if (message.includes('inválido') || message.includes('suspensa') || message.includes('banida')) {
+          client.deactivate();
+          localStorage.removeItem('bn_token');
+          localStorage.removeItem('bn_user');
+          window.location.href = '/';
+        }
+      },
+      onWebSocketClose: (event) => {
+        if (event?.code === 1008 || event?.code === 1002) {
+          client.deactivate();
+          localStorage.removeItem('bn_token');
+          localStorage.removeItem('bn_user');
+          window.location.href = '/';
+        }
+      },
     });
 
     client.activate();
@@ -48,9 +65,19 @@ const useWebSocket = ({ token, onReconnect }) => {
     if (client?.connected) {
       const sub = client.subscribe(destination, (msg) => callback(JSON.parse(msg.body)));
       activeSubsRef.current.push(sub);
+      return sub;
     } else {
       pendingRef.current.push({ dest: destination, cb: callback });
+      return null;
     }
+  }, []);
+
+  const unsubscribeAll = useCallback(() => {
+    activeSubsRef.current.forEach((sub) => {
+      try { sub.unsubscribe(); } catch (e) { /* ignore */ }
+    });
+    activeSubsRef.current = [];
+    pendingRef.current = [];
   }, []);
 
   const publish = useCallback((destination, body) => {
@@ -60,7 +87,7 @@ const useWebSocket = ({ token, onReconnect }) => {
     });
   }, []);
 
-  return { connected, subscribe, publish };
+  return { connected, subscribe, unsubscribeAll, publish };
 };
 
 export default useWebSocket;
