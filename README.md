@@ -96,6 +96,18 @@ O dev server inicia na porta **5173**. A variável `VITE_API_BASE_URL` no arquiv
 
 Abrir `http://localhost:5173` em duas abas/navegadores diferentes, registrar dois usuários distintos e iniciar uma partida.
 
+## Decisões de Design
+
+| Decisão | Alternativas consideradas | Motivo |
+|---------|--------------------------|--------|
+| **STOMP sobre WebSocket puro** | WebSocket raw (frames custom), Server-Sent Events | STOMP oferece roteamento de mensagens por destino (`/topic/game/{id}/state`, `/user/queue/...`), permitindo broadcast seletivo para subscribers de uma partida sem lógica manual de dispatch. Integra nativamente com a abstração `SimpMessagingTemplate` do Spring, eliminando boilerplate de serialização e routing. WebSocket raw exigiria implementar um protocolo de mensagens ad-hoc; SSE não suporta comunicação bidirecional. |
+| **BCrypt para hash de senha** | SHA-256, Argon2, PBKDF2 | BCrypt é um hash lento por design — inclui salt automático por invocação e fator de custo ajustável (padrão 10 = ~100ms), tornando ataques de brute-force via GPU inviáveis. SHA-256 é um hash rápido (~bilhões/s em GPU), inadequado para senhas. Argon2 seria superior em teoria, mas BCrypt é o padrão consolidado no ecossistema Spring Security (`BCryptPasswordEncoder`) com suporte zero-config. |
+| **Optimistic locking (`@Version`)** | Pessimistic locking (`SELECT FOR UPDATE`), mutex em memória | Contenção real é baixa: cada partida tem exatamente 2 jogadores e turnos alternados, então conflitos (double-fire) são raros e causados por race conditions de rede, não por alta concorrência. Optimistic locking evita o overhead de locks no banco em 99.9% das requests e trata o caso raro via catch de `ObjectOptimisticLockingFailureException`, retornando erro amigável ao cliente. Pessimistic locking adicionaria latência desnecessária em toda operação de tiro. |
+| **H2 em dev, PostgreSQL em prod** | PostgreSQL em todos os ambientes, SQLite | H2 embarcado oferece zero-config (sem instalar/rodar serviço externo), inicialização instantânea e modo de compatibilidade PostgreSQL para as queries. Isso acelera o onboarding: `./mvnw spring-boot:run` funciona sem dependências externas. Trade-off assumido: divergências sutis de dialeto podem surgir (funções específicas de Postgres). Para maior fidelidade, há `docker-compose` com PostgreSQL 16 como alternativa local. |
+| **Estado 100% server-authoritative (sem optimistic updates no frontend)** | Optimistic UI com rollback | Elimina toda uma classe de bugs de inconsistência de estado entre client e server. O frontend nunca exibe dados que o backend não confirmou — isso é especialmente crítico para fog-of-war, onde qualquer estado local "otimista" poderia vazar inferências sobre o tabuleiro oponente. O custo é latência visível no feedback de ação (~50-100ms em WebSocket), aceitável para um jogo por turnos. |
+
+**ADR adicional:** [Scheduler Single-Thread para Timeouts de Desconexão](backend/docs/adr-scheduler-single-thread.md) — documenta por que um `ScheduledExecutorService` de thread única é suficiente para gerenciar grace periods de reconexão no volume esperado do sistema.
+
 ## Documentação Detalhada
 
 - [Backend — README](backend/README.md): endpoints, WebSocket, configurações, testes
