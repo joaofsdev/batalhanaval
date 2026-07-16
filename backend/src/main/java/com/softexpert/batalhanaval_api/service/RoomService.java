@@ -54,10 +54,10 @@ public class RoomService {
             .ifPresent(g -> { throw new PlayerAlreadyInGameException(); });
 
         Game game = gameRepository.findByRoomToken(token.toUpperCase())
-            .orElseThrow(() -> new RoomException("Sala não encontrada com este token.", "ROOM_NOT_FOUND"));
+            .orElseThrow(RoomNotFoundException::new);
 
         if (game.getStatus() != GameStatus.WAITING) {
-            throw new RoomException("Esta sala já está cheia ou a partida já começou.", "ROOM_FULL");
+            throw new RoomFullException();
         }
 
         if (game.getPlayer1().getId().equals(userId)) {
@@ -133,7 +133,7 @@ public class RoomService {
         }
 
         if (!game.getPlayer1().getId().equals(userId)) {
-            throw new RoomException("Apenas o criador da sala pode cancelá-la.", "NOT_HOST");
+            throw new NotRoomOwnerException();
         }
 
         if (game.getStatus() == GameStatus.IN_PROGRESS) {
