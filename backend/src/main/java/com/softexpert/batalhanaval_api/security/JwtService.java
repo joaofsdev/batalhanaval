@@ -15,6 +15,8 @@ import java.util.UUID;
 @Service
 public class JwtService {
 
+    private static final String ISSUER = "batalhanaval-api";
+
     private final SecretKey secretKey;
     private final long expirationMs;
 
@@ -31,6 +33,7 @@ public class JwtService {
         return Jwts.builder()
             .subject(userId.toString())
             .claim("username", username)
+            .issuer(ISSUER)
             .issuedAt(now)
             .expiration(new Date(now.getTime() + expirationMs))
             .signWith(secretKey)
@@ -57,6 +60,7 @@ public class JwtService {
     private Claims extractClaims(String token) {
         return Jwts.parser()
             .verifyWith(secretKey)
+            .requireIssuer(ISSUER)
             .build()
             .parseSignedClaims(token)
             .getPayload();

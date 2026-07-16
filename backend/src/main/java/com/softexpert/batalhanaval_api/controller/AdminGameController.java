@@ -4,7 +4,7 @@ import com.softexpert.batalhanaval_api.domain.User;
 import com.softexpert.batalhanaval_api.dto.response.AdminGameBoardsResponse;
 import com.softexpert.batalhanaval_api.dto.response.AdminGameResponse;
 import com.softexpert.batalhanaval_api.dto.response.PageResponse;
-import com.softexpert.batalhanaval_api.repository.UserRepository;
+import com.softexpert.batalhanaval_api.security.UserResolver;
 import com.softexpert.batalhanaval_api.service.AdminGameService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -22,12 +23,13 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/admin/games")
 @RequiredArgsConstructor
+@PreAuthorize("hasRole('ADMIN')")
 @Tag(name = "Admin — Partidas")
 @SecurityRequirement(name = "bearerAuth")
 public class AdminGameController {
 
     private final AdminGameService adminGameService;
-    private final UserRepository userRepository;
+    private final UserResolver userResolver;
 
     @GetMapping("/active")
     @Operation(
@@ -56,7 +58,7 @@ public class AdminGameController {
         @ApiResponse(responseCode = "404", description = "Partida não encontrada")
     })
     public AdminGameBoardsResponse revealBoards(@PathVariable UUID id, @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
-        User admin = userRepository.findByUsername(userDetails.getUsername()).orElseThrow();
+        User admin = userResolver.resolveUser(userDetails);
         return adminGameService.revealBoards(id, admin);
     }
 
@@ -72,7 +74,7 @@ public class AdminGameController {
         @ApiResponse(responseCode = "409", description = "Partida não está em andamento")
     })
     public AdminGameResponse forceEnd(@PathVariable UUID id, @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
-        User admin = userRepository.findByUsername(userDetails.getUsername()).orElseThrow();
+        User admin = userResolver.resolveUser(userDetails);
         return adminGameService.forceEnd(id, admin);
     }
 }

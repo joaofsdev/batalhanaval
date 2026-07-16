@@ -19,6 +19,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Controller;
 
 import java.security.Principal;
@@ -73,6 +74,14 @@ public class GameWebSocketHandler {
                 attackerId.toString(),
                 "/queue/errors",
                 ErrorResponse.of("CELL_ALREADY_ATTACKED", "Você já atacou esta posição.")
+            );
+        } catch (ObjectOptimisticLockingFailureException ex) {
+            log.warn("Conflito de turno (double-fire): partida={}, atacante={}, linha={}, coluna={}",
+                gameId, attackerId, request.row(), request.col());
+            messagingTemplate.convertAndSendToUser(
+                attackerId.toString(),
+                "/queue/errors",
+                ErrorResponse.of("NOT_YOUR_TURN", "Não é o seu turno de atacar")
             );
         }
     }

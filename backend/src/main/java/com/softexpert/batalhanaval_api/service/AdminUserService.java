@@ -44,6 +44,9 @@ public class AdminUserService {
 
     @Transactional
     public AdminUserResponse ban(UUID userId, User admin) {
+        if (userId.equals(admin.getId())) {
+            throw new IllegalArgumentException("Não é permitido banir a si mesmo");
+        }
         User user = findUser(userId);
         user.setStatus(UserStatus.BANNED);
         user.setSuspendedUntil(null);
@@ -56,6 +59,9 @@ public class AdminUserService {
 
     @Transactional
     public AdminUserResponse suspend(UUID userId, Instant suspendedUntil, User admin) {
+        if (userId.equals(admin.getId())) {
+            throw new IllegalArgumentException("Não é permitido suspender a si mesmo");
+        }
         User user = findUser(userId);
         user.setStatus(UserStatus.SUSPENDED);
         user.setSuspendedUntil(suspendedUntil);

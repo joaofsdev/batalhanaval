@@ -5,7 +5,7 @@ import com.softexpert.batalhanaval_api.domain.UserStatus;
 import com.softexpert.batalhanaval_api.dto.request.SuspendRequest;
 import com.softexpert.batalhanaval_api.dto.response.AdminUserResponse;
 import com.softexpert.batalhanaval_api.dto.response.PageResponse;
-import com.softexpert.batalhanaval_api.repository.UserRepository;
+import com.softexpert.batalhanaval_api.security.UserResolver;
 import com.softexpert.batalhanaval_api.service.AdminUserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -24,12 +25,13 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/admin/users")
 @RequiredArgsConstructor
+@PreAuthorize("hasRole('ADMIN')")
 @Tag(name = "Admin — Usuários")
 @SecurityRequirement(name = "bearerAuth")
 public class AdminUserController {
 
     private final AdminUserService adminUserService;
-    private final UserRepository userRepository;
+    private final UserResolver userResolver;
 
     @GetMapping
     @Operation(
@@ -96,6 +98,6 @@ public class AdminUserController {
     }
 
     private User resolveAdmin(UserDetails userDetails) {
-        return userRepository.findByUsername(userDetails.getUsername()).orElseThrow();
+        return userResolver.resolveUser(userDetails);
     }
 }

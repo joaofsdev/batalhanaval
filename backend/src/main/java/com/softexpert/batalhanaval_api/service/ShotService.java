@@ -33,6 +33,13 @@ public class ShotService {
         if (game.getStatus() != GameStatus.IN_PROGRESS) {
             throw new GameNotInProgressException();
         }
+
+        boolean isPlayer1 = game.getPlayer1().getId().equals(attackerId);
+        boolean isPlayer2 = game.getPlayer2() != null && game.getPlayer2().getId().equals(attackerId);
+        if (!isPlayer1 && !isPlayer2) {
+            throw new NotGameParticipantException();
+        }
+
         if (!game.getCurrentTurn().getId().equals(attackerId)) {
             throw new NotYourTurnException();
         }
