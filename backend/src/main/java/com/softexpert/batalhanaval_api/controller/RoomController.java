@@ -5,6 +5,7 @@ import com.softexpert.batalhanaval_api.dto.request.CreateRoomRequest;
 import com.softexpert.batalhanaval_api.dto.request.JoinRoomRequest;
 import com.softexpert.batalhanaval_api.dto.response.RoomResponse;
 import com.softexpert.batalhanaval_api.repository.UserRepository;
+import com.softexpert.batalhanaval_api.security.UserResolver;
 import com.softexpert.batalhanaval_api.service.RoomService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -29,7 +30,7 @@ import java.util.UUID;
 public class RoomController {
 
     private final RoomService roomService;
-    private final UserRepository userRepository;
+    private final UserResolver userResolver;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -124,7 +125,6 @@ public class RoomController {
     }
 
     private UUID resolveUserId(UserDetails userDetails) {
-        User user = userRepository.findByUsername(userDetails.getUsername()).orElseThrow();
-        return user.getId();
+        return userResolver.resolveUserId(userDetails);
     }
 }

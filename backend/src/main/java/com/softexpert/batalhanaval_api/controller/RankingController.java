@@ -2,7 +2,7 @@ package com.softexpert.batalhanaval_api.controller;
 
 import com.softexpert.batalhanaval_api.domain.User;
 import com.softexpert.batalhanaval_api.dto.response.RankingResponse;
-import com.softexpert.batalhanaval_api.repository.UserRepository;
+import com.softexpert.batalhanaval_api.security.UserResolver;
 import com.softexpert.batalhanaval_api.service.RankingService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class RankingController {
 
     private final RankingService rankingService;
-    private final UserRepository userRepository;
+    private final UserResolver userResolver;
 
     @GetMapping
     @Operation(
@@ -42,7 +42,7 @@ public class RankingController {
         @RequestParam(defaultValue = "all") String period,
         @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails
     ) {
-        User currentUser = userRepository.findByUsername(userDetails.getUsername()).orElseThrow();
+        User currentUser = userResolver.resolveUser(userDetails);
         return rankingService.getRanking(currentUser.getId(), currentUser.getUsername(), page, size, period);
     }
 }

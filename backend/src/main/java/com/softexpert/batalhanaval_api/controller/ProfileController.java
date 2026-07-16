@@ -2,7 +2,7 @@ package com.softexpert.batalhanaval_api.controller;
 
 import com.softexpert.batalhanaval_api.domain.User;
 import com.softexpert.batalhanaval_api.dto.response.PlayerProfileResponse;
-import com.softexpert.batalhanaval_api.repository.UserRepository;
+import com.softexpert.batalhanaval_api.security.UserResolver;
 import com.softexpert.batalhanaval_api.service.ProfileService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -28,7 +28,7 @@ import java.util.UUID;
 public class ProfileController {
 
     private final ProfileService profileService;
-    private final UserRepository userRepository;
+    private final UserResolver userResolver;
 
     @GetMapping("/me/profile")
     @Operation(
@@ -39,8 +39,8 @@ public class ProfileController {
         @ApiResponse(responseCode = "401", description = "Token JWT ausente ou inválido")
     })
     public PlayerProfileResponse getMyProfile(@Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
-        User currentUser = userRepository.findByUsername(userDetails.getUsername()).orElseThrow();
-        return profileService.getProfile(currentUser.getId());
+        UUID userId = userResolver.resolveUserId(userDetails);
+        return profileService.getProfile(userId);
     }
 
     @GetMapping("/{id}/profile")
