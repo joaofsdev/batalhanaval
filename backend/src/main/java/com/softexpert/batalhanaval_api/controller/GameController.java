@@ -9,11 +9,11 @@ import com.softexpert.batalhanaval_api.dto.response.FleetConfigResponse;
 import com.softexpert.batalhanaval_api.dto.response.GameHistoryEntry;
 import com.softexpert.batalhanaval_api.dto.response.GameResponse;
 import com.softexpert.batalhanaval_api.dto.response.PageResponse;
-import com.softexpert.batalhanaval_api.dto.response.PlayerSummary;
 import com.softexpert.batalhanaval_api.dto.response.PlaceShipsResponse;
 import com.softexpert.batalhanaval_api.dto.response.RematchInvite;
 import com.softexpert.batalhanaval_api.dto.response.RematchResponse;
 import com.softexpert.batalhanaval_api.repository.UserRepository;
+import com.softexpert.batalhanaval_api.security.UserResolver;
 import com.softexpert.batalhanaval_api.service.GameService;
 import com.softexpert.batalhanaval_api.service.NotificationService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -43,6 +43,7 @@ public class GameController {
 
     private final GameService gameService;
     private final NotificationService notificationService;
+    private final UserResolver userResolver;
     private final UserRepository userRepository;
 
     @GetMapping("/fleet-config")
@@ -106,14 +107,7 @@ public class GameController {
         @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails
     ) {
         UUID userId = resolveUserId(userDetails);
-        GameResponse response = gameService.createOrJoinGame(userId, request.gameMode());
-        if (response.player2() != null) {
-            PlayerSummary joiner = response.player2().id().equals(userId)
-                ? response.player2()
-                : response.player1();
-            notificationService.notifyPlayerJoined(response.id(), joiner);
-        }
-        return response;
+        return gameService.createOrJoinGame(userId, request.gameMode());
     }
 
     @GetMapping("/{id}")
@@ -215,7 +209,6 @@ public class GameController {
     }
 
     private UUID resolveUserId(UserDetails userDetails) {
-        User user = userRepository.findByUsername(userDetails.getUsername()).orElseThrow();
-        return user.getId();
+        return userResolver.resolveUserId(userDetails);
     }
 }

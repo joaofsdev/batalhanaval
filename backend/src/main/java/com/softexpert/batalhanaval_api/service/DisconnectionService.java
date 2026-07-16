@@ -50,6 +50,20 @@ public class DisconnectionService {
                 );
 
                 pendingTimeouts.put(userId, future);
+
+                UUID opponentId = gameService.getOpponentId(game.getId(), userId);
+                if (opponentId != null && pendingTimeouts.containsKey(opponentId)) {
+                    log.info("Ambos jogadores desconectados na partida {}. Cancelando partida.", game.getId());
+                    ScheduledFuture<?> opponentFuture = pendingTimeouts.remove(opponentId);
+                    if (opponentFuture != null) {
+                        opponentFuture.cancel(false);
+                    }
+                    ScheduledFuture<?> myFuture = pendingTimeouts.remove(userId);
+                    if (myFuture != null) {
+                        myFuture.cancel(false);
+                    }
+                    cancelGameByMutualDisconnection(game.getId());
+                }
             });
 
         gameRepository.findActiveGameByUserId(userId, List.of(GameStatus.PLACING))
@@ -124,6 +138,26 @@ public class DisconnectionService {
             log.info("Cancelamento de posicionamento ignorado para partida={} (mudança de status concorrente)", gameId);
         } catch (Exception ex) {
             log.error("Erro ao cancelar partida em posicionamento {} para jogador desconectado {}", gameId, userId, ex);
+        }
+    }
+
+    private void cancelGameByMutualDisconnection(UUID gameId) {
+        try {
+            Game game = gameRepository.findById(gameId).orElse(null);
+            if (game == null || game.getStatus() != GameStatus.IN_PROGRESS) {
+                return;
+            }
+
+            game.setStatus(GameStatus.CANCELLED);
+            game.setCancellationReason(CancellationReason.DISCONNECTION);
+            game.setCurrentTurn(null);
+            gameRepository.save(game);
+
+            notificationService.broadcastGameState(game);
+
+            log.info("Partida {} cancelada por desconexão mútua de ambos jogadores.", gameId);
+        } catch (Exception ex) {
+            log.error("Erro ao cancelar partida {} por desconexão mútua", gameId, ex);
         }
     }
 }

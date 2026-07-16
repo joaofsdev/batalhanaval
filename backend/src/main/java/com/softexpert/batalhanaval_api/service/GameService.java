@@ -28,6 +28,7 @@ public class GameService {
     private final PlacementService placementService;
     private final AbilityService abilityService;
     private final EloService eloService;
+    private final NotificationService notificationService;
 
     private final Map<UUID, UUID> pendingRematches = new ConcurrentHashMap<>();
 
@@ -49,7 +50,12 @@ public class GameService {
             game.setPlacementDeadline(Instant.now().plusSeconds(PLACEMENT_TIMEOUT_SECONDS));
             createBoardForPlayer(game, user);
             gameRepository.save(game);
-            return buildGameResponse(game, userId);
+            GameResponse response = buildGameResponse(game, userId);
+            PlayerSummary joiner = response.player2().id().equals(userId)
+                ? response.player2()
+                : response.player1();
+            notificationService.notifyPlayerJoined(response.id(), joiner);
+            return response;
         }
 
         Game game = new Game();
@@ -116,6 +122,20 @@ public class GameService {
     public Optional<GameResponse> getActiveGame(UUID userId) {
         return gameRepository.findActiveGameByUserId(userId, List.of(GameStatus.WAITING, GameStatus.PLACING, GameStatus.IN_PROGRESS))
             .map(game -> buildGameResponse(game, userId));
+    }
+
+    @Transactional
+    public Game endGameByAfk(Game game) {
+        User currentPlayer = game.getCurrentTurn();
+        User winner = game.getPlayer1().getId().equals(currentPlayer.getId())
+            ? game.getPlayer2()
+            : game.getPlayer1();
+
+        game.setStatus(GameStatus.FINISHED);
+        game.setWinner(winner);
+        game.setCurrentTurn(null);
+        eloService.updateElo(game);
+        return gameRepository.save(game);
     }
 
     @Transactional

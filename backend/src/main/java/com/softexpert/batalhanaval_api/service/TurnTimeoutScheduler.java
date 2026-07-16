@@ -25,8 +25,8 @@ public class TurnTimeoutScheduler {
     private int maxConsecutiveSkips;
 
     private final GameRepository gameRepository;
+    private final GameService gameService;
     private final NotificationService notificationService;
-    private final EloService eloService;
 
     @Scheduled(fixedDelay = 15000)
     @Transactional
@@ -42,17 +42,8 @@ public class TurnTimeoutScheduler {
             game.setConsecutiveSkips(game.getConsecutiveSkips() + 1);
 
             if (game.getConsecutiveSkips() >= maxConsecutiveSkips) {
-                User winner = game.getPlayer1().getId().equals(currentPlayer.getId())
-                    ? game.getPlayer2()
-                    : game.getPlayer1();
-
-                game.setStatus(GameStatus.FINISHED);
-                game.setWinner(winner);
-                game.setCurrentTurn(null);
-                eloService.updateElo(game);
-                gameRepository.save(game);
-
-                notificationService.broadcastGameState(game);
+                Game finishedGame = gameService.endGameByAfk(game);
+                notificationService.broadcastGameState(finishedGame);
 
                 log.info("Derrota por AFK: partida={}, perdedor={} ({} turnos pulados consecutivos)",
                     game.getId(), currentPlayer.getUsername(), maxConsecutiveSkips);
