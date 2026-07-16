@@ -28,6 +28,8 @@ cors:
 rate-limit:
   auth:
     requests-per-minute: 10
+  api:
+    requests-per-minute: 120
 
 game:
   afk:
