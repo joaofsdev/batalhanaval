@@ -16,6 +16,7 @@ public class VictoryService {
     private final ShipRepository shipRepository;
     private final GameRepository gameRepository;
     private final EloService eloService;
+    private final CacheEvictionService cacheEvictionService;
 
     @Transactional
     public boolean checkVictoryCondition(Game game, UUID attackerId, Board targetBoard) {
@@ -26,6 +27,7 @@ public class VictoryService {
             game.setCurrentTurn(null);
             eloService.updateElo(game);
             gameRepository.save(game);
+            cacheEvictionService.evictOnGameEnd(game.getPlayer1().getId(), game.getPlayer2().getId());
             return true;
         }
         return false;

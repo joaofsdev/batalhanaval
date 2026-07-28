@@ -4,6 +4,7 @@ import com.softexpert.batalhanaval_api.dto.response.RankingEntry;
 import com.softexpert.batalhanaval_api.dto.response.RankingResponse;
 import com.softexpert.batalhanaval_api.repository.GameRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +21,7 @@ public class RankingService {
     private final GameRepository gameRepository;
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "ranking", key = "#currentUserId + '_' + #page + '_' + #size + '_' + #period")
     public RankingResponse getRanking(UUID currentUserId, String currentUsername, int page, int size, String period) {
         List<Object[]> rows = fetchRankingData(period);
 

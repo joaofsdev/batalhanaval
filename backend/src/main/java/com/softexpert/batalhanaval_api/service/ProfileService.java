@@ -9,6 +9,7 @@ import com.softexpert.batalhanaval_api.repository.GameRepository;
 import com.softexpert.batalhanaval_api.repository.ShotRepository;
 import com.softexpert.batalhanaval_api.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,6 +30,7 @@ public class ProfileService {
     private final RankingService rankingService;
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "profile", key = "#userId")
     public PlayerProfileResponse getProfile(UUID userId) {
         User user = userRepository.findById(userId)
             .orElseThrow(UserNotFoundException::new);

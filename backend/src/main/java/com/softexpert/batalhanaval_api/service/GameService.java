@@ -29,6 +29,7 @@ public class GameService {
     private final AbilityService abilityService;
     private final EloService eloService;
     private final NotificationService notificationService;
+    private final CacheEvictionService cacheEvictionService;
 
     private final Map<UUID, UUID> pendingRematches = new ConcurrentHashMap<>();
 
@@ -135,7 +136,9 @@ public class GameService {
         game.setWinner(winner);
         game.setCurrentTurn(null);
         eloService.updateElo(game);
-        return gameRepository.save(game);
+        Game saved = gameRepository.save(game);
+        cacheEvictionService.evictOnGameEnd(game.getPlayer1().getId(), game.getPlayer2().getId());
+        return saved;
     }
 
     @Transactional
@@ -156,6 +159,7 @@ public class GameService {
         game.setCurrentTurn(null);
         eloService.updateElo(game);
         gameRepository.save(game);
+        cacheEvictionService.evictOnGameEnd(game.getPlayer1().getId(), game.getPlayer2().getId());
         return game;
     }
 
