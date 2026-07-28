@@ -2,14 +2,9 @@ package com.softexpert.batalhanaval_api.service;
 
 import com.softexpert.batalhanaval_api.dto.response.RankingEntry;
 import com.softexpert.batalhanaval_api.dto.response.RankingResponse;
-import com.softexpert.batalhanaval_api.repository.GameRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -18,12 +13,10 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class RankingService {
 
-    private final GameRepository gameRepository;
+    private final RankingCacheService rankingCacheService;
 
-    @Transactional(readOnly = true)
-    @Cacheable(value = "ranking", key = "#currentUserId + '_' + #page + '_' + #size + '_' + #period")
     public RankingResponse getRanking(UUID currentUserId, String currentUsername, int page, int size, String period) {
-        List<Object[]> rows = fetchRankingData(period);
+        List<Object[]> rows = rankingCacheService.fetchRankingData(period);
 
         List<RankingEntry> allEntries = new ArrayList<>();
         RankingEntry myPosition = null;
@@ -56,19 +49,5 @@ public class RankingService {
         List<RankingEntry> pageContent = allEntries.subList(fromIndex, toIndex);
 
         return new RankingResponse(pageContent, myPosition, page, size, totalElements, totalPages);
-    }
-
-    private List<Object[]> fetchRankingData(String period) {
-        if (period == null || period.isBlank() || "all".equalsIgnoreCase(period)) {
-            return gameRepository.findFullRanking();
-        }
-
-        Instant since = switch (period.toLowerCase()) {
-            case "week" -> Instant.now().minus(7, ChronoUnit.DAYS);
-            case "month" -> Instant.now().minus(30, ChronoUnit.DAYS);
-            default -> Instant.EPOCH;
-        };
-
-        return gameRepository.findFullRankingSince(since);
     }
 }

@@ -4,9 +4,12 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import java.util.concurrent.TimeUnit;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
-import org.springframework.cache.caffeine.CaffeineCacheManager;
+import org.springframework.cache.caffeine.CaffeineCache;
+import org.springframework.cache.support.SimpleCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.util.List;
 
 @Configuration
 @EnableCaching
@@ -17,17 +20,19 @@ public class CacheConfig {
 
     @Bean
     public CacheManager cacheManager() {
-        CaffeineCacheManager cacheManager = new CaffeineCacheManager();
-        cacheManager.registerCustomCache(RANKING_CACHE,
-                Caffeine.newBuilder()
-                        .expireAfterWrite(5, TimeUnit.MINUTES)
-                        .maximumSize(50)
-                        .build());
-        cacheManager.registerCustomCache(PROFILE_CACHE,
-                Caffeine.newBuilder()
-                        .expireAfterWrite(2, TimeUnit.MINUTES)
-                        .maximumSize(200)
-                        .build());
+        SimpleCacheManager cacheManager = new SimpleCacheManager();
+        cacheManager.setCaches(List.of(
+                new CaffeineCache(RANKING_CACHE,
+                        Caffeine.newBuilder()
+                                .expireAfterWrite(5, TimeUnit.MINUTES)
+                                .maximumSize(50)
+                                .build()),
+                new CaffeineCache(PROFILE_CACHE,
+                        Caffeine.newBuilder()
+                                .expireAfterWrite(2, TimeUnit.MINUTES)
+                                .maximumSize(200)
+                                .build())
+        ));
         return cacheManager;
     }
 }

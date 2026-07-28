@@ -27,7 +27,7 @@ public class ProfileService {
     private final UserRepository userRepository;
     private final GameRepository gameRepository;
     private final ShotRepository shotRepository;
-    private final RankingService rankingService;
+    private final RankingCacheService rankingCacheService;
 
     @Transactional(readOnly = true)
     @Cacheable(value = "profile", key = "#userId")
@@ -35,7 +35,7 @@ public class ProfileService {
         User user = userRepository.findById(userId)
             .orElseThrow(UserNotFoundException::new);
 
-        List<Object[]> rankingRows = gameRepository.findFullRanking();
+        List<Object[]> rankingRows = rankingCacheService.fetchRankingData("all");
         long totalGames = 0;
         long wins = 0;
         int rank = rankingRows.size() + 1;
