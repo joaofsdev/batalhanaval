@@ -120,7 +120,7 @@ public class GameService {
 
     @Transactional(readOnly = true)
     public Optional<GameResponse> getActiveGame(UUID userId) {
-        return gameRepository.findActiveGameByUserId(userId, List.of(GameStatus.WAITING, GameStatus.PLACING, GameStatus.IN_PROGRESS))
+        return gameRepository.findActiveGameByUserIdEager(userId, List.of(GameStatus.WAITING, GameStatus.PLACING, GameStatus.IN_PROGRESS))
             .map(game -> buildGameResponse(game, userId));
     }
 
@@ -338,9 +338,11 @@ public class GameService {
     }
 
     private BoardResponse buildMyBoard(Game game, UUID userId) {
-        Board board = boardRepository.findByGameIdAndOwnerIdWithShipsAndCells(game.getId(), userId).orElse(null);
-
+        // Two queries instead of lazy-loading (avoids N+1: board → ships, board → cells)
+        Board board = boardRepository.findByGameIdAndOwnerIdWithShips(game.getId(), userId).orElse(null);
         if (board == null) return null;
+        // Second query fetches cells (same board, already in persistence context)
+        boardRepository.findByGameIdAndOwnerIdWithCells(game.getId(), userId);
 
         List<ShipResponse> ships = board.getShips().stream()
             .map(s -> new ShipResponse(s.getShipType(), s.getOriginRow(), s.getOriginCol(), s.getOrientation(), s.getHits(), s.isSunk()))
@@ -364,7 +366,7 @@ public class GameService {
             UUID opponentId = game.getPlayer1().getId().equals(userId)
                 ? game.getPlayer2().getId()
                 : game.getPlayer1().getId();
-            Board opponentBoard = boardRepository.findByGameIdAndOwnerIdWithShipsAndCells(game.getId(), opponentId).orElse(null);
+            Board opponentBoard = boardRepository.findByGameIdAndOwnerIdWithShips(game.getId(), opponentId).orElse(null);
             if (opponentBoard != null) {
                 opponentShips = opponentBoard.getShips().stream()
                     .map(s -> new ShipResponse(s.getShipType(), s.getOriginRow(), s.getOriginCol(), s.getOrientation(), s.getHits(), s.isSunk()))
