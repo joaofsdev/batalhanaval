@@ -6,6 +6,7 @@ import com.softexpert.batalhanaval_api.domain.GameStatus;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -81,4 +82,32 @@ public interface GameRepository extends JpaRepository<Game, UUID> {
     org.springframework.data.domain.Page<Game> findByStatusIn(List<GameStatus> statuses, org.springframework.data.domain.Pageable pageable);
 
     long countByStatus(GameStatus status);
+
+    @Modifying
+    @Query(value = "DELETE FROM cells WHERE board_id IN (SELECT id FROM boards WHERE game_id = :gameId)", nativeQuery = true)
+    void bulkDeleteCellsByGameId(@Param("gameId") UUID gameId);
+
+    @Modifying
+    @Query(value = "DELETE FROM ships WHERE board_id IN (SELECT id FROM boards WHERE game_id = :gameId)", nativeQuery = true)
+    void bulkDeleteShipsByGameId(@Param("gameId") UUID gameId);
+
+    @Modifying
+    @Query(value = "DELETE FROM shots WHERE game_id = :gameId", nativeQuery = true)
+    void bulkDeleteShotsByGameId(@Param("gameId") UUID gameId);
+
+    @Modifying
+    @Query(value = "DELETE FROM storm_events WHERE game_id = :gameId", nativeQuery = true)
+    void bulkDeleteStormEventsByGameId(@Param("gameId") UUID gameId);
+
+    @Modifying
+    @Query(value = "DELETE FROM player_abilities WHERE game_id = :gameId", nativeQuery = true)
+    void bulkDeletePlayerAbilitiesByGameId(@Param("gameId") UUID gameId);
+
+    @Modifying
+    @Query(value = "DELETE FROM boards WHERE game_id = :gameId", nativeQuery = true)
+    void bulkDeleteBoardsByGameId(@Param("gameId") UUID gameId);
+
+    @Modifying
+    @Query(value = "DELETE FROM games WHERE id = :gameId", nativeQuery = true)
+    void bulkDeleteGameById(@Param("gameId") UUID gameId);
 }

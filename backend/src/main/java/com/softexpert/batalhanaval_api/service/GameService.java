@@ -264,8 +264,7 @@ public class GameService {
         }
 
         if (game.getStatus() == GameStatus.WAITING) {
-            gameRepository.delete(game);
-            gameRepository.flush();
+            bulkDeleteGame(gameId);
             return;
         }
 
@@ -288,6 +287,16 @@ public class GameService {
         }
 
         throw new GameCannotBeCancelledException();
+    }
+
+    private void bulkDeleteGame(UUID gameId) {
+        gameRepository.bulkDeleteCellsByGameId(gameId);
+        gameRepository.bulkDeleteShipsByGameId(gameId);
+        gameRepository.bulkDeleteShotsByGameId(gameId);
+        gameRepository.bulkDeleteStormEventsByGameId(gameId);
+        gameRepository.bulkDeletePlayerAbilitiesByGameId(gameId);
+        gameRepository.bulkDeleteBoardsByGameId(gameId);
+        gameRepository.bulkDeleteGameById(gameId);
     }
 
     private void createBoardForPlayer(Game game, User player) {
