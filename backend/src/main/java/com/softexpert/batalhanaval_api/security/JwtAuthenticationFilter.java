@@ -1,5 +1,6 @@
 package com.softexpert.batalhanaval_api.security;
 
+import com.softexpert.batalhanaval_api.config.observability.OnlinePlayersTracker;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -21,6 +22,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final CustomUserDetailsService userDetailsService;
+    private final OnlinePlayersTracker onlinePlayersTracker;
 
     private static final AntPathMatcher PATH_MATCHER = new AntPathMatcher();
     private static final List<String> EXCLUDED_PATHS = List.of(
@@ -68,6 +70,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     userDetails, null, userDetails.getAuthorities()
                 );
                 SecurityContextHolder.getContext().setAuthentication(authToken);
+                onlinePlayersTracker.recordActivity(jwtService.extractUserId(token));
             } catch (Exception e) {
                 response.setStatus(401);
                 response.setContentType("application/json");

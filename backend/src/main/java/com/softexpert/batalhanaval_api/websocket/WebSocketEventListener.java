@@ -60,4 +60,18 @@ public class WebSocketEventListener {
             }
         }
     }
+
+    /**
+     * Returns the number of unique players with at least one active WebSocket session.
+     */
+    public int getOnlinePlayerCount() {
+        return activeSessions.size();
+    }
+
+    /**
+     * Returns the total number of open WebSocket sessions (a player can have multiple).
+     */
+    public int getTotalSessionCount() {
+        return activeSessions.values().stream().mapToInt(Set::size).sum();
+    }
 }

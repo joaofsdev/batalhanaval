@@ -38,7 +38,8 @@ public class SecurityConfig {
                 auth
                     .requestMatchers("/api/auth/**").permitAll()
                     .requestMatchers("/api/games/fleet-config").permitAll()
-                    .requestMatchers("/ws/**").permitAll();
+                    .requestMatchers("/ws/**").permitAll()
+                    .requestMatchers("/actuator/**").permitAll();
 
                 if ("dev".equals(activeProfile)) {
                     auth

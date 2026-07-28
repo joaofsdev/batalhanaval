@@ -1,0 +1,73 @@
+version: "3.8"
+
+# =============================================================================
+# Observability Stack — Local Development
+#
+# Backend Spring Boot roda no Windows via IntelliJ (porta 8080).
+# Prometheus + Grafana rodam via Docker no WSL, fazendo scrape do host.
+#
+# Usage (no WSL):
+#   cd /mnt/c/Projetos/batalhanaval
+#   docker compose -f docker-compose-observability.yml up -d
+#
+# IntelliJ Run Config:
+#   Active profiles: dev,observability
+#
+# Acesso:
+#   - Prometheus:  http://localhost:9090
+#   - Grafana:     http://localhost:3001 (admin/admin)
+# =============================================================================
+
+services:
+  # ---------------------------------------------------------------------------
+  # Prometheus — Coleta métricas do backend rodando no IntelliJ (Windows)
+  # ---------------------------------------------------------------------------
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    container_name: bn-prometheus
+    ports:
+      - "9090:9090"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.retention.time=7d"
+      - "--web.enable-lifecycle"
+    restart: unless-stopped
+    networks:
+      - observability
+
+  # ---------------------------------------------------------------------------
+  # Grafana — Dashboards
+  # ---------------------------------------------------------------------------
+  grafana:
+    image: grafana/grafana:11.1.0
+    container_name: bn-grafana
+    ports:
+      - "3001:3000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+    networks:
+      - observability
+
+networks:
+  observability:
+    driver: bridge
+
+volumes:
+  prometheus-data:
+  grafana-data:

@@ -11,6 +11,7 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+        generate_statistics: true
   flyway:
     enabled: true
     baseline-on-migrate: true
@@ -38,3 +39,29 @@ springdoc:
     enabled: false
   swagger-ui:
     enabled: false
+
+# --- Observability ---
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+  metrics:
+    tags:
+      application: batalhanaval-api
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+      slo:
+        http.server.requests: 50ms,100ms,200ms,500ms,1s,5s
+  tracing:
+    enabled: false
+
+observability:
+  slow-request:
+    threshold-ms: 1000
+  slow-query:
+    threshold-ms: 500

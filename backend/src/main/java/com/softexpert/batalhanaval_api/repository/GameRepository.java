@@ -76,4 +76,6 @@ public interface GameRepository extends JpaRepository<Game, UUID> {
     Optional<Game> findByRoomToken(String roomToken);
 
     org.springframework.data.domain.Page<Game> findByStatusIn(List<GameStatus> statuses, org.springframework.data.domain.Pageable pageable);
+
+    long countByStatus(GameStatus status);
 }
