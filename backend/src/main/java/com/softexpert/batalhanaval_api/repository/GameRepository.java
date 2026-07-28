@@ -26,7 +26,7 @@ public interface GameRepository extends JpaRepository<Game, UUID> {
     @Query("SELECT g FROM Game g WHERE g.status = :status AND g.player1.id <> :userId AND g.gameMode = :gameMode AND g.privateRoom = false ORDER BY g.createdAt ASC LIMIT 1")
     Optional<Game> findFirstWaitingGameByModeForUpdate(@Param("status") GameStatus status, @Param("userId") UUID userId, @Param("gameMode") GameMode gameMode);
 
-    @Query("SELECT g FROM Game g WHERE (g.player1.id = :userId OR g.player2.id = :userId) AND g.status IN :statuses")
+    @Query("SELECT g FROM Game g JOIN FETCH g.player1 LEFT JOIN FETCH g.player2 LEFT JOIN FETCH g.currentTurn LEFT JOIN FETCH g.winner WHERE (g.player1.id = :userId OR g.player2.id = :userId) AND g.status IN :statuses")
     Optional<Game> findActiveGameByUserId(@Param("userId") UUID userId, @Param("statuses") List<GameStatus> statuses);
 
     @Query("SELECT g.winner.id, g.winner.username, COUNT(g) FROM Game g WHERE g.status = 'FINISHED' AND g.winner IS NOT NULL GROUP BY g.winner.id, g.winner.username ORDER BY COUNT(g) DESC")

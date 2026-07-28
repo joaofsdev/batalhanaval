@@ -338,7 +338,7 @@ public class GameService {
     }
 
     private BoardResponse buildMyBoard(Game game, UUID userId) {
-        Board board = boardRepository.findByGameIdAndOwnerId(game.getId(), userId).orElse(null);
+        Board board = boardRepository.findByGameIdAndOwnerIdWithShipsAndCells(game.getId(), userId).orElse(null);
 
         if (board == null) return null;
 
@@ -364,7 +364,7 @@ public class GameService {
             UUID opponentId = game.getPlayer1().getId().equals(userId)
                 ? game.getPlayer2().getId()
                 : game.getPlayer1().getId();
-            Board opponentBoard = boardRepository.findByGameIdAndOwnerId(game.getId(), opponentId).orElse(null);
+            Board opponentBoard = boardRepository.findByGameIdAndOwnerIdWithShipsAndCells(game.getId(), opponentId).orElse(null);
             if (opponentBoard != null) {
                 opponentShips = opponentBoard.getShips().stream()
                     .map(s -> new ShipResponse(s.getShipType(), s.getOriginRow(), s.getOriginCol(), s.getOrientation(), s.getHits(), s.isSunk()))
