@@ -3,6 +3,7 @@ package com.softexpert.batalhanaval_api.dto.response;
 import com.softexpert.batalhanaval_api.domain.GameStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import java.io.Serializable;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -14,4 +15,4 @@ public record GameHistoryEntry(
     @Schema(description = "Se o jogador venceu", example = "true") boolean won,
     @Schema(description = "Duração da partida em segundos", example = "320") long durationSeconds,
     @Schema(description = "Data/hora da partida") Instant playedAt
-) {}
+) implements Serializable {}

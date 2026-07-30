@@ -2,6 +2,7 @@ package com.softexpert.batalhanaval_api.dto.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import java.io.Serializable;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
@@ -22,4 +23,4 @@ public record PlayerProfileResponse(
     @Schema(description = "Navios afundados", example = "85") long shipsSunk,
     @Schema(description = "Precisão de tiro (0.0 a 1.0)", example = "0.4") double accuracy,
     @Schema(description = "Últimas partidas jogadas") List<GameHistoryEntry> recentGames
-) {}
+) implements Serializable {}
