@@ -6,7 +6,11 @@ spring:
     driver-class-name: org.postgresql.Driver
   data:
     redis:
-      url: ${REDIS_URL}
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD}
+      ssl:
+        enabled: true
   jpa:
     hibernate:
       ddl-auto: validate
