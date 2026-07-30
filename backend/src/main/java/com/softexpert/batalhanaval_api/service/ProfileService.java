@@ -5,6 +5,7 @@ import com.softexpert.batalhanaval_api.domain.ShotResult;
 import com.softexpert.batalhanaval_api.domain.User;
 import com.softexpert.batalhanaval_api.dto.response.GameHistoryEntry;
 import com.softexpert.batalhanaval_api.dto.response.PlayerProfileResponse;
+import com.softexpert.batalhanaval_api.dto.response.RankingRow;
 import com.softexpert.batalhanaval_api.repository.GameRepository;
 import com.softexpert.batalhanaval_api.repository.ShotRepository;
 import com.softexpert.batalhanaval_api.repository.UserRepository;
@@ -35,17 +36,16 @@ public class ProfileService {
         User user = userRepository.findById(userId)
             .orElseThrow(UserNotFoundException::new);
 
-        List<Object[]> rankingRows = rankingCacheService.fetchRankingData("all");
+        List<RankingRow> rankingRows = rankingCacheService.fetchRankingData("all");
         long totalGames = 0;
         long wins = 0;
         int rank = rankingRows.size() + 1;
 
         for (int i = 0; i < rankingRows.size(); i++) {
-            Object[] row = rankingRows.get(i);
-            UUID id = (UUID) row[0];
-            if (id.equals(userId)) {
-                wins = (long) row[2];
-                totalGames = (long) row[3];
+            RankingRow row = rankingRows.get(i);
+            if (row.userId().equals(userId)) {
+                wins = row.wins();
+                totalGames = row.totalGames();
                 rank = i + 1;
                 break;
             }

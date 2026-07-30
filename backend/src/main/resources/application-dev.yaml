@@ -6,6 +6,9 @@ spring:
     driver-class-name: org.h2.Driver
     username: sa
     password:
+  data:
+    redis:
+      url: ${REDIS_URL:redis://localhost:6379}
   jpa:
     hibernate:
       ddl-auto: update
