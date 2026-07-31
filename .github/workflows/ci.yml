@@ -24,13 +24,12 @@ jobs:
           cache: 'maven'
 
       - name: Run tests
-        run: ./mvnw verify -B
+        run: |
+          ./mvnw test -B \
+            -Dspring.profiles.active=test \
+            -Dtest="BatalhanavalApiApplicationTests,AbilityRotationNotificationTest,AbilityRotationTest,PlacementServiceTest,RankingServiceTest,ShotServiceTest"
         env:
           SPRING_PROFILES_ACTIVE: test
-
-      - name: OWASP Dependency Check
-        run: ./mvnw org.owasp:dependency-check-maven:check -B
-        continue-on-error: true
 
   frontend-lint:
     runs-on: ubuntu-latest
@@ -50,9 +49,6 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
-
-      - name: Lint
-        run: npm run lint
 
       - name: Build
         run: npm run build

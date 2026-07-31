@@ -2,7 +2,7 @@ package com.softexpert.batalhanaval_api.service;
 
 import com.softexpert.batalhanaval_api.dto.response.RankingEntry;
 import com.softexpert.batalhanaval_api.dto.response.RankingResponse;
-import com.softexpert.batalhanaval_api.repository.GameRepository;
+import com.softexpert.batalhanaval_api.dto.response.RankingRow;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,7 +20,7 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class RankingServiceTest {
 
-    @Mock private GameRepository gameRepository;
+    @Mock private RankingCacheService rankingCacheService;
 
     @InjectMocks private RankingService rankingService;
 
@@ -39,15 +39,12 @@ class RankingServiceTest {
 
     @Test
     void getRanking_shouldOrderByEloDescending() {
-        // Player with higher Elo should be ranked first even with fewer wins
-        List<Object[]> rows = new ArrayList<>();
-        // row format: [userId, username, wins, totalGames, eloRating]
-        // Query already returns ordered by eloRating DESC, wins DESC
-        rows.add(new Object[]{user1Id, "highElo", 5L, 10L, 1200});
-        rows.add(new Object[]{user2Id, "midElo", 8L, 12L, 1100});
-        rows.add(new Object[]{user3Id, "lowElo", 10L, 15L, 900});
+        List<RankingRow> rows = new ArrayList<>();
+        rows.add(new RankingRow(user1Id, "highElo", 5L, 10L, 1200));
+        rows.add(new RankingRow(user2Id, "midElo", 8L, 12L, 1100));
+        rows.add(new RankingRow(user3Id, "lowElo", 10L, 15L, 900));
 
-        when(gameRepository.findFullRanking()).thenReturn(rows);
+        when(rankingCacheService.fetchRankingData("all")).thenReturn(rows);
 
         RankingResponse response = rankingService.getRanking(currentUserId, "viewer", 0, 20, "all");
 
@@ -67,13 +64,11 @@ class RankingServiceTest {
 
     @Test
     void getRanking_sameElo_shouldTiebreakByWinsDescending() {
-        // Two players with same Elo — more wins = better position
-        // The query orders by eloRating DESC, wins DESC so same Elo → higher wins first
-        List<Object[]> rows = new ArrayList<>();
-        rows.add(new Object[]{user1Id, "moreWins", 8L, 10L, 1000});
-        rows.add(new Object[]{user2Id, "fewerWins", 3L, 10L, 1000});
+        List<RankingRow> rows = new ArrayList<>();
+        rows.add(new RankingRow(user1Id, "moreWins", 8L, 10L, 1000));
+        rows.add(new RankingRow(user2Id, "fewerWins", 3L, 10L, 1000));
 
-        when(gameRepository.findFullRanking()).thenReturn(rows);
+        when(rankingCacheService.fetchRankingData("all")).thenReturn(rows);
 
         RankingResponse response = rankingService.getRanking(currentUserId, "viewer", 0, 20, "all");
 
@@ -89,27 +84,26 @@ class RankingServiceTest {
 
     @Test
     void getRanking_emptyRanking_playerNotInRanking_shouldGetDefaultPosition() {
-        // Player with no finished games does not appear in ranking
-        when(gameRepository.findFullRanking()).thenReturn(new ArrayList<>());
+        when(rankingCacheService.fetchRankingData("all")).thenReturn(new ArrayList<>());
 
         RankingResponse response = rankingService.getRanking(currentUserId, "newPlayer", 0, 20, "all");
 
         assertThat(response.ranking()).isEmpty();
         assertThat(response.myPosition()).isNotNull();
-        assertThat(response.myPosition().position()).isEqualTo(1); // size+1 = 0+1
+        assertThat(response.myPosition().position()).isEqualTo(1);
         assertThat(response.myPosition().username()).isEqualTo("newPlayer");
-        assertThat(response.myPosition().eloRating()).isEqualTo(1000); // default
+        assertThat(response.myPosition().eloRating()).isEqualTo(1000);
         assertThat(response.myPosition().wins()).isEqualTo(0);
     }
 
     @Test
     void getRanking_currentUserInRanking_shouldFindTheirPosition() {
-        List<Object[]> rows = new ArrayList<>();
-        rows.add(new Object[]{user1Id, "topPlayer", 10L, 12L, 1300});
-        rows.add(new Object[]{currentUserId, "me", 5L, 10L, 1100});
-        rows.add(new Object[]{user2Id, "other", 3L, 8L, 900});
+        List<RankingRow> rows = new ArrayList<>();
+        rows.add(new RankingRow(user1Id, "topPlayer", 10L, 12L, 1300));
+        rows.add(new RankingRow(currentUserId, "me", 5L, 10L, 1100));
+        rows.add(new RankingRow(user2Id, "other", 3L, 8L, 900));
 
-        when(gameRepository.findFullRanking()).thenReturn(rows);
+        when(rankingCacheService.fetchRankingData("all")).thenReturn(rows);
 
         RankingResponse response = rankingService.getRanking(currentUserId, "me", 0, 20, "all");
 
@@ -121,10 +115,10 @@ class RankingServiceTest {
 
     @Test
     void getRanking_shouldIncludeEloRatingInEntries() {
-        List<Object[]> rows = new ArrayList<>();
-        rows.add(new Object[]{user1Id, "player1", 7L, 10L, 1150});
+        List<RankingRow> rows = new ArrayList<>();
+        rows.add(new RankingRow(user1Id, "player1", 7L, 10L, 1150));
 
-        when(gameRepository.findFullRanking()).thenReturn(rows);
+        when(rankingCacheService.fetchRankingData("all")).thenReturn(rows);
 
         RankingResponse response = rankingService.getRanking(currentUserId, "viewer", 0, 20, "all");
 
@@ -136,23 +130,22 @@ class RankingServiceTest {
     }
 
     @Test
-    void getRanking_withPeriodWeek_shouldCallFindFullRankingSince() {
-        when(gameRepository.findFullRankingSince(any())).thenReturn(new ArrayList<>());
+    void getRanking_withPeriodWeek_shouldCallFetchRankingDataWithWeek() {
+        when(rankingCacheService.fetchRankingData("week")).thenReturn(new ArrayList<>());
 
         rankingService.getRanking(currentUserId, "viewer", 0, 20, "week");
 
-        verify(gameRepository).findFullRankingSince(any());
-        verify(gameRepository, never()).findFullRanking();
+        verify(rankingCacheService).fetchRankingData("week");
     }
 
     @Test
     void getRanking_pagination_shouldReturnCorrectPage() {
-        List<Object[]> rows = new ArrayList<>();
+        List<RankingRow> rows = new ArrayList<>();
         for (int i = 0; i < 25; i++) {
-            rows.add(new Object[]{UUID.randomUUID(), "player" + i, (long)(25 - i), 30L, 1500 - i * 10});
+            rows.add(new RankingRow(UUID.randomUUID(), "player" + i, (long)(25 - i), 30L, 1500 - i * 10));
         }
 
-        when(gameRepository.findFullRanking()).thenReturn(rows);
+        when(rankingCacheService.fetchRankingData("all")).thenReturn(rows);
 
         // Page 0, size 10
         RankingResponse page0 = rankingService.getRanking(currentUserId, "viewer", 0, 10, "all");

@@ -28,6 +28,8 @@ class GameServiceTest {
     @Mock private PlacementService placementService;
     @Mock private AbilityService abilityService;
     @Mock private EloService eloService;
+    @Mock private NotificationService notificationService;
+    @Mock private CacheEvictionService cacheEvictionService;
 
     @InjectMocks private GameService gameService;
 
