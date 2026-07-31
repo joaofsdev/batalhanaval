@@ -25,6 +25,7 @@ jobs:
 
       - name: Run tests
         run: |
+          chmod +x ./mvnw
           ./mvnw test -B \
             -Dspring.profiles.active=test \
             -Dtest="BatalhanavalApiApplicationTests,AbilityRotationNotificationTest,AbilityRotationTest,PlacementServiceTest,RankingServiceTest,ShotServiceTest"
