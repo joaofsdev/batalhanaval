@@ -1,3 +1,2 @@
-ALTER TABLE shots ADD COLUMN sunk_ship_origin_row INTEGER;
-ALTER TABLE shots ADD COLUMN sunk_ship_origin_col INTEGER;
-ALTER TABLE shots ADD COLUMN sunk_ship_orientation VARCHAR(10);
+-- V3__add_sunk_ship_position_to_shots.sql
+-- Colunas já criadas na V0 (schema base)
