@@ -30,11 +30,9 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        // Native WebSocket endpoint (preferred — no SockJS overhead)
         registry.addEndpoint("/ws-native")
             .setAllowedOrigins(allowedOrigins.split(","));
 
-        // SockJS fallback endpoint (legacy clients)
         registry.addEndpoint("/ws")
             .setAllowedOrigins(allowedOrigins.split(","))
             .withSockJS();
