@@ -1,8 +1,8 @@
 import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useWs } from "../context/WebSocketContext";
 import useGame from "../hooks/useGame";
-import useWebSocket from "../hooks/useWebSocket";
 import useSoundEffects from "../hooks/useSoundEffects";
 import WaitingScreen from "../components/GameStatus/WaitingScreen";
 import OpponentInfo from "../components/GameStatus/OpponentInfo";
@@ -23,7 +23,7 @@ import * as adminApi from "../api/adminApi";
 
 const GamePage = () => {
   const { id: gameId } = useParams();
-  const { user, token } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [toast, setToast] = useState(null);
   const [boardConfirmed, setBoardConfirmed] = useState(false);
@@ -48,12 +48,13 @@ const GamePage = () => {
     handleStateUpdate,
   } = useGame(gameId);
 
-  const { subscribe, unsubscribeAll, publish, connected } = useWebSocket({
-    token,
-    onReconnect: fetchGame,
-  });
+  const { subscribe, unsubscribeAll, publish, connected, setOnReconnect } = useWs();
 
   const { playHit, playMiss, playSunk, muted, toggleMute } = useSoundEffects();
+
+  useEffect(() => {
+    setOnReconnect(fetchGame);
+  }, [setOnReconnect, fetchGame]);
 
   const isStormMode = game?.gameMode === 'STORM';
 

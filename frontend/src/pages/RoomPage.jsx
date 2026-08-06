@@ -1,15 +1,13 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import useWebSocket from "../hooks/useWebSocket";
+import { useWs } from "../context/WebSocketContext";
 import * as gameApi from "../api/gameApi";
 
 const RoomPage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const token = localStorage.getItem("bn_token");
-
   const mode = searchParams.get("mode") || "CLASSIC";
   const joinToken = searchParams.get("token");
   const [view, setView] = useState("choosing");
@@ -36,7 +34,7 @@ const RoomPage = () => {
     [navigate],
   );
 
-  const { connected, subscribe } = useWebSocket({ token, onReconnect: null });
+  const { connected, subscribe } = useWs();
 
   useEffect(() => {
     if (room?.gameId && connected) {
